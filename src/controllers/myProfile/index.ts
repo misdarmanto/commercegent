@@ -1,7 +1,7 @@
-import { findMyProfile } from './find'
-import { updateMyProfile } from './update'
+import { findMyProfile } from './findMyProfile'
+import { updateMyProfile } from './updateMyProfile'
 
 export const MyProfileController = {
-  find: findMyProfile,
-  update: updateMyProfile
+  findMyProfile,
+  updateMyProfile
 }

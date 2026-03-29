@@ -2,12 +2,11 @@ import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
-import { NotificationService } from '../../services/Notification.service'
+import { MyProfileService } from '../../services/MyProfile.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdatePushTokenBody } from '../../schemas/NotificationSchema'
 import { AppError } from '../../utilities/appError'
 
-export const updatePushToken = async (
+export const findMyProfile = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
@@ -18,15 +17,9 @@ export const updatePushToken = async (
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const payload = req.body as unknown as IUpdatePushTokenBody
-    const result = await NotificationService.updatePushToken(userId, payload)
+    const result = await MyProfileService.findMyProfile(userId)
 
-    return res.status(StatusCodes.OK).json(
-      ResponseData.success({
-        data: result,
-        message: 'Push token updated successfully'
-      })
-    )
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (error) {
     return handleError(res, error)
   }
