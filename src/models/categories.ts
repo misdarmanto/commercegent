@@ -13,7 +13,7 @@ export interface CategoryAttributes extends ZygoteAttributes {
 
 // we're telling the Model that 'id' is optional
 // when creating an instance of the model (such as using Model.create()).
-type CategoryCreationAttributes = Optional<
+export type CategoryCreationAttributes = Optional<
   CategoryAttributes,
   'categoryId' | 'createdAt' | 'updatedAt'
 >

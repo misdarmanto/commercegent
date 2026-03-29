@@ -1,12 +1,13 @@
-import { createCategory } from './create'
-import { findAllCategory, findDetailCategory } from './find'
-import { removeCategory } from './remove'
-import { updateCategory } from './update'
+import { createCategory } from './createCategory'
+import { findAllCategory } from './findAllCategory'
+import { findDetailCategory } from './findDetailCategory'
+import { removeCategory } from './removeCategory'
+import { updateCategory } from './updateCategory'
 
 export const CategoryController = {
-  create: createCategory,
-  findAll: findAllCategory,
-  findOne: findDetailCategory,
-  remove: removeCategory,
-  update: updateCategory
+  createCategory,
+  findAllCategory,
+  findDetailCategory,
+  removeCategory,
+  updateCategory
 }
