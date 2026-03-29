@@ -1,5 +1,8 @@
 import { z } from 'zod'
-import { jwtPayloadSchema } from './jwtPayloadSchema'
+
+/* ============================= */
+/* CREATE CART (body) */
+/* ============================= */
 
 export const createCartSchema = z.object({
   cartProductId: z.coerce
@@ -13,22 +16,34 @@ export const createCartSchema = z.object({
     .min(1, 'cartTotalItem minimal 1')
 })
 
-export const removeCartSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
+/* ============================= */
+/* REMOVE CART (query) */
+/* ============================= */
+
+export const removeCartQuerySchema = z.object({
   cartId: z.coerce
     .number({ invalid_type_error: 'cartId harus berupa angka' })
     .int('cartId harus bilangan bulat')
     .positive('cartId harus lebih dari 0')
 })
 
-export const findDetailCartSchema = z.object({
-  jwtPayload: jwtPayloadSchema
-})
+/* ============================= */
+/* FIND ALL CARTS (query) */
+/* ============================= */
 
 export const findAllCartSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
-  page: z.number().int().optional(),
-  size: z.number().int().optional(),
-  search: z.string().optional(),
-  pagination: z.boolean().optional()
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(20),
+  search: z
+    .union([z.string(), z.literal('')])
+    .optional()
+    .transform((v) => (v === '' ? undefined : v)),
+  pagination: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true')
 })
+
+export type ICreateCartBody = z.infer<typeof createCartSchema>
+export type IRemoveCartQuery = z.infer<typeof removeCartQuerySchema>
+export type IFindAllCartQuery = z.infer<typeof findAllCartSchema>

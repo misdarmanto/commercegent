@@ -6,31 +6,35 @@ import { hashPassword } from '../utilities/scurePassword'
 import { generateAccessToken } from '../utilities/jwt'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import { type IFindAllUsers } from '../schemas/userSchema'
-import { IUpdateAdmin, type ICreateAdmin } from '../schemas/AdminSchema'
+import {
+  IFindAllAdmins,
+  IFindDetailAdmin,
+  IUpdateAdmin,
+  type ICreateAdmin
+} from '../schemas/AdminSchema'
 import { ILoginAdmin } from '../schemas/AuthSchema'
 
 export class AdminService {
-  static async createAdmin(body: ICreateAdmin) {
+  static async createAdmin(payload: ICreateAdmin) {
     try {
       const existing = await UserModel.findOne({
         raw: true,
         where: {
           deleted: { [Op.eq]: 0 },
-          [Op.or]: [{ userWhatsAppNumber: { [Op.eq]: body.adminWhatsAppNumber } }]
+          [Op.or]: [{ userWhatsAppNumber: { [Op.eq]: payload.adminWhatsAppNumber } }]
         }
       })
 
       if (existing != null) {
         throw new AppError(
-          `Nomor WA ${body.adminWhatsAppNumber} sudah terdaftar. Silahkan gunakan yang lain.`,
+          `Nomor WA ${payload.adminWhatsAppNumber} sudah terdaftar. Silahkan gunakan yang lain.`,
           StatusCodes.BAD_REQUEST
         )
       }
 
       const payload: Record<string, unknown> = {
-        ...body,
-        adminPassword: hashPassword(body.adminPassword)
+        ...payload,
+        adminPassword: hashPassword(payload.adminPassword)
       }
 
       await UserModel.create(payload as unknown as UserAttributes)
@@ -41,12 +45,12 @@ export class AdminService {
     }
   }
 
-  static async loginAdmin(params: ILoginAdmin) {
+  static async loginAdmin(payload: ILoginAdmin) {
     try {
       const user = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          userWhatsAppNumber: { [Op.eq]: params.adminWhatsAppNumber },
+          userWhatsAppNumber: { [Op.eq]: payload.adminWhatsAppNumber },
           [Op.or]: [
             { userRole: { [Op.eq]: 'admin' } },
             { userRole: { [Op.eq]: 'superAdmin' } }
@@ -61,7 +65,7 @@ export class AdminService {
         )
       }
 
-      if (hashPassword(params.adminPassword) !== user.userPassword) {
+      if (hashPassword(payload.adminPassword) !== user.userPassword) {
         throw new AppError(
           'kombinasi nomor wa dan password tidak ditemukan!',
           StatusCodes.UNAUTHORIZED
@@ -81,12 +85,12 @@ export class AdminService {
     }
   }
 
-  static async updateAdmin(params: IUpdateAdmin) {
+  static async updateAdmin(payload: IUpdateAdmin) {
     try {
       const actor = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          userId: { [Op.eq]: params.jwtPayload?.userId },
+          userId: { [Op.eq]: payload.jwtPayload?.userId },
           [Op.or]: [
             { userRole: { [Op.eq]: 'admin' } },
             { userRole: { [Op.eq]: 'superAdmin' } }
@@ -99,16 +103,16 @@ export class AdminService {
       }
 
       let hashedPassword: string | undefined
-      if (params.adminPassword != null && params.adminPassword.length > 0) {
-        hashedPassword = hashPassword(params.adminPassword)
+      if (payload.adminPassword != null && payload.adminPassword.length > 0) {
+        hashedPassword = hashPassword(payload.adminPassword)
       }
 
-      if (params.adminName != null && params.adminName.length > 0) {
+      if (payload.adminName != null && payload.adminName.length > 0) {
         const duplicateName = await UserModel.findOne({
           where: {
             deleted: { [Op.eq]: 0 },
-            userId: { [Op.not]: params.jwtPayload?.userId },
-            userName: { [Op.eq]: params.adminName }
+            userId: { [Op.not]: payload.jwtPayload?.userId },
+            userName: { [Op.eq]: payload.adminName }
           }
         })
 
@@ -118,20 +122,20 @@ export class AdminService {
       }
 
       const newData: Record<string, unknown> = {}
-      if (params.adminName != null && params.adminName.length > 0) {
-        newData.userName = params.adminName
+      if (payload.adminName != null && payload.adminName.length > 0) {
+        newData.userName = payload.adminName
       }
       if (hashedPassword != null) {
         newData.adminPassword = hashedPassword
       }
-      if (params.adminRole != null && params.adminRole.length > 0) {
-        newData.adminRole = params.adminRole
+      if (payload.adminRole != null && payload.adminRole.length > 0) {
+        newData.adminRole = payload.adminRole
       }
 
       await UserModel.update(newData, {
         where: {
           deleted: { [Op.eq]: 0 },
-          userId: { [Op.eq]: params.jwtPayload?.userId }
+          userId: { [Op.eq]: payload.jwtPayload?.userId }
         }
       })
     } catch (error) {
@@ -141,22 +145,22 @@ export class AdminService {
     }
   }
 
-  static async findAllAdmins(params: IFindAllUsers) {
+  static async findAllAdmins(payload: IFindAllAdmins) {
     try {
-      const page = new Pagination(params.page, params.size)
+      const page = new Pagination(payload.page, payload.size)
 
       const users = await UserModel.findAndCountAll({
         where: {
           deleted: { [Op.eq]: 0 },
           userRole: { [Op.not]: 'user' },
-          userId: { [Op.not]: params.jwtPayload?.userId },
-          ...(Boolean(params.search) && {
-            [Op.or]: [{ userName: { [Op.like]: `%${params.search}%` } }]
+          userId: { [Op.not]: payload.jwtPayload?.userId },
+          ...(Boolean(payload.search) && {
+            [Op.or]: [{ userName: { [Op.like]: `%${payload.search}%` } }]
           })
         },
         attributes: ['userId', 'userName', 'userRole', 'createdAt', 'updatedAt'],
         order: [['userId', 'desc']],
-        ...(params.pagination === true && {
+        ...(payload.pagination === true && {
           limit: page.limit,
           offset: page.offset
         })
@@ -170,13 +174,13 @@ export class AdminService {
     }
   }
 
-  static async findDetailAdmin(userId: number) {
+  static async findDetailAdmin(payload: IFindDetailAdmin) {
     try {
       const user = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
           userRole: { [Op.not]: 'user' },
-          userId: { [Op.eq]: userId }
+          userId: { [Op.eq]: payload.adminId }
         },
         attributes: [
           'userId',

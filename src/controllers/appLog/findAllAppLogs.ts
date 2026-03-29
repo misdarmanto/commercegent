@@ -7,10 +7,8 @@ import { IFindAllAppLogs } from '../../schemas/AppLogSchema'
 
 export const findAllAppLogs = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllAppLogs
-
-    const result = await AppLogService.findAll(query)
-
+    const payload = req.query as unknown as IFindAllAppLogs
+    const result = await AppLogService.findAll(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (error) {
     return handleError(res, error)
