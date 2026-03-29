@@ -10,12 +10,13 @@ AppLogRoute.use(MiddleWares.authorization)
 AppLogRoute.post(
   '/',
   MiddleWares.validate({ body: createAppLogSchema }),
-  AppLogController.create
+  AppLogController.createAppLog
 )
+
 AppLogRoute.get(
   '/',
   MiddleWares.validate({ query: findAllAppLogsSchema }),
-  AppLogController.findAll
+  AppLogController.findAllAppLogs
 )
 
 export default AppLogRoute

@@ -1,9 +1,9 @@
-import { createCart } from './create'
-import { findAllCart } from './find'
-import { removeCart } from './remove'
+import { createCart } from './createCart'
+import { findAllCart } from './findAllCart'
+import { removeCart } from './removeCart'
 
 export const CartController = {
-  create: createCart,
-  findAll: findAllCart,
-  remove: removeCart
+  createCart,
+  findAllCart,
+  removeCart
 }
