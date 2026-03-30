@@ -5,6 +5,10 @@ const productImagesField = z
   .optional()
   .transform((v) => (v == null ? [] : Array.isArray(v) ? v : [v]))
 
+/* ============================= */
+/* CREATE PRODUCT (body) */
+/* ============================= */
+
 export const createProductSchema = z.object({
   productName: z
     .string({ required_error: 'Nama produk wajib diisi' })
@@ -62,6 +66,10 @@ export const createProductSchema = z.object({
   productSellPrice: z.number().optional()
 })
 
+/* ============================= */
+/* UPDATE PRODUCT (body) */
+/* ============================= */
+
 export const updateProductSchema = z
   .object({
     productId: z.number().int().positive(),
@@ -89,3 +97,67 @@ export const updateProductSchema = z
     productSellPrice: z.number().optional()
   })
   .strict()
+
+/* ============================= */
+/* FIND PRODUCTS (query) */
+/* ============================= */
+
+export const findAllProductsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(10),
+  search: z
+    .union([z.string(), z.literal('')])
+    .optional()
+    .transform((v) => (v === '' ? undefined : v)),
+  pagination: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
+  productCategoryId: z.coerce.number().int().optional(),
+  productSubCategoryId: z.coerce.number().int().optional()
+})
+
+export const findAllProductsAdminQuerySchema = findAllProductsQuerySchema
+
+/* ============================= */
+/* PRODUCT DETAIL (params) */
+/* ============================= */
+
+export const productDetailParamsSchema = z.object({
+  productId: z.coerce
+    .number({ invalid_type_error: 'productId harus berupa angka' })
+    .int('productId harus bilangan bulat')
+    .positive('productId harus lebih dari 0')
+})
+
+/* ============================= */
+/* REMOVE PRODUCT (query) */
+/* ============================= */
+
+export const removeProductQuerySchema = z.object({
+  productId: z.coerce
+    .number({ invalid_type_error: 'productId harus berupa angka' })
+    .int('productId harus bilangan bulat')
+    .positive('productId harus lebih dari 0')
+})
+
+/* ============================= */
+/* UPLOAD HISTORIES (query) */
+/* ============================= */
+
+export const uploadHistoriesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(10),
+  pagination: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
+  status: z.string().optional()
+})
+
+export type ICreateProductBody = z.infer<typeof createProductSchema>
+export type IUpdateProductBody = z.infer<typeof updateProductSchema>
+export type IFindAllProductsQuery = z.infer<typeof findAllProductsQuerySchema>
+export type IProductDetailParams = z.infer<typeof productDetailParamsSchema>
+export type IRemoveProductQuery = z.infer<typeof removeProductQuerySchema>
+export type IUploadHistoriesQuery = z.infer<typeof uploadHistoriesQuerySchema>

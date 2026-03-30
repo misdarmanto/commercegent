@@ -2,7 +2,7 @@ import { Request, Response } from 'express'
 import { sequelize } from '../../models'
 import { OrdersModel } from '../../models/orders'
 import { BiteShipService } from '../../services/biteShipService'
-import { confirmDraftOrderSchema } from '../../schemas/orderSchema'
+import { confirmDraftOrderSchema } from '../../schemas/OrderSchema'
 import { validateRequest, handleValidationError } from '../../utilities/requestHandler'
 
 export const confirmDraftOrder = async (req: Request, res: Response) => {

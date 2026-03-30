@@ -1,5 +1,5 @@
 import { Response } from 'express'
-import { createDraftFromOrderSchema } from '../../schemas/orderSchema'
+import { createDraftFromOrderSchema } from '../../schemas/OrderSchema'
 import { validateRequest, handleValidationError } from '../../utilities/requestHandler'
 import { ShippingService } from '../../services/ShippingService'
 import { IAuthenticatedRequest } from '../../interfaces/shared'

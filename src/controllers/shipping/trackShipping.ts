@@ -1,7 +1,7 @@
 import { Request, Response } from 'express'
 import { OrdersModel } from '../../models/orders'
 import { BiteShipService } from '../../services/biteShipService'
-import { trackOrderSchema } from '../../schemas/orderSchema'
+import { trackOrderSchema } from '../../schemas/OrderSchema'
 import { validateRequest, handleValidationError } from '../../utilities/requestHandler'
 import { ResponseData } from '../../utilities/response'
 import { StatusCodes } from 'http-status-codes'
