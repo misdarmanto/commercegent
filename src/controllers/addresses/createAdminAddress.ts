@@ -1,49 +1,35 @@
 import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
-import { AddressesModel } from '../../models/address'
-import {
-  handleServerError,
-  handleValidationError,
-  validateRequest
-} from '../../utilities/requestHandler'
-import { createAddressSchema } from '../../schemas/addressSchema'
-import { IAuthenticatedRequest } from '../../interfaces/shared'
+import { handleError } from '../../utilities/requestHandler'
+import { AddressService } from '../../services/Address.service'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
+import { type ICreateAddressBody } from '../../schemas/AddressSchema'
+import { AppError } from '../../utilities/appError'
 
-export const createAdminAddress = async (req: IAuthenticatedRequest, res: Response) => {
-  if (!['admin', 'superAdmin'].includes(req.jwtPayload!.userRole)) {
-    return res.status(403).json(ResponseData.error('Forbidden'))
-  }
-
-  const { error, value } = validateRequest(createAddressSchema, req.body)
-  if (error) return handleValidationError(res, error)
-
+export const createAdminAddress = async (
+  req: IAuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   try {
-    const existing = await AddressesModel.findOne({
-      where: { addressCategory: 'admin' }
-    })
+    const userId = req.jwtPayload?.userId
 
-    const { jwtPayload: _jwt, ...addressFields } = value
-
-    const payload = {
-      ...addressFields,
-      addressUserId: req.jwtPayload!.userId,
-      addressCategory: 'admin' as const,
-      deleted: 0
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    if (existing) {
-      await existing.update(payload)
-      return res.status(StatusCodes.OK).json({ message: "'Admin address updated" })
-    }
+    const payload = req.body as unknown as ICreateAddressBody
+    const result = await AddressService.createAdminAddress(
+      userId,
+      req.jwtPayload?.userRole,
+      payload
+    )
 
-    await AddressesModel.create(payload)
+    const status =
+      result.message === 'Admin address updated' ? StatusCodes.OK : StatusCodes.CREATED
 
-    const response = ResponseData.default
-    response.data = { message: 'Admin address created' }
-
-    return res.status(201).json(response)
-  } catch (e) {
-    return handleServerError(res, e)
+    return res.status(status).json(ResponseData.success({ data: result }))
+  } catch (error) {
+    return handleError(res, error)
   }
 }
