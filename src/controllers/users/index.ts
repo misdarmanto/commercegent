@@ -1,22 +1,23 @@
-import { findAllUser, findDetailUser } from './find'
-import { userLogin } from './login'
-import { userRegister } from './register'
-import { removeUser } from './remove'
-import { requestOtp } from './requestOtp'
-import { updateUser } from './update'
-import { updateUserCoin } from './updateCoin'
-import { updatePassword } from './updatePassword'
-import { verifyOtp } from './verifyOtp'
+import { findAllUsers } from './findAllUsers'
+import { findDetailUser } from './findDetailUser'
+import { loginUser } from './loginUser'
+import { registerUser } from './registerUser'
+import { removeUser } from './removeUser'
+import { requestUserOtp } from './requestUserOtp'
+import { updateSelfUser } from './updateSelfUser'
+import { updateUserCoin } from './updateUserCoin'
+import { updateUserPassword } from './updateUserPassword'
+import { verifyUserOtp } from './verifyUserOtp'
 
 export const UsersController = {
-  login: userLogin,
-  register: userRegister,
-  findAll: findAllUser,
+  login: loginUser,
+  register: registerUser,
+  findAll: findAllUsers,
   findDetailUser,
-  update: updateUser,
+  update: updateSelfUser,
   remove: removeUser,
   updateUserCoin,
-  updatePassword,
-  requestOtp,
-  verifyOtp
+  updatePassword: updateUserPassword,
+  requestOtp: requestUserOtp,
+  verifyOtp: verifyUserOtp
 }
