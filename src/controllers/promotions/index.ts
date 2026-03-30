@@ -1,4 +1,4 @@
-import { findAllPromotion } from './findAllPromotions'
+import { findAllPromotion } from './findAllPromotion'
 import { removePromotion } from './removePromotion'
 import { updatePromotion } from './updatePromotion'
 

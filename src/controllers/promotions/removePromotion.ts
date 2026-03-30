@@ -1,34 +1,20 @@
 import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
-import { ProductModel } from '../../models/products'
-import {
-  handleServerError,
-  handleValidationError,
-  validateRequest
-} from '../../utilities/requestHandler'
+import { handleError } from '../../utilities/requestHandler'
+import { PromotionService } from '../../services/Promotion.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { removePromotionSchema } from '../../schemas/promotionSchema'
+import { type IRemovePromotionQuery } from '../../schemas/PromotionSchema'
 
 export const removePromotion = async (
   req: IAuthenticatedRequest,
   res: Response
-): Promise<any> => {
-  console.log(req.query)
-  const { error, value } = validateRequest(removePromotionSchema, req.query)
-
-  if (error) return handleValidationError(res, error)
-
+): Promise<Response> => {
   try {
-    const { productId } = value
-
-    await ProductModel.update({ productIsHighlight: false }, { where: { productId } })
-
-    const response = ResponseData.default
-    response.data = { message: 'Product promotion removed successfully' }
-
-    return res.status(StatusCodes.OK).json(response)
-  } catch (serverError) {
-    return handleServerError(res, serverError)
+    const query = req.query as unknown as IRemovePromotionQuery
+    const result = await PromotionService.removeProductHighlight(query)
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
+  } catch (error) {
+    return handleError(res, error)
   }
 }

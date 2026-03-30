@@ -1,20 +1,33 @@
 import { Router } from 'express'
 import { PromotionController } from '../controllers/promotions'
 import { MiddleWares } from '../middlewares'
+import {
+  findAllPromotionQuerySchema,
+  removePromotionQuerySchema,
+  updatePromotionSchema
+} from '../schemas/PromotionSchema'
 
 const PromotionRoute = Router()
 
-PromotionRoute.get('/', PromotionController.findAllPromotion)
+PromotionRoute.get(
+  '/',
+  MiddleWares.validate({ query: findAllPromotionQuerySchema }),
+  PromotionController.findAllPromotion
+)
+
 PromotionRoute.patch(
   '/',
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
+  MiddleWares.validate({ body: updatePromotionSchema }),
   PromotionController.updatePromotion
 )
+
 PromotionRoute.delete(
   '/',
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
+  MiddleWares.validate({ query: removePromotionQuerySchema }),
   PromotionController.removePromotion
 )
 
