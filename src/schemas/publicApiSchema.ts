@@ -9,6 +9,10 @@ const orderStatusEnum = z.enum([
   'cancel'
 ])
 
+/* ============================= */
+/* CREATE PRODUCT (public, body) */
+/* ============================= */
+
 export const createProductPublicSchema = z.object({
   code: z
     .string({ required_error: 'Kode produk wajib diisi' })
@@ -48,6 +52,10 @@ export const createProductPublicSchema = z.object({
     invalid_type_error: 'Status visible harus berupa true atau false'
   })
 })
+
+/* ============================= */
+/* UPDATE PRODUCT (public, body) */
+/* ============================= */
 
 export const updateProductPublicSchema = z.object({
   code: z
@@ -95,15 +103,31 @@ export const updateProductPublicSchema = z.object({
     .optional()
 })
 
-export const findAllOrderPublicSchema = z
+/* ============================= */
+/* FIND ORDERS (public, query) */
+/* ============================= */
+
+export const findAllOrderPublicQuerySchema = z
   .object({
-    page: z.coerce.number().int().optional(),
-    size: z.coerce.number().int().optional(),
-    search: z.string().optional(),
-    pagination: z.union([z.boolean(), z.string()]).optional(),
+    page: z.coerce.number().int().min(1).default(1),
+    size: z.coerce.number().int().min(1).max(100).default(10),
+    search: z
+      .union([z.string(), z.literal('')])
+      .optional()
+      .transform((v) => (v === '' ? undefined : v)),
+    pagination: z
+      .string()
+      .optional()
+      .transform((v) => v === 'true'),
     orderStatus: orderStatusEnum.optional(),
-    startDate: z.coerce.date().optional(),
-    endDate: z.coerce.date().optional()
+    startDate: z
+      .union([z.string(), z.literal('')])
+      .optional()
+      .transform((v) => (v === '' ? undefined : v)),
+    endDate: z
+      .union([z.string(), z.literal('')])
+      .optional()
+      .transform((v) => (v === '' ? undefined : v))
   })
   .refine(
     (data) => {
@@ -116,3 +140,7 @@ export const findAllOrderPublicSchema = z
       path: ['startDate']
     }
   )
+
+export type ICreateProductPublicBody = z.infer<typeof createProductPublicSchema>
+export type IUpdateProductPublicBody = z.infer<typeof updateProductPublicSchema>
+export type IFindAllOrderPublicQuery = z.infer<typeof findAllOrderPublicQuerySchema>
