@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { AdminService } from '../../services/Admin.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IFindAllUsers } from '../../schemas/userSchema'
+import { type IFindAllUsers } from '../../schemas/UserSchema'
 import { type IFindDetailAdmin } from '../../schemas/AdminSchema'
 
 export const findAllAdmin = async (

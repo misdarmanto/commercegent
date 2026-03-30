@@ -1,16 +1,55 @@
 import { z } from 'zod'
 
+/* ============================= */
+/* FIND PROMOTIONS / HIGHLIGHTS (query) */
+/* ============================= */
+
+export const findAllPromotionQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(10),
+  search: z
+    .union([z.string(), z.literal('')])
+    .optional()
+    .transform((v) => (v === '' ? undefined : v)),
+  pagination: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
+  productCategoryId: z.coerce.number().int().optional(),
+  productSubCategoryId: z.coerce.number().int().optional()
+})
+
+/* ============================= */
+/* UPDATE HIGHLIGHTS (body) */
+/* ============================= */
+
 export const updatePromotionSchema = z.object({
   products: z
     .array(
       z.object({
-        productId: z.number(),
-        productIsHighlight: z.boolean()
+        productId: z.coerce
+          .number({ invalid_type_error: 'productId harus berupa angka' })
+          .int('productId harus bilangan bulat')
+          .positive('productId harus lebih dari 0'),
+        productIsHighlight: z.boolean({
+          invalid_type_error: 'productIsHighlight harus boolean'
+        })
       })
     )
-    .min(1)
+    .min(1, 'Minimal satu produk')
 })
 
-export const removePromotionSchema = z.object({
-  productId: z.coerce.number()
+/* ============================= */
+/* REMOVE PROMOTION (query) */
+/* ============================= */
+
+export const removePromotionQuerySchema = z.object({
+  productId: z.coerce
+    .number({ invalid_type_error: 'productId harus berupa angka' })
+    .int('productId harus bilangan bulat')
+    .positive('productId harus lebih dari 0')
 })
+
+export type IFindAllPromotionQuery = z.infer<typeof findAllPromotionQuerySchema>
+export type IUpdatePromotionBody = z.infer<typeof updatePromotionSchema>
+export type IRemovePromotionQuery = z.infer<typeof removePromotionQuerySchema>

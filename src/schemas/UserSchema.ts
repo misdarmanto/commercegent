@@ -1,11 +1,9 @@
 import { z } from 'zod'
-import { jwtPayloadSchema } from './jwtPayloadSchema'
 
 const userRoleEnum = z.enum(['user', 'admin', 'superAdmin'])
 const userGenderEnum = z.enum(['pria', 'wanita'])
 
 export const userSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
   userName: z.string(),
   userEmail: z.string().email(),
   userPassword: z.string().min(6),
@@ -19,7 +17,6 @@ export const userSchema = z.object({
 })
 
 export const userUpdateSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
   userName: z.string().optional(),
   userEmail: z.string().email().optional(),
   userPassword: z.string().min(6).optional(),
@@ -32,10 +29,30 @@ export const userUpdateSchema = z.object({
   userPartnerCode: z.string().optional()
 })
 
+/* ============================= */
+/* AUTH (body) */
+/* ============================= */
+
+export const userLoginSchema = z.object({
+  userWhatsAppNumber: z.string().min(8).max(20),
+  userPassword: z.string().min(6)
+})
+
+export const userRegisterSchema = z.object({
+  userName: z.string().min(3).max(255),
+  userWhatsAppNumber: z.string().min(8).max(20),
+  userPassword: z.string().min(6),
+  userGender: userGenderEnum
+})
+
 export const userUpdatePasswordSchema = z.object({
   userPassword: z.string().min(6),
   userWhatsAppNumber: z.string()
 })
+
+/* ============================= */
+/* USERS (query/params/body) */
+/* ============================= */
 
 export const requestOtpSchema = z.object({
   whatsappNumber: z
@@ -66,13 +83,41 @@ export const findAllUsersSchema = z.object({
     .string()
     .optional()
     .transform((v) => v === 'true'),
-  userRole: userRoleEnum.optional(),
-  jwtPayload: jwtPayloadSchema
+  userRole: userRoleEnum.optional()
+})
+
+export const userDetailParamsSchema = z.object({
+  userId: z.coerce
+    .number({ invalid_type_error: 'userId harus berupa angka' })
+    .int('userId harus bilangan bulat')
+    .positive('userId harus lebih dari 0')
+})
+
+export const removeUserQuerySchema = z.object({
+  userId: z.coerce
+    .number({ invalid_type_error: 'userId harus berupa angka' })
+    .int('userId harus bilangan bulat')
+    .positive('userId harus lebih dari 0')
+})
+
+export const updateUserCoinSchema = z.object({
+  userId: z.coerce
+    .number({ invalid_type_error: 'userId harus berupa angka' })
+    .int('userId harus bilangan bulat')
+    .positive('userId harus lebih dari 0'),
+  userCoin: z.coerce
+    .number({ invalid_type_error: 'userCoin harus berupa angka' })
+    .int('userCoin harus bilangan bulat')
+    .min(0, 'userCoin minimal 0')
 })
 
 export type ICreateUser = z.infer<typeof userSchema>
 
 export type IUpdateUser = z.infer<typeof userUpdateSchema>
+
+export type IUserLoginBody = z.infer<typeof userLoginSchema>
+
+export type IUserRegisterBody = z.infer<typeof userRegisterSchema>
 
 export type IUpdateUserPassword = z.infer<typeof userUpdatePasswordSchema>
 
@@ -81,3 +126,9 @@ export type IRequestOtp = z.infer<typeof requestOtpSchema>
 export type IVerifyOtp = z.infer<typeof verifyOtpSchema>
 
 export type IFindAllUsers = z.infer<typeof findAllUsersSchema>
+
+export type IUserDetailParams = z.infer<typeof userDetailParamsSchema>
+
+export type IRemoveUserQuery = z.infer<typeof removeUserQuerySchema>
+
+export type IUpdateUserCoinBody = z.infer<typeof updateUserCoinSchema>

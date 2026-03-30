@@ -1,50 +1,31 @@
 import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
-import { AddressesModel, type AddressesAttributes } from '../../models/address'
-import {
-  handleServerError,
-  handleValidationError,
-  validateRequest
-} from '../../utilities/requestHandler'
-import { createAddressSchema } from '../../schemas/addressSchema'
-import { IAuthenticatedRequest } from '../../interfaces/shared'
+import { handleError } from '../../utilities/requestHandler'
+import { AddressService } from '../../services/Address.service'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
+import { type ICreateAddressBody } from '../../schemas/AddressSchema'
+import { AppError } from '../../utilities/appError'
 
-export const createUserAddress = async (req: IAuthenticatedRequest, res: Response) => {
-  const { error, value } = validateRequest(createAddressSchema, req.body)
-  if (error) return handleValidationError(res, error)
-
+export const createUserAddress = async (
+  req: IAuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   try {
-    const userId = req.jwtPayload!.userId
+    const userId = req.jwtPayload?.userId
 
-    const { jwtPayload: _jwt, ...addressFields } = value
-
-    const payload = {
-      ...addressFields,
-      addressUserId: userId,
-      addressCategory: 'user' as const,
-      deleted: 0
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const existing = await AddressesModel.findOne({
-      where: {
-        addressUserId: userId,
-        addressCategory: 'user'
-      }
-    })
+    const payload = req.body as unknown as ICreateAddressBody
+    const result = await AddressService.createUserAddress(userId, payload)
 
-    if (existing) {
-      await existing.update(payload)
-      return res.status(StatusCodes.OK).json({ message: 'User address updated' })
-    }
+    const status =
+      result.message === 'User address updated' ? StatusCodes.OK : StatusCodes.CREATED
 
-    await AddressesModel.create(payload)
-
-    const response = ResponseData.default
-    response.data = { message: 'User address created' }
-
-    return res.status(201).json(response)
-  } catch (e) {
-    return handleServerError(res, e)
+    return res.status(status).json(ResponseData.success({ data: result }))
+  } catch (error) {
+    return handleError(res, error)
   }
 }

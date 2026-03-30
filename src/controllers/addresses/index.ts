@@ -2,16 +2,16 @@ import { createAdminAddress } from './createAdminAddress'
 import { createUserAddress } from './createUserAddress'
 import { findAdminAddress } from './findAdminAddress'
 import { findDistricts } from './findDistricts'
-import { findProvinces } from './findProvince'
+import { findProvinces } from './findProvinces'
 import { findRegencies } from './findRegencies'
 import { findUserAddress } from './findUserAddress'
 import { findVillages } from './findVillages'
-import { removeAddress } from './remove'
+import { removeAddress } from './removeAddress'
 
 export const AddressController = {
   createUserAddress,
   createAdminAddress,
-  remove: removeAddress,
+  removeAddress,
   findUserAddress,
   findAdminAddress,
   findProvinces,

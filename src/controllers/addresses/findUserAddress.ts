@@ -1,28 +1,26 @@
 import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
-import { Op } from 'sequelize'
-import { AddressesModel } from '../../models/address'
-import { handleServerError } from '../../utilities/requestHandler'
-import { IAuthenticatedRequest } from '../../interfaces/shared'
+import { handleError } from '../../utilities/requestHandler'
+import { AddressService } from '../../services/Address.service'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
+import { AppError } from '../../utilities/appError'
 
 export const findUserAddress = async (
   req: IAuthenticatedRequest,
   res: Response
-): Promise<any> => {
+): Promise<Response> => {
   try {
-    const result = await AddressesModel.findOne({
-      where: {
-        deleted: { [Op.eq]: 0 },
-        addressUserId: { [Op.eq]: req.jwtPayload?.userId },
-        addressCategory: 'user'
-      }
-    })
+    const userId = req.jwtPayload?.userId
 
-    const response = ResponseData.default
-    response.data = result
-    return res.status(StatusCodes.OK).json(response)
-  } catch (serverError) {
-    return handleServerError(res, serverError)
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
+    }
+
+    const result = await AddressService.findUserAddress(userId)
+
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
+  } catch (error) {
+    return handleError(res, error)
   }
 }

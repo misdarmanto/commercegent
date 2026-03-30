@@ -1,14 +1,15 @@
-import { createNotification } from './create'
-import { findAllNotification, findDetailNotification } from './find'
-import { removeNofication } from './remove'
-import { updateNotification } from './update'
+import { createNotification } from './createNotification'
+import { findAllNotification } from './findAllNotification'
+import { findDetailNotification } from './findDetailNotification'
+import { removeNotification } from './removeNotification'
+import { updateNotification } from './updateNotification'
 import { updatePushToken } from './updatePushToken'
 
 export const NotificationController = {
-  create: createNotification,
-  findAll: findAllNotification,
-  findOne: findDetailNotification,
-  remove: removeNofication,
-  update: updateNotification,
+  createNotification,
+  findAllNotification,
+  findDetailNotification,
+  removeNotification,
+  updateNotification,
   updatePushToken
 }

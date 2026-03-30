@@ -1,32 +1,33 @@
 import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
-import { Op } from 'sequelize'
+import { handleError } from '../../utilities/requestHandler'
+import { NotificationService } from '../../services/Notification.service'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
+import { type IUpdatePushTokenBody } from '../../schemas/NotificationSchema'
+import { AppError } from '../../utilities/appError'
 
-import { UserModel, type UserAttributes } from '../../models/user'
-import { handleServerError } from '../../utilities/requestHandler'
-
-export const updatePushToken = async (req: any, res: Response): Promise<any> => {
-  const requestBody: UserAttributes = req.body
-
+export const updatePushToken = async (
+  req: IAuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   try {
-    const newData: UserAttributes | any = {
-      ...(requestBody.userFcmId.length > 0 && {
-        userFcmId: requestBody.userFcmId
-      })
+    const userId = req.jwtPayload?.userId
+
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    await UserModel.update(newData, {
-      where: {
-        deleted: { [Op.eq]: 0 },
-        userId: { [Op.eq]: req.body?.user?.userId }
-      }
-    })
+    const payload = req.body as unknown as IUpdatePushTokenBody
+    const result = await NotificationService.updatePushToken(userId, payload)
 
-    const response = ResponseData.default
-    response.data = { message: 'success' }
-    return res.status(StatusCodes.OK).json(response)
-  } catch (serverError) {
-    return handleServerError(res, serverError)
+    return res.status(StatusCodes.OK).json(
+      ResponseData.success({
+        data: result,
+        message: 'Push token updated successfully'
+      })
+    )
+  } catch (error) {
+    return handleError(res, error)
   }
 }

@@ -1,9 +1,10 @@
 import { z } from 'zod'
-import { jwtPayloadSchema } from './jwtPayloadSchema'
+
+/* ============================= */
+/* CREATE / UPDATE ADDRESS (body) */
+/* ============================= */
 
 export const createAddressSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
-
   addressUserName: z
     .string({ required_error: 'Nama penerima wajib diisi' })
     .min(3, 'Nama penerima minimal 3 karakter')
@@ -52,3 +53,33 @@ export const createAddressSchema = z.object({
     .string({ required_error: 'Latitude wajib diisi' })
     .regex(/^-?\d+(\.\d+)?$/, 'Format latitude tidak valid')
 })
+
+/* ============================= */
+/* REMOVE ADDRESS (query) */
+/* ============================= */
+
+export const removeAddressQuerySchema = z.object({
+  addressId: z.coerce.number().int().positive()
+})
+
+/* ============================= */
+/* REGION (params) */
+/* ============================= */
+
+export const regenciesParamsSchema = z.object({
+  provinceId: z.string().min(1)
+})
+
+export const districtsParamsSchema = z.object({
+  regencyId: z.string().min(1)
+})
+
+export const villagesParamsSchema = z.object({
+  districtId: z.string().min(1)
+})
+
+export type ICreateAddressBody = z.infer<typeof createAddressSchema>
+export type IRemoveAddressQuery = z.infer<typeof removeAddressQuerySchema>
+export type IRegenciesParams = z.infer<typeof regenciesParamsSchema>
+export type IDistrictsParams = z.infer<typeof districtsParamsSchema>
+export type IVillagesParams = z.infer<typeof villagesParamsSchema>

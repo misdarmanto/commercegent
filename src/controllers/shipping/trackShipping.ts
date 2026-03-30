@@ -1,51 +1,26 @@
-import { Request, Response } from 'express'
-import { OrdersModel } from '../../models/orders'
-import { BiteShipService } from '../../services/biteShipService'
-import { trackOrderSchema } from '../../schemas/orderSchema'
-import { validateRequest, handleValidationError } from '../../utilities/requestHandler'
-import { ResponseData } from '../../utilities/response'
+import { type Request, type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
-import logger from '../../logs'
+import { ResponseData } from '../../utilities/response'
+import { handleError } from '../../utilities/requestHandler'
+import { ShippingService } from '../../services/ShippingService'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
+import { type ITrackShipmentQuery } from '../../schemas/ShippingSchema'
+import { AppError } from '../../utilities/appError'
 
-export const trackShipment = async (req: Request, res: Response) => {
-  const { error, value } = validateRequest(trackOrderSchema, req.query)
-
-  if (error) return handleValidationError(res, error)
-
-  const { orderId } = value
-
+export const trackShipment = async (
+  req: IAuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   try {
-    /* ===================== 1. GET ORDER ===================== */
-    const order = await OrdersModel.findByPk(orderId)
-
-    if (!order) {
-      return res.status(404).json({
-        success: false,
-        message: 'Order not found'
-      })
+    const userId = req.jwtPayload?.userId
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    if (!order.orderWaybillId || !order.orderCourierCompany) {
-      return res.status(400).json({
-        success: false,
-        message: 'Shipment data not available'
-      })
-    }
-
-    const { data } = await BiteShipService.get(
-      `/trackings/${order.orderWaybillId}/couriers/${order.orderCourierCompany}`
-    )
-
-    /* ===================== 3. RESPONSE ===================== */
-    const response = ResponseData.default
-    response.data = data
-
-    return res.status(StatusCodes.OK).json(response)
-  } catch (serverError) {
-    logger.error('[BITESHIP_TRACKING_ERROR]', serverError)
-    return res.status(500).json({
-      success: false,
-      message: 'Internal server error'
-    })
+    const query = req.query as unknown as ITrackShipmentQuery
+    const result = await ShippingService.trackShipment(userId, query.orderId)
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
+  } catch (error) {
+    return handleError(res, error)
   }
 }

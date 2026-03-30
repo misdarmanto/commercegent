@@ -1,20 +1,17 @@
 import { type Request, type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
-import { handleServerError } from '../../utilities/requestHandler'
-import { RegionService } from '../../services/regionService'
+import { handleError } from '../../utilities/requestHandler'
+import { AddressService } from '../../services/Address.service'
+import { type IRegenciesParams } from '../../schemas/AddressSchema'
 
-export const findRegencies = async (req: Request, res: Response) => {
+export const findRegencies = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const { provinceId } = req.params
+    const params = req.params as unknown as IRegenciesParams
+    const regencies = await AddressService.getRegencies(params.provinceId)
 
-    const regencies = await RegionService.getRegencies(provinceId)
-
-    const response = ResponseData.default
-    response.data = regencies
-
-    return res.status(StatusCodes.OK).json(response)
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: regencies }))
   } catch (error) {
-    return handleServerError(res, error)
+    return handleError(res, error)
   }
 }

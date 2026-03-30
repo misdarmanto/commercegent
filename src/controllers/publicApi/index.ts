@@ -1,4 +1,4 @@
-import { createProductPublic } from './createProduct'
+import { createProductPublic } from './createProductPublic'
 import { findAllOrderPublic } from './findAllOrderPublic'
 import { updateProductPublic } from './updateProductPublic'
 

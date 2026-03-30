@@ -1,11 +1,12 @@
-import { createTransaction } from './create'
-import { findAllTransaction, findDetailTransaction } from './find'
-import { removeTransaction } from './remove'
-import { updateTransaction } from './update'
+import { createTransaction } from './createTransaction'
+import { findAllTransactions } from './findAllTransactions'
+import { findDetailTransaction } from './findDetailTransaction'
+import { removeTransaction } from './removeTransaction'
+import { updateTransaction } from './updateTransaction'
 
 export const TransactionController = {
   create: createTransaction,
-  findAll: findAllTransaction,
+  findAll: findAllTransactions,
   findOne: findDetailTransaction,
   remove: removeTransaction,
   update: updateTransaction

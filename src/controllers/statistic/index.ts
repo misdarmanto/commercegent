@@ -1,3 +1,5 @@
-import { findTotal } from './findTotal'
+import { findTotalStatistic } from './findTotalStatistic'
 
-export const StatisticController = { findTotal }
+export const StatisticController = {
+  findTotal: findTotalStatistic
+}

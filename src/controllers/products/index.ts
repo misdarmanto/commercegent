@@ -1,10 +1,11 @@
-import { findAllProductsAdmin } from './adminProduct'
-import { createProduct } from './create'
-import { findAllProducts, findDetailProduct } from './find'
-import { removeProduct } from './remove'
-import { updateProduct } from './update'
-import { uploadProductExcel } from './upload'
-import { uploadHistories } from './uploadHistory'
+import { findAllProductsAdmin } from './findAllProductsAdmin'
+import { createProduct } from './createProduct'
+import { findAllProducts } from './findAllProducts'
+import { findDetailProduct } from './findDetailProduct'
+import { removeProduct } from './removeProduct'
+import { updateProduct } from './updateProduct'
+import { uploadProductExcel } from './uploadProductExcel'
+import { uploadHistories } from './uploadHistories'
 
 export const ProductController = {
   create: createProduct,
@@ -13,6 +14,6 @@ export const ProductController = {
   remove: removeProduct,
   update: updateProduct,
   upload: uploadProductExcel,
-  uploadHistories: uploadHistories,
+  uploadHistories,
   findAllProductsAdmin
 }
