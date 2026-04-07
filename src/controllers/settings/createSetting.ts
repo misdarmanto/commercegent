@@ -19,16 +19,12 @@ export const createSetting = async (
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await SettingService.createSetting(userId, payload)
+    await SettingService.createSetting(userId, payload)
 
-    if (result.status === 'created') {
-      return res
-        .status(StatusCodes.CREATED)
-        .json(ResponseData.success({ data: result.data }))
-    }
-
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result.data }))
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Setting created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

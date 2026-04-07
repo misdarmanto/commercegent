@@ -10,7 +10,8 @@ export const findAdminAddress = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const result = await AddressService.findAdminAddress(req.jwtPayload?.userRole)
+    const userRole = req.jwtPayload?.userRole
+    const result = await AddressService.findAdminAddress(userRole)
 
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (error) {

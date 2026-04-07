@@ -8,14 +8,12 @@ import { type ICreateCategoryBody } from '../../schemas/CategorySchema'
 export const createCategory = async (req: Request, res: Response): Promise<Response> => {
   try {
     const payload = req.body as unknown as ICreateCategoryBody
-    const result = await CategoryService.createCategory(payload)
+    await CategoryService.createCategory(payload)
 
     return res
       .status(StatusCodes.CREATED)
-      .json(
-        ResponseData.success({ data: result, message: 'Category created successfully' })
-      )
-  } catch (error) {
-    return handleError(res, error)
+      .json(ResponseData.success({ message: 'Category created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

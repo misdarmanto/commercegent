@@ -20,7 +20,7 @@ export const findMyProfile = async (
     const result = await MyProfileService.findMyProfile(userId)
 
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

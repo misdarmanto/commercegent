@@ -5,12 +5,14 @@ import { handleError } from '../../utilities/requestHandler'
 import { UserService } from '../../services/User.service'
 import { type IRequestOtp } from '../../schemas/UserSchema'
 
-export const requestUserOtp = async (req: unknown, res: Response): Promise<Response> => {
+export const requestUserOtp = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const body = (req as { body: IRequestOtp }).body
-    const result = await UserService.requestOtp(body)
-    return res.status(StatusCodes.CREATED).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    const payload = req.body as unknown as IRequestOtp
+    await UserService.requestOtp(payload)
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'User OTP requested successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

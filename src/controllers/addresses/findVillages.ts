@@ -7,11 +7,11 @@ import { type IVillagesParams } from '../../schemas/AddressSchema'
 
 export const findVillages = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const params = req.params as unknown as IVillagesParams
-    const villages = await AddressService.getVillages(params.districtId)
+    const payload = req.params as unknown as IVillagesParams
+    const result = await AddressService.getVillages(payload.districtId)
 
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: villages }))
-  } catch (error) {
-    return handleError(res, error)
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

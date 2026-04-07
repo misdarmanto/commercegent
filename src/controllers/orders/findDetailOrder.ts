@@ -5,22 +5,17 @@ import { handleError } from '../../utilities/requestHandler'
 import { OrderService } from '../../services/Order.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
 import { type IOrderDetailParams } from '../../schemas/OrderSchema'
-import { AppError } from '../../utilities/appError'
 
 export const findDetailOrder = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const params = req.params as unknown as IOrderDetailParams
+    const payload = req.params as unknown as IOrderDetailParams
 
-    if (req.jwtPayload?.userId == null) {
-      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
-    }
-
-    const result = await OrderService.findDetailOrder(params)
+    const result = await OrderService.findDetailOrder(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

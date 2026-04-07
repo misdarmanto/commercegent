@@ -11,10 +11,13 @@ export const removeProduct = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IRemoveProductQuery
-    const result = await ProductService.removeProduct(query)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    const payload = req.query as unknown as IRemoveProductQuery
+
+    await ProductService.removeProduct(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Product removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

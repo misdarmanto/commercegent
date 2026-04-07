@@ -19,9 +19,12 @@ export const createCart = async (
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await CartService.createCart(userId, payload)
-    return res.status(StatusCodes.CREATED).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await CartService.createCart(userId, payload)
+
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Cart created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

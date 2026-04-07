@@ -12,22 +12,19 @@ export const updateMyProfile = async (
   res: Response
 ): Promise<Response> => {
   try {
+    const payload = req.body as unknown as IUpdateMyProfileBody
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const payload = req.body as unknown as IUpdateMyProfileBody
-    const result = await MyProfileService.updateMyProfile(userId, payload)
+    await MyProfileService.updateMyProfile(userId, payload)
 
-    return res.status(StatusCodes.OK).json(
-      ResponseData.success({
-        data: result,
-        message: 'Profile updated successfully'
-      })
-    )
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Profile updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

@@ -11,9 +11,10 @@ export const bitshipWebhookHandler = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as IBitshipWebhookBody
+
     const result = await WebhookService.handleBitshipWebhook(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

@@ -4,16 +4,20 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { UserService } from '../../services/User.service'
 import { type IUpdateUserPassword } from '../../schemas/UserSchema'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
 
 export const updateUserPassword = async (
-  req: unknown,
+  req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const body = (req as { body: IUpdateUserPassword }).body
-    const result = await UserService.updatePassword(body)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    const payload = req.body as unknown as IUpdateUserPassword
+
+    await UserService.updatePassword(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'User password updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

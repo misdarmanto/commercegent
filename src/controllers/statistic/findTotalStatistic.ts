@@ -11,7 +11,7 @@ export const findTotalStatistic = async (
   try {
     const result = await StatisticService.findTotal()
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

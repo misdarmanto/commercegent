@@ -12,16 +12,19 @@ export const removeCart = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IRemoveCartQuery
+    const payload = req.query as unknown as IRemoveCartQuery
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await CartService.removeCart(userId, query.cartId)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await CartService.removeCart(userId, payload.cartId)
+
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Cart removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

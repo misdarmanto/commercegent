@@ -11,15 +11,12 @@ export const createNotification = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as ICreateNotificationBody
-    const result = await NotificationService.createNotification(payload)
+    await NotificationService.createNotification(payload)
 
-    return res.status(StatusCodes.CREATED).json(
-      ResponseData.success({
-        data: result,
-        message: 'Notification created successfully'
-      })
-    )
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Notification created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

@@ -9,8 +9,9 @@ export const findAllAppLogs = async (req: Request, res: Response): Promise<Respo
   try {
     const payload = req.query as unknown as IFindAllAppLogs
     const result = await AppLogService.findAll(payload)
+
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

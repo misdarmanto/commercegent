@@ -12,9 +12,12 @@ export const createProduct = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as ICreateProductBody
-    const result = await ProductService.createProduct(payload)
-    return res.status(StatusCodes.CREATED).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await ProductService.createProduct(payload)
+
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Product created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

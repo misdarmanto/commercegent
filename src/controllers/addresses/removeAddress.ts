@@ -7,11 +7,13 @@ import { type IRemoveAddressQuery } from '../../schemas/AddressSchema'
 
 export const removeAddress = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const query = req.query as unknown as IRemoveAddressQuery
-    const result = await AddressService.removeAddress(query.addressId)
+    const payload = req.query as unknown as IRemoveAddressQuery
+    await AddressService.removeAddress(payload.addressId)
 
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Address removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

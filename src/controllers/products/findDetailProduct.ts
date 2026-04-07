@@ -10,11 +10,11 @@ export const findDetailProduct = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const result = await ProductService.findDetailProduct(
-      req.params as unknown as IProductDetailParams
-    )
+    const payload = req.params as unknown as IProductDetailParams
+
+    const result = await ProductService.findDetailProduct(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

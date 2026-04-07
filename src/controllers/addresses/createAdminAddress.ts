@@ -12,23 +12,18 @@ export const createAdminAddress = async (
   res: Response
 ): Promise<Response> => {
   try {
+    const payload = req.body as unknown as ICreateAddressBody
     const userId = req.jwtPayload?.userId
+    const userRole = req.jwtPayload?.userRole
 
-    if (userId == null) {
+    if (userId == null || userRole == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const payload = req.body as unknown as ICreateAddressBody
-    const result = await AddressService.createAdminAddress(
-      userId,
-      req.jwtPayload?.userRole,
-      payload
-    )
-
-    const status =
-      result.message === 'Admin address updated' ? StatusCodes.OK : StatusCodes.CREATED
-
-    return res.status(status).json(ResponseData.success({ data: result }))
+    await AddressService.createAdminAddress(userId, userRole, payload)
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Admin address created successfully' }))
   } catch (error) {
     return handleError(res, error)
   }

@@ -6,10 +6,9 @@ import { AddressService } from '../../services/Address.service'
 
 export const findProvinces = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const provinces = await AddressService.getProvinces()
-
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: provinces }))
-  } catch (error) {
-    return handleError(res, error)
+    const result = await AddressService.getProvinces()
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

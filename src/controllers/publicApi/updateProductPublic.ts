@@ -12,9 +12,12 @@ export const updateProductPublic = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as IUpdateProductPublicBody
-    const result = await PublicApiService.updateProductPublic(payload)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+
+    await PublicApiService.updateProductPublic(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Product public updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

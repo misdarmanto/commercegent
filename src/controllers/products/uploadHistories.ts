@@ -11,10 +11,13 @@ export const uploadHistories = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IUploadHistoriesQuery
-    const result = await ProductService.findUploadHistories(query)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    const payload = req.query as unknown as IUploadHistoriesQuery
+    await ProductService.findUploadHistories(payload)
+
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Upload histories found successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

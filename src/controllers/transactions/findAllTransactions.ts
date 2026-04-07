@@ -12,16 +12,16 @@ export const findAllTransactions = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllTransactionQuery
+    const payload = req.query as unknown as IFindAllTransactionQuery
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await TransactionService.findAllTransactions(userId, query)
+    const result = await TransactionService.findAllTransactions(userId, payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

@@ -15,7 +15,7 @@ export const updateCategory = async (req: Request, res: Response): Promise<Respo
       .json(
         ResponseData.success({ data: result, message: 'Category updated successfully' })
       )
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

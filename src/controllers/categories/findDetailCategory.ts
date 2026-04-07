@@ -10,11 +10,11 @@ export const findDetailCategory = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const params = req.params as unknown as IFindDetailCategoryParams
-    const result = await CategoryService.findDetailCategory(params.categoryId)
+    const payload = req.params as unknown as IFindDetailCategoryParams
+    const result = await CategoryService.findDetailCategory(payload.categoryId)
 
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

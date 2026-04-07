@@ -12,15 +12,18 @@ export const createTransaction = async (
   res: Response
 ): Promise<Response> => {
   try {
+    const payload = req.body as unknown as ICreateTransactionBody
+
     const userId = req.jwtPayload?.userId
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const body = req.body as unknown as ICreateTransactionBody
-    const result = await TransactionService.createTransaction(userId, body)
-    return res.status(StatusCodes.CREATED).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await TransactionService.createTransaction(userId, payload)
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Transaction created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

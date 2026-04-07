@@ -12,16 +12,18 @@ export const updateOrder = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const body = req.body as unknown as IUpdateOrderBody
+    const payload = req.body as unknown as IUpdateOrderBody
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await OrderService.updateOrder(userId, body)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await OrderService.updateOrder(userId, payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Order updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

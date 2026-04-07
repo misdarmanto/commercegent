@@ -10,11 +10,10 @@ export const findAllPromotion = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const result = await PromotionService.findAllPromotions(
-      req.query as unknown as IFindAllPromotionQuery
-    )
+    const payload = req.query as unknown as IFindAllPromotionQuery
+    const result = await PromotionService.findAllPromotions(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

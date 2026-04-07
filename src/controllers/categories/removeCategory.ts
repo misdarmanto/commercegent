@@ -7,11 +7,13 @@ import { type IRemoveCategoryQuery } from '../../schemas/CategorySchema'
 
 export const removeCategory = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const query = req.query as unknown as IRemoveCategoryQuery
-    const result = await CategoryService.removeCategory(query.categoryId)
+    const payload = req.query as unknown as IRemoveCategoryQuery
+    await CategoryService.removeCategory(payload.categoryId)
 
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Category removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

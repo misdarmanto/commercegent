@@ -7,11 +7,10 @@ import { type IRegenciesParams } from '../../schemas/AddressSchema'
 
 export const findRegencies = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const params = req.params as unknown as IRegenciesParams
-    const regencies = await AddressService.getRegencies(params.provinceId)
-
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: regencies }))
-  } catch (error) {
-    return handleError(res, error)
+    const payload = req.params as unknown as IRegenciesParams
+    const result = await AddressService.getRegencies(payload.provinceId)
+    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

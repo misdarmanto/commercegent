@@ -12,17 +12,19 @@ export const findAllCart = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllCartQuery
+    const payload = req.query as unknown as IFindAllCartQuery
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await CartService.findAllCarts(userId, query)
+    await CartService.findAllCarts(userId, payload)
 
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Cart found successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

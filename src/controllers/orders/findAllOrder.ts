@@ -12,16 +12,16 @@ export const findAllOrder = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllOrderQuery
+    const payload = req.query as unknown as IFindAllOrderQuery
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await OrderService.findAllOrders(userId, query)
+    const result = await OrderService.findAllOrders(userId, payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

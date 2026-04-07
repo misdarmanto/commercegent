@@ -10,11 +10,10 @@ export const findAllOrderPublic = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const result = await PublicApiService.findAllOrdersPublic(
-      req.query as unknown as IFindAllOrderPublicQuery
-    )
+    const payload = req.query as unknown as IFindAllOrderPublicQuery
+    const result = await PublicApiService.findAllOrdersPublic(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

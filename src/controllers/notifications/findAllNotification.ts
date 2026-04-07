@@ -10,11 +10,11 @@ export const findAllNotification = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllNotificationQuery
-    const result = await NotificationService.findAllNotifications(query)
+    const payload = req.query as unknown as IFindAllNotificationQuery
+    const result = await NotificationService.findAllNotifications(payload)
 
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

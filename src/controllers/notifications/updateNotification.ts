@@ -11,15 +11,12 @@ export const updateNotification = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as IUpdateNotificationBody
-    const result = await NotificationService.updateNotification(payload)
+    await NotificationService.updateNotification(payload)
 
-    return res.status(StatusCodes.OK).json(
-      ResponseData.success({
-        data: result,
-        message: 'Notification updated successfully'
-      })
-    )
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Notification updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

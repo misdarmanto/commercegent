@@ -1,9 +1,5 @@
 import { z } from 'zod'
 
-/* ============================= */
-/* CREATE / UPDATE ADDRESS (body) */
-/* ============================= */
-
 export const createAddressSchema = z.object({
   addressUserName: z
     .string({ required_error: 'Nama penerima wajib diisi' })
@@ -54,17 +50,9 @@ export const createAddressSchema = z.object({
     .regex(/^-?\d+(\.\d+)?$/, 'Format latitude tidak valid')
 })
 
-/* ============================= */
-/* REMOVE ADDRESS (query) */
-/* ============================= */
-
 export const removeAddressQuerySchema = z.object({
   addressId: z.coerce.number().int().positive()
 })
-
-/* ============================= */
-/* REGION (params) */
-/* ============================= */
 
 export const regenciesParamsSchema = z.object({
   provinceId: z.string().min(1)

@@ -12,9 +12,12 @@ export const createProductPublic = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as ICreateProductPublicBody
-    const result = await PublicApiService.createProductPublic(payload)
-    return res.status(StatusCodes.CREATED).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+
+    await PublicApiService.createProductPublic(payload)
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Product public created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

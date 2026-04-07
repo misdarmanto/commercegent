@@ -12,22 +12,19 @@ export const updatePushToken = async (
   res: Response
 ): Promise<Response> => {
   try {
+    const payload = req.body as unknown as IUpdatePushTokenBody
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const payload = req.body as unknown as IUpdatePushTokenBody
-    const result = await NotificationService.updatePushToken(userId, payload)
+    await NotificationService.updatePushToken(userId, payload)
 
-    return res.status(StatusCodes.OK).json(
-      ResponseData.success({
-        data: result,
-        message: 'Push token updated successfully'
-      })
-    )
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Push token updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

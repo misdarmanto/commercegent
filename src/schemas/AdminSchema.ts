@@ -43,7 +43,6 @@ export const findAllAdminsSchema = z.object({
 })
 
 export const findDetailAdminSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
   adminId: z.number()
 })
 

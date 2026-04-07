@@ -10,11 +10,13 @@ export const removeNotification = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IRemoveNotificationQuery
-    const result = await NotificationService.removeNotification(query.notificationId)
+    const payload = req.query as unknown as IRemoveNotificationQuery
+    await NotificationService.removeNotification(payload.notificationId)
 
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Notification removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

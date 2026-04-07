@@ -19,9 +19,12 @@ export const createOrder = async (
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await OrderService.createOrder(userId, payload)
-    return res.status(StatusCodes.CREATED).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await OrderService.createOrder(userId, payload)
+
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Order created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

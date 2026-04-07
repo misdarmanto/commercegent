@@ -12,20 +12,19 @@ export const createUserAddress = async (
   res: Response
 ): Promise<Response> => {
   try {
+    const payload = req.body as unknown as ICreateAddressBody
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const payload = req.body as unknown as ICreateAddressBody
-    const result = await AddressService.createUserAddress(userId, payload)
+    await AddressService.createUserAddress(userId, payload)
 
-    const status =
-      result.message === 'User address updated' ? StatusCodes.OK : StatusCodes.CREATED
-
-    return res.status(status).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'User address created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

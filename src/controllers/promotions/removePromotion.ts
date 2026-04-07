@@ -11,10 +11,13 @@ export const removePromotion = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IRemovePromotionQuery
-    const result = await PromotionService.removeProductHighlight(query)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    const payload = req.query as unknown as IRemovePromotionQuery
+
+    await PromotionService.removeProductHighlight(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Promotion removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

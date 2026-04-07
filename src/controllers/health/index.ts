@@ -1,20 +1,18 @@
 import type { Request, Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
+import { handleError } from '../../utilities/requestHandler'
 
 export const mainController = async (req: Request, res: Response): Promise<any> => {
   try {
-    const data = {
-      about_me: 'Welcome to LEORA E-COMMERCE API sV1'
-    }
-    const response = ResponseData.default
-    response.data = data
-    return res.status(StatusCodes.OK).json(response)
-  } catch (error: any) {
-    const response = ResponseData.error(
-      `unable to process request! error ${error.message}`
+    return res.status(StatusCodes.OK).json(
+      ResponseData.success({
+        data: { aboutMe: 'Welcome to FRESH E-COMMERCE API sV1' },
+        message: 'Welcome to FRESH E-COMMERCE API sV1'
+      })
     )
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(response)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }
 
@@ -23,11 +21,13 @@ export const healthCheckController = async (
   res: Response
 ): Promise<any> => {
   try {
-    const response = ResponseData.default
-    response.data = { status: 'ok', uptime: process.uptime() }
-    return res.status(StatusCodes.OK).json(response)
-  } catch (error: any) {
-    const response = ResponseData.error(`Health check failed: ${error.message}`)
-    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json(response)
+    return res.status(StatusCodes.OK).json(
+      ResponseData.success({
+        data: { status: 'ok', uptime: process.uptime() },
+        message: 'Health check successful'
+      })
+    )
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

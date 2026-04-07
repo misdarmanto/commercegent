@@ -12,9 +12,12 @@ export const updateSetting = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as IUpdateSettingBody
-    const result = await SettingService.updateSetting(payload)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+
+    await SettingService.updateSetting(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Setting updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

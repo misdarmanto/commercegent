@@ -7,11 +7,11 @@ import { type IFindAllCategoryQuery } from '../../schemas/CategorySchema'
 
 export const findAllCategory = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllCategoryQuery
-    const result = await CategoryService.findAllCategories(query)
+    const payload = req.query as unknown as IFindAllCategoryQuery
+    const result = await CategoryService.findAllCategories(payload)
 
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

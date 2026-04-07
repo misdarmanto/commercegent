@@ -12,9 +12,12 @@ export const updatePromotion = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as IUpdatePromotionBody
-    const result = await PromotionService.updateHighlights(payload)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+
+    await PromotionService.updateHighlights(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Promotion updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

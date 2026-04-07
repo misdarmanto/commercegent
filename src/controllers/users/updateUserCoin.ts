@@ -12,14 +12,18 @@ export const updateUserCoin = async (
   res: Response
 ): Promise<Response> => {
   try {
-    if (req.jwtPayload?.userId == null) {
+    const payload = req.body as unknown as IUpdateUserCoinBody
+    const userId = req.jwtPayload?.userId
+
+    if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const body = req.body as unknown as IUpdateUserCoinBody
-    const result = await UserService.updateUserCoin(body)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await UserService.updateUserCoin(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'User coin updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

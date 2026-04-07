@@ -12,16 +12,18 @@ export const removeSetting = async (
   res: Response
 ): Promise<Response> => {
   try {
+    const payload = req.params as unknown as IRemoveSettingParams
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const params = req.params as unknown as IRemoveSettingParams
-    const result = await SettingService.removeSetting(userId, params)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await SettingService.removeSetting(userId, payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'Setting removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

@@ -9,10 +9,11 @@ export const updateAdmin = async (req: Request, res: Response): Promise<Response
   try {
     const payload = req.body as unknown as IUpdateAdmin
     await AdminService.updateAdmin(payload)
+
     return res
       .status(StatusCodes.OK)
       .json(ResponseData.success({ message: 'Admin updated successfully' }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }
