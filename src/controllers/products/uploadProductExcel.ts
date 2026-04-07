@@ -3,7 +3,7 @@ import fs from 'fs'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
-import { ProductService } from '../../services/Product.service'
+import { UploadProductService } from '../../services/UploadProduct.service'
 import { AppError } from '../../utilities/appError'
 
 export const uploadProductExcel = async (
@@ -19,7 +19,7 @@ export const uploadProductExcel = async (
       )
     }
 
-    await ProductService.recordExcelUpload(file)
+    await UploadProductService.recordExcelUpload(file)
 
     return res.status(StatusCodes.ACCEPTED).json(
       ResponseData.success({

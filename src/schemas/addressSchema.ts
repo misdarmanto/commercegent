@@ -66,8 +66,8 @@ export const villagesParamsSchema = z.object({
   districtId: z.string().min(1)
 })
 
-export type ICreateAddressBody = z.infer<typeof createAddressSchema>
-export type IRemoveAddressQuery = z.infer<typeof removeAddressQuerySchema>
-export type IRegenciesParams = z.infer<typeof regenciesParamsSchema>
-export type IDistrictsParams = z.infer<typeof districtsParamsSchema>
-export type IVillagesParams = z.infer<typeof villagesParamsSchema>
+export type ICreateAddress = z.infer<typeof createAddressSchema>
+export type IRemoveAddress = z.infer<typeof removeAddressQuerySchema>
+export type IFindRegencies = z.infer<typeof regenciesParamsSchema>
+export type IFindDistricts = z.infer<typeof districtsParamsSchema>
+export type IFindVillages = z.infer<typeof villagesParamsSchema>

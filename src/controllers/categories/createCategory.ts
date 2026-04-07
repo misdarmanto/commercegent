@@ -3,11 +3,11 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { CategoryService } from '../../services/Category.service'
-import { type ICreateCategoryBody } from '../../schemas/CategorySchema'
+import { type ICreateCategory } from '../../schemas/CategorySchema'
 
 export const createCategory = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const payload = req.body as unknown as ICreateCategoryBody
+    const payload = req.body as unknown as ICreateCategory
     await CategoryService.createCategory(payload)
 
     return res

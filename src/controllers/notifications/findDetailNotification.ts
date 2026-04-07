@@ -3,18 +3,16 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { NotificationService } from '../../services/Notification.service'
-import { type IFindDetailNotificationParams } from '../../schemas/NotificationSchema'
+import { type IFindDetailNotification } from '../../schemas/NotificationSchema'
 
 export const findDetailNotification = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.params as unknown as IFindDetailNotificationParams
-    const result = await NotificationService.findDetailNotification(
-      payload.notificationId
-    )
+    const payload = req.params as unknown as IFindDetailNotification
 
+    const result = await NotificationService.findDetailNotification(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (serverError) {
     return handleError(res, serverError)

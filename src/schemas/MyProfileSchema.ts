@@ -2,10 +2,6 @@ import { z } from 'zod'
 
 const userRoleEnum = z.enum(['user', 'courier', 'office', 'admin', 'superAdmin'])
 
-/* ============================= */
-/* UPDATE MY PROFILE (body) */
-/* ============================= */
-
 export const updateMyProfileSchema = z
   .object({
     userName: z.string().min(1).optional(),
@@ -17,4 +13,4 @@ export const updateMyProfileSchema = z
     path: ['userName']
   })
 
-export type IUpdateMyProfileBody = z.infer<typeof updateMyProfileSchema>
+export type IUpdateMyProfile = z.infer<typeof updateMyProfileSchema>

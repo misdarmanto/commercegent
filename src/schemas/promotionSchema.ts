@@ -1,9 +1,5 @@
 import { z } from 'zod'
 
-/* ============================= */
-/* FIND PROMOTIONS / HIGHLIGHTS (query) */
-/* ============================= */
-
 export const findAllPromotionQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(10),
@@ -18,10 +14,6 @@ export const findAllPromotionQuerySchema = z.object({
   productCategoryId: z.coerce.number().int().optional(),
   productSubCategoryId: z.coerce.number().int().optional()
 })
-
-/* ============================= */
-/* UPDATE HIGHLIGHTS (body) */
-/* ============================= */
 
 export const updatePromotionSchema = z.object({
   products: z
@@ -39,10 +31,6 @@ export const updatePromotionSchema = z.object({
     .min(1, 'Minimal satu produk')
 })
 
-/* ============================= */
-/* REMOVE PROMOTION (query) */
-/* ============================= */
-
 export const removePromotionQuerySchema = z.object({
   productId: z.coerce
     .number({ invalid_type_error: 'productId harus berupa angka' })
@@ -50,6 +38,6 @@ export const removePromotionQuerySchema = z.object({
     .positive('productId harus lebih dari 0')
 })
 
-export type IFindAllPromotionQuery = z.infer<typeof findAllPromotionQuerySchema>
-export type IUpdatePromotionBody = z.infer<typeof updatePromotionSchema>
-export type IRemovePromotionQuery = z.infer<typeof removePromotionQuerySchema>
+export type IFindAllPromotion = z.infer<typeof findAllPromotionQuerySchema>
+export type IUpdatePromotion = z.infer<typeof updatePromotionSchema>
+export type IRemovePromotion = z.infer<typeof removePromotionQuerySchema>

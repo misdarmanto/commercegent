@@ -9,22 +9,22 @@ import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { calculateSellPrice } from '../utilities/priceCalculator'
 import type {
-  ICreateProductPublicBody,
-  IFindAllOrderPublicQuery,
-  IUpdateProductPublicBody
+  ICreateProductPublic,
+  IFindAllOrderPublic,
+  IUpdateProductPublic
 } from '../schemas/PublicApiSchema'
 
 export class PublicApiService {
-  static async createProductPublic(body: ICreateProductPublicBody) {
+  static async createProductPublic(payload: ICreateProductPublic) {
     try {
       const orConditions: Array<{ productCode?: string; productBarcode?: string }> = []
 
-      if (body.code) {
-        orConditions.push({ productCode: body.code })
+      if (payload.code) {
+        orConditions.push({ productCode: payload.code })
       }
 
-      if (body.barcode) {
-        orConditions.push({ productBarcode: body.barcode })
+      if (payload.barcode) {
+        orConditions.push({ productBarcode: payload.barcode })
       }
 
       const duplicateProduct = await ProductModel.findOne({
@@ -38,15 +38,18 @@ export class PublicApiService {
         let message = 'Product sudah terdaftar'
 
         if (
-          body.code &&
-          body.barcode &&
-          duplicateProduct.productCode === body.code &&
-          duplicateProduct.productBarcode === body.barcode
+          payload.code &&
+          payload.barcode &&
+          duplicateProduct.productCode === payload.code &&
+          duplicateProduct.productBarcode === payload.barcode
         ) {
           message = 'Product code dan barcode sudah terdaftar'
-        } else if (body.code && duplicateProduct.productCode === body.code) {
+        } else if (payload.code && duplicateProduct.productCode === payload.code) {
           message = 'Product code sudah terdaftar'
-        } else if (body.barcode && duplicateProduct.productBarcode === body.barcode) {
+        } else if (
+          payload.barcode &&
+          duplicateProduct.productBarcode === payload.barcode
+        ) {
           message = 'Product barcode sudah terdaftar'
         }
 
@@ -54,107 +57,110 @@ export class PublicApiService {
       }
 
       const productSellPrice = calculateSellPrice({
-        originalPrice: body.price,
+        originalPrice: payload.price,
         discountPercent: 0
       })
 
       await ProductModel.create({
-        productName: body.name,
+        productName: payload.name,
         productDescription: '',
         productImages: [],
-        productPrice: body.price,
+        productPrice: payload.price,
         productDiscount: 0,
-        productStock: body.stock,
-        productWeight: body.weight,
+        productStock: payload.stock,
+        productWeight: payload.weight,
         productIsHighlight: false,
         productSellPrice,
-        productIsVisible: body.isVisible,
-        productCode: body.code,
-        productBarcode: body.barcode,
-        productUnit: body.unit,
+        productIsVisible: payload.isVisible,
+        productCode: payload.code,
+        productBarcode: payload.barcode,
+        productUnit: payload.unit,
         deleted: 0,
         productCategoryId: '0',
         productSubCategoryId: '0',
         productTotalSale: 0
       })
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[PublicApiService] createProductPublic failed: ${String(error)}`)
-      throw new AppError('Gagal membuat produk', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[PublicApiService] createProductPublic failed: ${String(serviceError)}`
+      )
+      throw new AppError('Failed to create product', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updateProductPublic(body: IUpdateProductPublicBody) {
+  static async updateProductPublic(payload: IUpdateProductPublic) {
     try {
       const product = await ProductModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          productCode: body.code
+          productCode: payload.code
         }
       })
 
       if (product == null) {
         throw new AppError(
-          `Product with code (${body.code}) is not found`,
+          `Product with code (${payload.code}) is not found`,
           StatusCodes.NOT_FOUND
         )
       }
 
       const productPayload: Record<string, unknown> = {}
 
-      if (body.name !== undefined) {
-        productPayload.productName = body.name
+      if (payload.name !== undefined) {
+        productPayload.productName = payload.name
       }
 
-      if (body.price !== undefined) {
-        productPayload.productPrice = body.price
+      if (payload.price !== undefined) {
+        productPayload.productPrice = payload.price
       }
 
-      if (body.stock !== undefined) {
-        productPayload.productStock = body.stock
+      if (payload.stock !== undefined) {
+        productPayload.productStock = payload.stock
       }
 
-      if (body.weight !== undefined) {
-        productPayload.productWeight = body.weight
+      if (payload.weight !== undefined) {
+        productPayload.productWeight = payload.weight
       }
 
-      if (body.barcode !== undefined) {
-        productPayload.productBarcode = body.barcode
+      if (payload.barcode !== undefined) {
+        productPayload.productBarcode = payload.barcode
       }
 
-      if (body.unit !== undefined) {
-        productPayload.productUnit = body.unit
+      if (payload.unit !== undefined) {
+        productPayload.productUnit = payload.unit
       }
 
-      if (body.isVisible !== undefined) {
-        productPayload.productIsVisible = body.isVisible
+      if (payload.isVisible !== undefined) {
+        productPayload.productIsVisible = payload.isVisible
       }
 
       if (Object.keys(productPayload).length === 0) {
-        throw new AppError('No data provided to update', StatusCodes.BAD_REQUEST)
+        throw new AppError(
+          'No data provided to update product  ',
+          StatusCodes.BAD_REQUEST
+        )
       }
 
       await product.update(productPayload)
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[PublicApiService] updateProductPublic failed: ${String(error)}`)
-      throw new AppError('Gagal memperbarui produk', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[PublicApiService] updateProductPublic failed: ${String(serviceError)}`
+      )
+      throw new AppError('Failed to update product', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async findAllOrdersPublic(query: IFindAllOrderPublicQuery) {
+  static async findAllOrdersPublic(payload: IFindAllOrderPublic) {
     try {
-      const page = new Pagination(query.page, query.size)
+      const page = new Pagination(payload.page, payload.size)
 
       const dateFilter: Record<string, unknown> = {}
 
-      if (query.startDate != null && query.endDate != null) {
+      if (payload.startDate != null && payload.endDate != null) {
         dateFilter.created_at = {
-          [Op.between]: [`${query.startDate} 00:00:00`, `${query.endDate} 23:59:59`]
+          [Op.between]: [`${payload.startDate} 00:00:00`, `${payload.endDate} 23:59:59`]
         }
       }
 
@@ -162,11 +168,11 @@ export class PublicApiService {
         where: {
           deleted: { [Op.eq]: 0 },
           ...dateFilter,
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ orderReferenceId: { [Op.like]: `%${query.search}%` } }]
+          ...(Boolean(payload.search) && {
+            [Op.or]: [{ orderReferenceId: { [Op.like]: `%${payload.search}%` } }]
           }),
-          ...(Boolean(query.orderStatus) && {
-            orderStatus: { [Op.eq]: query.orderStatus }
+          ...(Boolean(payload.orderStatus) && {
+            orderStatus: { [Op.eq]: payload.orderStatus }
           })
         },
         attributes: [
@@ -189,8 +195,8 @@ export class PublicApiService {
             model: UserModel,
             where: {
               deleted: { [Op.eq]: 0 },
-              ...(Boolean(query.search) && {
-                [Op.or]: [{ userName: { [Op.like]: `%${query.search}%` } }]
+              ...(Boolean(payload.search) && {
+                [Op.or]: [{ userName: { [Op.like]: `%${payload.search}%` } }]
               })
             },
             attributes: ['userName', 'userWhatsAppNumber']
@@ -224,20 +230,19 @@ export class PublicApiService {
           }
         ],
         order: [['orderId', 'desc']],
-        ...(query.pagination === true && {
+        ...(payload.pagination === true && {
           limit: page.limit,
           offset: page.offset
         })
       })
 
       return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[PublicApiService] findAllOrdersPublic failed: ${String(error)}`)
-      throw new AppError(
-        'Gagal mengambil daftar pesanan',
-        StatusCodes.INTERNAL_SERVER_ERROR
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[PublicApiService] findAllOrdersPublic failed: ${String(serviceError)}`
       )
+      throw new AppError('Failed to find all orders', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

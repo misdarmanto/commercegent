@@ -3,11 +3,11 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
-import { type IRemoveAddressQuery } from '../../schemas/AddressSchema'
+import { type IRemoveAddress } from '../../schemas/AddressSchema'
 
 export const removeAddress = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const payload = req.query as unknown as IRemoveAddressQuery
+    const payload = req.query as unknown as IRemoveAddress
     await AddressService.removeAddress(payload.addressId)
 
     return res

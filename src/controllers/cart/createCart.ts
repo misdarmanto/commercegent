@@ -4,15 +4,15 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { CartService } from '../../services/Cart.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { ICreateCartBody } from '../../schemas/cartSchema'
 import { AppError } from '../../utilities/appError'
+import { type ICreateCart } from '../../schemas/CartSchema'
 
 export const createCart = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as ICreateCartBody
+    const payload = req.body as unknown as ICreateCart
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {

@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { OrderService } from '../../services/Order.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdateOrderBody } from '../../schemas/OrderSchema'
+import { type IUpdateOrder } from '../../schemas/OrderSchema'
 import { AppError } from '../../utilities/appError'
 
 export const updateOrder = async (
@@ -12,7 +12,7 @@ export const updateOrder = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as IUpdateOrderBody
+    const payload = req.body as unknown as IUpdateOrder
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {

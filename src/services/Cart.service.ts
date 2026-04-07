@@ -5,94 +5,105 @@ import { ProductModel } from '../models/products'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import { ICreateCartBody, IFindAllCartQuery } from '../schemas/cartSchema'
+import { ICreateCart, IFindAllCarts, IRemoveCart } from '../schemas/CartSchema'
+
+type FindAllCartsWhere = {
+  deleted: { [Op.eq]: number }
+  cartUserId: { [Op.eq]: number }
+  [Op.or]?: Array<{ cartProductId: { [Op.like]: string } }>
+}
 
 export class CartService {
-  static async createCart(userId: number, body: ICreateCartBody) {
-    try {
-      const existingCart = await CartsModel.findOne({
-        where: {
-          deleted: 0,
-          cartUserId: userId,
-          cartProductId: body.cartProductId
-        }
-      })
-
-      if (existingCart != null) {
-        existingCart.cartTotalItem += body.cartTotalItem
-        await existingCart.save()
-        return { message: 'success' as const }
-      }
-
-      await CartsModel.create({
-        cartProductId: body.cartProductId,
-        cartTotalItem: body.cartTotalItem,
-        cartUserId: userId,
-        deleted: 0
-      })
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[CartService] createCart failed: ${String(error)}`)
-      throw new AppError('Failed to update cart', StatusCodes.INTERNAL_SERVER_ERROR)
+  private static buildFindAllWhere(
+    userId: number,
+    payload: IFindAllCarts
+  ): FindAllCartsWhere {
+    const where: FindAllCartsWhere = {
+      deleted: { [Op.eq]: 0 },
+      cartUserId: { [Op.eq]: userId }
     }
+
+    if (payload.search != null) {
+      where[Op.or] = [{ cartProductId: { [Op.like]: `%${payload.search}%` } }]
+    }
+
+    return where
   }
 
-  static async removeCart(userId: number, cartId: number) {
+  static async findAllCarts(userId: number, payload: IFindAllCarts) {
     try {
-      const row = await CartsModel.findOne({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          cartId: { [Op.eq]: cartId },
-          cartUserId: { [Op.eq]: userId }
-        }
-      })
-
-      if (row == null) {
-        throw new AppError('cart not found!', StatusCodes.NOT_FOUND)
-      }
-
-      row.deleted = 1
-      await row.save()
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[CartService] removeCart failed: ${String(error)}`)
-      throw new AppError('Failed to remove cart', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async findAllCarts(userId: number, query: IFindAllCartQuery) {
-    try {
-      const page = new Pagination(query.page, query.size)
+      const pager = new Pagination(payload.page, payload.size)
 
       const result = await CartsModel.findAndCountAll({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          cartUserId: { [Op.eq]: userId },
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ cartProductId: { [Op.like]: `%${query.search}%` } }]
-          })
-        },
+        where: this.buildFindAllWhere(userId, payload),
         include: [
           {
             model: ProductModel
           }
         ],
         order: [['cartId', 'desc']],
-        ...(query.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
+        ...(payload.pagination === true && {
+          limit: pager.limit,
+          offset: pager.offset
         })
       })
 
-      return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[CartService] findAllCarts failed: ${String(error)}`)
-      throw new AppError('Failed to fetch cart', StatusCodes.INTERNAL_SERVER_ERROR)
+      return pager.formatData(result)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[CartService] findAllCarts failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find carts', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  static async createCart(userId: number, payload: ICreateCart) {
+    try {
+      const existingCart = await CartsModel.findOne({
+        where: {
+          deleted: 0,
+          cartUserId: userId,
+          cartProductId: payload.cartProductId
+        }
+      })
+
+      if (existingCart != null) {
+        existingCart.cartTotalItem += payload.cartTotalItem
+        await existingCart.save()
+      }
+
+      await CartsModel.create({
+        cartProductId: payload.cartProductId,
+        cartTotalItem: payload.cartTotalItem,
+        cartUserId: userId,
+        deleted: 0
+      })
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[CartService] createCart failed: ${String(serviceError)}`)
+      throw new AppError('Failed to create cart', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  static async removeCart(userId: number, payload: IRemoveCart) {
+    try {
+      const [updatedRows] = await CartsModel.update(
+        { deleted: 1 },
+        {
+          where: {
+            deleted: { [Op.eq]: 0 },
+            cartId: { [Op.eq]: payload.cartId },
+            cartUserId: { [Op.eq]: userId }
+          }
+        }
+      )
+
+      if (updatedRows === 0) {
+        throw new AppError('cart not found!', StatusCodes.NOT_FOUND)
+      }
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[CartService] removeCart failed: ${String(serviceError)}`)
+      throw new AppError('Failed to remove cart', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

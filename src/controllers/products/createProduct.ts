@@ -4,19 +4,19 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { ProductService } from '../../services/Product.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type ICreateProductBody } from '../../schemas/ProductSchema'
+import { type ICreateProduct } from '../../schemas/ProductSchema'
 
 export const createProduct = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as ICreateProductBody
-    await ProductService.createProduct(payload)
+    const payload = req.body as unknown as ICreateProduct
+    const result = await ProductService.createProduct(payload)
 
     return res
       .status(StatusCodes.CREATED)
-      .json(ResponseData.success({ message: 'Product created successfully' }))
+      .json(ResponseData.success({ data: result, message: 'Product created successfully' }))
   } catch (serverError) {
     return handleError(res, serverError)
   }

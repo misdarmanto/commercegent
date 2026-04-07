@@ -14,21 +14,22 @@ import type {
   IFindAllUsers,
   IRequestOtp,
   IUpdateUser,
-  IUpdateUserCoinBody,
+  IUpdateUserCoin,
   IUpdateUserPassword,
-  IUserDetailParams,
-  IUserLoginBody,
-  IUserRegisterBody,
-  IVerifyOtp
+  IFindDetailUser,
+  ILoginUser,
+  IVerifyOtp,
+  IRemoveUser,
+  ISignupUser
 } from '../schemas/UserSchema'
 
 export class UserService {
-  static async login(body: IUserLoginBody) {
+  static async login(payload: ILoginUser) {
     try {
       const user = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          userWhatsAppNumber: { [Op.eq]: body.userWhatsAppNumber },
+          userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber },
           userRole: 'user'
         }
       })
@@ -40,7 +41,7 @@ export class UserService {
         )
       }
 
-      if (hashPassword(body.userPassword) !== user.userPassword) {
+      if (hashPassword(payload.userPassword) !== user.userPassword) {
         throw new AppError(
           'kombinasi nomor whatsapp dan password tidak ditemukan!',
           StatusCodes.UNAUTHORIZED
@@ -53,63 +54,63 @@ export class UserService {
       })
 
       return { token }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] login failed: ${String(error)}`)
-      throw new AppError('Gagal login', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] login failed: ${String(serviceError)}`)
+      throw new AppError('Failed to login', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async register(body: IUserRegisterBody) {
+  static async signup(userId: number, payload: ISignupUser) {
     try {
       const existing = await UserModel.findOne({
         raw: true,
         where: {
           deleted: { [Op.eq]: 0 },
-          [Op.or]: [{ userWhatsAppNumber: { [Op.eq]: body.userWhatsAppNumber } }]
+          [Op.or]: [{ userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber } }]
         }
       })
 
       if (existing != null) {
         throw new AppError(
-          `Nomor ${body.userWhatsAppNumber} sudah terdaftar. Silahkan gunakan yang lain.`,
+          `Nomor ${payload.userWhatsAppNumber} sudah terdaftar. Silahkan gunakan yang lain.`,
           StatusCodes.BAD_REQUEST
         )
       }
 
-      const payload: Partial<UserAttributes> = {
-        userName: body.userName,
-        userWhatsAppNumber: body.userWhatsAppNumber,
-        userPassword: hashPassword(body.userPassword),
-        userGender: body.userGender,
+      const createPayload = {
+        userName: payload.userName,
+        userWhatsAppNumber: payload.userWhatsAppNumber,
+        userPassword: hashPassword(payload.userPassword),
+        userGender: payload.userGender,
         userRole: 'user',
         deleted: 0,
-        userPartnerCode: `${generateUniqueId()}-${body.userWhatsAppNumber}`
-      }
+        userPartnerCode: `${generateUniqueId()}-${payload.userWhatsAppNumber}`,
+        userId: userId
+      } as unknown as UserAttributes
 
-      await UserModel.create(payload as UserAttributes)
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] register failed: ${String(error)}`)
-      throw new AppError('Gagal registrasi', StatusCodes.INTERNAL_SERVER_ERROR)
+      await UserModel.create(createPayload)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] register failed: ${String(serviceError)}`)
+      throw new AppError('Failed to register', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async findAllUsers(query: IFindAllUsers) {
+  static async findAllUsers(payload: IFindAllUsers) {
     try {
-      const page = new Pagination(query.page, query.size)
+      const page = new Pagination(payload.page, payload.size)
 
       const users = await UserModel.findAndCountAll({
         where: {
           deleted: { [Op.eq]: 0 },
-          ...(Boolean(query.userRole) && { userRole: { [Op.eq]: query.userRole } }),
-          ...(query.userRole == null && { userRole: { [Op.eq]: 'user' } }),
-          ...(Boolean(query.search) && {
+          ...(Boolean(payload.userRole) && { userRole: { [Op.eq]: payload.userRole } }),
+          ...(payload.userRole == null && { userRole: { [Op.eq]: 'user' } }),
+          ...(Boolean(payload.search) && {
             [Op.or]: [
-              { userName: { [Op.like]: `%${query.search}%` } },
-              { userEmail: { [Op.like]: `%${query.search}%` } },
-              { userPartnerCode: { [Op.like]: `%${query.search}%` } }
+              { userName: { [Op.like]: `%${payload.search}%` } },
+              { userEmail: { [Op.like]: `%${payload.search}%` } },
+              { userPartnerCode: { [Op.like]: `%${payload.search}%` } }
             ]
           })
         },
@@ -124,26 +125,26 @@ export class UserService {
           'updatedAt'
         ],
         order: [['userId', 'desc']],
-        ...(query.pagination === true && {
+        ...(payload.pagination === true && {
           limit: page.limit,
           offset: page.offset
         })
       })
 
       return page.formatData(users)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] findAllUsers failed: ${String(error)}`)
-      throw new AppError('Gagal mengambil daftar user', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] findAllUsers failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find all users', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async findDetailUser(params: IUserDetailParams) {
+  static async findDetailUser(payload: IFindDetailUser) {
     try {
       const user = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          userId: { [Op.eq]: params.userId }
+          userId: { [Op.eq]: payload.userId }
         },
         attributes: [
           'userId',
@@ -162,55 +163,54 @@ export class UserService {
       }
 
       return user
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] findDetailUser failed: ${String(error)}`)
-      throw new AppError('Gagal mengambil detail user', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] findDetailUser failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find detail user', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updateSelf(userId: number, body: IUpdateUser) {
+  static async updateSelf(userId: number, payload: IUpdateUser) {
     try {
       const user = await UserModel.findOne({
-        where: { deleted: { [Op.eq]: 0 }, userId: { [Op.eq]: userId } }
+        where: { deleted: 0, userId }
       })
 
       if (user == null) {
-        throw new AppError('user not found!', StatusCodes.NOT_FOUND)
+        throw new AppError('User not found!', StatusCodes.NOT_FOUND)
       }
 
       const newData: Partial<UserAttributes> = {
-        ...(body.userName != null &&
-          body.userName.length > 0 && { userName: body.userName }),
-        ...(body.userPassword != null &&
-          body.userPassword.length > 0 && {
-            userPassword: hashPassword(body.userPassword)
+        ...(payload.userName != null &&
+          payload.userName.length > 0 && { userName: payload.userName }),
+        ...(payload.userPassword != null &&
+          payload.userPassword.length > 0 && {
+            userPassword: hashPassword(payload.userPassword)
           }),
-        ...(body.userWhatsAppNumber != null &&
-          body.userWhatsAppNumber.length > 0 && {
-            userWhatsAppNumber: body.userWhatsAppNumber
+        ...(payload.userWhatsAppNumber != null &&
+          payload.userWhatsAppNumber.length > 0 && {
+            userWhatsAppNumber: payload.userWhatsAppNumber
           }),
-        ...(body.userPhoto != null &&
-          body.userPhoto.length > 0 && { userPhoto: body.userPhoto }),
-        ...(typeof body.userCoin === 'number' &&
-          body.userCoin >= 0 && { userCoin: body.userCoin }),
-        ...(body.userRole != null &&
-          body.userRole.length > 0 && { userRole: body.userRole })
+        ...(payload.userPhoto != null &&
+          payload.userPhoto.length > 0 && { userPhoto: payload.userPhoto }),
+        ...(typeof payload.userCoin === 'number' &&
+          payload.userCoin >= 0 && { userCoin: payload.userCoin }),
+        ...(payload.userRole != null &&
+          payload.userRole.length > 0 && { userRole: payload.userRole })
       }
 
       await user.update(newData)
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] updateSelf failed: ${String(error)}`)
-      throw new AppError('Gagal memperbarui user', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] updateSelf failed: ${String(serviceError)}`)
+      throw new AppError('Failed to update self', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async removeUser(userId: number) {
+  static async removeUser(payload: IRemoveUser) {
     try {
       const user = await UserModel.findOne({
-        where: { deleted: { [Op.eq]: 0 }, userId: { [Op.eq]: userId } }
+        where: { deleted: { [Op.eq]: 0 }, userId: { [Op.eq]: payload.userId } }
       })
 
       if (user == null) {
@@ -219,40 +219,38 @@ export class UserService {
 
       user.deleted = 1
       await user.save()
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] removeUser failed: ${String(error)}`)
-      throw new AppError('Gagal menghapus user', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] removeUser failed: ${String(serviceError)}`)
+      throw new AppError('Failed to remove user', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updateUserCoin(body: IUpdateUserCoinBody) {
+  static async updateUserCoin(payload: IUpdateUserCoin) {
     try {
       const user = await UserModel.findOne({
-        where: { deleted: { [Op.eq]: 0 }, userId: { [Op.eq]: body.userId } }
+        where: { deleted: { [Op.eq]: 0 }, userId: { [Op.eq]: payload.userId } }
       })
 
       if (user == null) {
         throw new AppError('user not found!', StatusCodes.NOT_FOUND)
       }
 
-      user.userCoin = body.userCoin
+      user.userCoin = payload.userCoin
       await user.save()
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] updateUserCoin failed: ${String(error)}`)
-      throw new AppError('Gagal update coin', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] updateUserCoin failed: ${String(serviceError)}`)
+      throw new AppError('Failed to update coin', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updatePassword(body: IUpdateUserPassword) {
+  static async updatePassword(payload: IUpdateUserPassword) {
     try {
       const user = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          userWhatsAppNumber: { [Op.eq]: body.userWhatsAppNumber },
+          userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber },
           userRole: 'user'
         }
       })
@@ -261,34 +259,33 @@ export class UserService {
         throw new AppError('User not found!', StatusCodes.NOT_FOUND)
       }
 
-      await user.update({ userPassword: hashPassword(body.userPassword) })
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] updatePassword failed: ${String(error)}`)
-      throw new AppError('Gagal update password', StatusCodes.INTERNAL_SERVER_ERROR)
+      await user.update({ userPassword: hashPassword(payload.userPassword) })
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] updatePassword failed: ${String(serviceError)}`)
+      throw new AppError('Failed to update password', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async requestOtp(body: IRequestOtp) {
+  static async requestOtp(payload: IRequestOtp) {
     try {
       const existingUser = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          userWhatsAppNumber: { [Op.eq]: body.whatsappNumber }
+          userWhatsAppNumber: { [Op.eq]: payload.whatsappNumber }
         }
       })
 
-      if (body.otpType === 'resetPassword' && existingUser === null) {
+      if (payload.otpType === 'resetPassword' && existingUser === null) {
         throw new AppError(
-          `whatsapp number ${body.whatsappNumber} is not registered.`,
+          `whatsapp number ${payload.whatsappNumber} is not registered.`,
           StatusCodes.BAD_REQUEST
         )
       }
 
-      if (body.otpType === 'register' && existingUser !== null) {
+      if (payload.otpType === 'register' && existingUser !== null) {
         throw new AppError(
-          `whatsapp number ${body.whatsappNumber} is already registered.`,
+          `whatsapp number ${payload.whatsappNumber} is already registered.`,
           StatusCodes.BAD_REQUEST
         )
       }
@@ -303,7 +300,7 @@ export class UserService {
       )
 
       const wablasResponse = await axios.get(
-        `${appConfigs.wablas.url}/send-message?phone=${body.whatsappNumber}&message=${message}&token=${appConfigs.wablas.apiKey}`
+        `${appConfigs.wablas.url}/send-message?phone=${payload.whatsappNumber}&message=${message}&token=${appConfigs.wablas.apiKey}`
       )
 
       if (wablasResponse.status !== 200) {
@@ -311,27 +308,27 @@ export class UserService {
       }
 
       return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] requestOtp failed: ${String(error)}`)
-      throw new AppError('Gagal request OTP', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] requestOtp failed: ${String(serviceError)}`)
+      throw new AppError('Failed to request OTP', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async verifyOtp(body: IVerifyOtp) {
+  static async verifyOtp(payload: IVerifyOtp) {
     try {
-      const storedOtp = await redis.get(`otp:${body.otpCode}`)
+      const storedOtp = await redis.get(`otp:${payload.otpCode}`)
 
-      if (!storedOtp || storedOtp !== body.otpCode) {
+      if (!storedOtp || storedOtp !== payload.otpCode) {
         throw new AppError('Invalid or expired OTP!', StatusCodes.UNAUTHORIZED)
       }
 
-      await redis.del(`otp:${body.otpCode}`)
+      await redis.del(`otp:${payload.otpCode}`)
       return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[UserService] verifyOtp failed: ${String(error)}`)
-      throw new AppError('Gagal verifikasi OTP', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[UserService] verifyOtp failed: ${String(serviceError)}`)
+      throw new AppError('Failed to verify OTP', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

@@ -12,20 +12,140 @@ import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { MidtransSnap } from '../configs/midtrans'
 import type {
-  ICreateOrderBody,
-  IFindAllOrderQuery,
-  IOrderDetailParams,
-  IUpdateOrderBody
+  ICreateOrder,
+  IFindAllOrder,
+  IFindDetailOrder,
+  IUpdateOrder
 } from '../schemas/OrderSchema'
 
-type OrderLineItem = ICreateOrderBody['items'][number]
+type OrderLineItem = ICreateOrder['items'][number]
+
+type FindAllOrdersWhere = {
+  deleted: { [Op.eq]: number }
+  [Op.or]?: Array<{ orderReferenceId: { [Op.like]: string } }>
+  orderUserId?: { [Op.eq]: number }
+  orderStatus?: OrdersAttributes['orderStatus']
+}
 
 export class OrderService {
-  static async createOrder(userId: number, body: ICreateOrderBody) {
-    const { items, orderShippingFee, orderCourierCompany, orderCourierType } = body
+  private static buildFindAllWhere(
+    userId: number,
+    userRole: string | undefined,
+    payload: IFindAllOrder
+  ): FindAllOrdersWhere {
+    const where: FindAllOrdersWhere = {
+      deleted: { [Op.eq]: 0 }
+    }
+
+    if (payload.search != null) {
+      where[Op.or] = [{ orderReferenceId: { [Op.like]: `%${payload.search}%` } }]
+    }
+    if (userRole === 'user') {
+      where.orderUserId = { [Op.eq]: userId }
+    }
+    if (payload.orderStatus != null) {
+      where.orderStatus = payload.orderStatus as OrdersAttributes['orderStatus']
+    }
+
+    return where
+  }
+
+  static async findAllOrders(userId: number, payload: IFindAllOrder, userRole?: string) {
+    try {
+      const pager = new Pagination(payload.page, payload.size)
+
+      const result = await OrdersModel.findAndCountAll({
+        where: this.buildFindAllWhere(userId, userRole, payload),
+        include: [
+          {
+            model: UserModel,
+            where: {
+              deleted: { [Op.eq]: 0 },
+              ...(Boolean(payload.search) && {
+                [Op.or]: [{ userName: { [Op.like]: `%${payload.search}%` } }]
+              })
+            },
+            attributes: ['userName']
+          },
+          {
+            model: OrderItemsModel,
+            as: 'orderItems',
+            include: [
+              {
+                model: ProductModel
+              }
+            ]
+          }
+        ],
+        order: [['orderId', 'desc']],
+        ...(payload.pagination === true && {
+          limit: pager.limit,
+          offset: pager.offset
+        })
+      })
+
+      return pager.formatData(result)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[OrderService] findAllOrders failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find orders', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  static async findDetailOrder(
+    userId: number,
+    userRole: string | undefined,
+    payload: IFindDetailOrder
+  ) {
+    try {
+      const result = await OrdersModel.findOne({
+        where: {
+          deleted: { [Op.eq]: 0 },
+          orderId: { [Op.eq]: payload.orderId },
+          ...(userRole === 'user' && {
+            orderUserId: { [Op.eq]: userId }
+          })
+        },
+        include: [
+          {
+            model: OrderItemsModel,
+            as: 'orderItems',
+            include: [
+              {
+                model: ProductModel
+              }
+            ]
+          },
+          {
+            model: AddressesModel
+          },
+          {
+            model: UserModel,
+            where: {
+              deleted: { [Op.eq]: 0 }
+            },
+            attributes: ['userName', 'userWhatsAppNumber', 'userCoin']
+          }
+        ]
+      })
+
+      if (result == null) {
+        throw new AppError('Order not found', StatusCodes.NOT_FOUND)
+      }
+
+      return result
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[OrderService] findDetailOrder failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find order', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  static async createOrder(userId: number, payload: ICreateOrder) {
+    const { items, orderShippingFee, orderCourierCompany, orderCourierType } = payload
     const productIds = items.map((i: OrderLineItem) => i.productId)
 
-    const t = await sequelize.transaction()
+    const transaction = await sequelize.transaction()
 
     try {
       const address = await AddressesModel.findOne({
@@ -34,12 +154,11 @@ export class OrderService {
           addressUserId: userId,
           addressCategory: 'user'
         },
-        transaction: t
+        transaction: transaction
       })
 
       if (address == null) {
-        await t.rollback()
-        throw new AppError('alamat pengiriman tidak ditemukan', StatusCodes.NOT_FOUND)
+        throw new AppError('Shipping address not found', StatusCodes.NOT_FOUND)
       }
 
       const products = await ProductModel.findAll({
@@ -47,13 +166,12 @@ export class OrderService {
           deleted: { [Op.eq]: 0 },
           productId: { [Op.in]: productIds }
         },
-        transaction: t,
-        lock: t.LOCK.UPDATE
+        transaction: transaction,
+        lock: transaction.LOCK.UPDATE
       })
 
       if (products.length !== items.length) {
-        await t.rollback()
-        throw new AppError('salah satu produk tidak ditemukan', StatusCodes.NOT_FOUND)
+        throw new AppError('One of the products not found', StatusCodes.NOT_FOUND)
       }
 
       for (const item of items) {
@@ -62,9 +180,8 @@ export class OrderService {
         )
         if (product == null) continue
         if (product.productStock < item.quantity) {
-          await t.rollback()
           throw new AppError(
-            `Stock produk ${product.productName} tidak mencukupi`,
+            `Stock product ${product.productName} is not enough`,
             StatusCodes.BAD_REQUEST
           )
         }
@@ -106,7 +223,7 @@ export class OrderService {
         orderCourierType: orderCourierType ?? ''
       } as OrdersAttributes
 
-      const order = await OrdersModel.create(orderPayload, { transaction: t })
+      const order = await OrdersModel.create(orderPayload, { transaction: transaction })
 
       for (const item of orderItemsPayload) {
         const payload = {
@@ -120,7 +237,7 @@ export class OrderService {
           totalPrice: item.totalPrice
         } as OrderItemsAttributes
 
-        await OrderItemsModel.create(payload, { transaction: t })
+        await OrderItemsModel.create(payload, { transaction: transaction })
       }
 
       for (const item of orderItemsPayload) {
@@ -134,7 +251,7 @@ export class OrderService {
               productId: item.productId,
               deleted: { [Op.eq]: 0 }
             },
-            transaction: t
+            transaction: transaction
           }
         )
       }
@@ -176,7 +293,7 @@ export class OrderService {
           orderPaymentToken: midtransResponse.token,
           orderReferenceId
         },
-        { transaction: t }
+        { transaction: transaction }
       )
 
       await CartsModel.destroy({
@@ -185,139 +302,31 @@ export class OrderService {
           cartUserId: userId,
           cartProductId: { [Op.in]: productIds }
         },
-        transaction: t
+        transaction: transaction
       })
 
-      await t.commit()
+      await transaction.commit()
 
       return {
         orderId: order.orderId,
         snapToken: midtransResponse.token,
         redirectUrl: midtransResponse.redirect_url
       }
-    } catch (error) {
-      await t.rollback()
-      if (error instanceof AppError) throw error
-      logger.error(`[OrderService] createOrder failed: ${String(error)}`)
-      throw new AppError('Gagal membuat pesanan', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      await transaction.rollback()
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[OrderService] createOrder failed: ${String(serviceError)}`)
+      throw new AppError('Failed to create order', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async findAllOrders(userId: number, query: IFindAllOrderQuery) {
-    try {
-      const user = await UserModel.findOne({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          userId
-        }
-      })
-
-      const page = new Pagination(query.page, query.size)
-
-      const result = await OrdersModel.findAndCountAll({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ orderReferenceId: { [Op.like]: `%${query.search}%` } }]
-          }),
-          ...(Boolean(user?.dataValues.userRole === 'user') && {
-            orderUserId: { [Op.eq]: userId }
-          }),
-          ...(Boolean(query.orderStatus) && {
-            orderStatus: { [Op.eq]: query.orderStatus }
-          })
-        },
-        include: [
-          {
-            model: UserModel,
-            where: {
-              deleted: { [Op.eq]: 0 },
-              ...(Boolean(query.search) && {
-                [Op.or]: [{ userName: { [Op.like]: `%${query.search}%` } }]
-              })
-            },
-            attributes: ['userName']
-          },
-          {
-            model: OrderItemsModel,
-            as: 'orderItems',
-            include: [
-              {
-                model: ProductModel
-              }
-            ]
-          }
-        ],
-        order: [['orderId', 'desc']],
-        ...(query.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
-        })
-      })
-
-      return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[OrderService] findAllOrders failed: ${String(error)}`)
-      throw new AppError(
-        'Gagal mengambil daftar pesanan',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
-    }
-  }
-
-  static async findDetailOrder(params: IOrderDetailParams) {
-    try {
-      const result = await OrdersModel.findOne({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          orderId: { [Op.eq]: params.orderId }
-        },
-        include: [
-          {
-            model: OrderItemsModel,
-            as: 'orderItems',
-            include: [
-              {
-                model: ProductModel
-              }
-            ]
-          },
-          {
-            model: AddressesModel
-          },
-          {
-            model: UserModel,
-            where: {
-              deleted: { [Op.eq]: 0 }
-            },
-            attributes: ['userName', 'userWhatsAppNumber', 'userCoin']
-          }
-        ]
-      })
-
-      if (result == null) {
-        throw new AppError('Pesanan tidak ditemukan', StatusCodes.NOT_FOUND)
-      }
-
-      return result
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[OrderService] findDetailOrder failed: ${String(error)}`)
-      throw new AppError(
-        'Gagal mengambil detail pesanan',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
-    }
-  }
-
-  static async updateOrder(_userId: number, _body: IUpdateOrderBody) {
+  static async updateOrder(_userId: number, _payload: IUpdateOrder) {
     try {
       return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[OrderService] updateOrder failed: ${String(error)}`)
-      throw new AppError('Gagal memperbarui pesanan', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[OrderService] updateOrder failed: ${String(serviceError)}`)
+      throw new AppError('Failed to update order', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

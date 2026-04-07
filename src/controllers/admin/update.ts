@@ -1,14 +1,25 @@
-import { type Request, type Response } from 'express'
+import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { AdminService } from '../../services/Admin.service'
 import { type IUpdateAdmin } from '../../schemas/AdminSchema'
+import { AppError } from '../../utilities/appError'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
 
-export const updateAdmin = async (req: Request, res: Response): Promise<Response> => {
+export const updateAdmin = async (
+  req: IAuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   try {
     const payload = req.body as unknown as IUpdateAdmin
-    await AdminService.updateAdmin(payload)
+    const userId = req.jwtPayload?.userId
+
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
+    }
+
+    await AdminService.updateAdmin(userId, payload)
 
     return res
       .status(StatusCodes.OK)

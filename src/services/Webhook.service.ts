@@ -6,10 +6,10 @@ import { TransactionsModel, type TransactionsAttributes } from '../models/transa
 import { appConfigs } from '../configs/appConfig'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import type { IBitshipWebhookBody, IMidtransWebhookBody } from '../schemas/WebhookSchema'
+import type { IBitshipWebhook, IMidtransWebhook } from '../schemas/WebhookSchema'
 
 export class WebhookService {
-  static async handleMidtransWebhook(payload: IMidtransWebhookBody) {
+  static async handleMidtransWebhook(payload: IMidtransWebhook) {
     const {
       order_id,
       transaction_status,
@@ -117,15 +117,17 @@ export class WebhookService {
 
       await dbTransaction.commit()
       return { message: 'success' as const }
-    } catch (error) {
-      await dbTransaction.rollback()
-      if (error instanceof AppError) throw error
-      logger.error(`[WebhookService] midtrans failed: ${String(error)}`)
-      throw new AppError('Webhook processing failed', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[WebhookService] midtrans failed: ${String(serviceError)}`)
+      throw new AppError(
+        'Failed to process midtrans webhook',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
     }
   }
 
-  static async handleBitshipWebhook(payload: IBitshipWebhookBody) {
+  static async handleBitshipWebhook(payload: IBitshipWebhook) {
     try {
       const order = await OrdersModel.findOne({
         where: {
@@ -139,10 +141,13 @@ export class WebhookService {
       }
 
       return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[WebhookService] bitship failed: ${String(error)}`)
-      throw new AppError('Webhook processing failed', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[WebhookService] bitship failed: ${String(serviceError)}`)
+      throw new AppError(
+        'Failed to process bitship webhook',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
     }
   }
 }

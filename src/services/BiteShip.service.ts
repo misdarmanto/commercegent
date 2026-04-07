@@ -1,9 +1,10 @@
 import axios from 'axios'
+import { appConfigs } from '../configs/appConfig'
 
 export const BiteShipService = axios.create({
-  baseURL: process.env.BITESHIP_BASE_URL,
+  baseURL: appConfigs.biteShip.baseURL,
   headers: {
-    Authorization: `Bearer ${process.env.BITESHIP_API_KEY}`,
+    Authorization: `Bearer ${appConfigs.biteShip.apiKey}`,
     'Content-Type': 'application/json'
   }
 })

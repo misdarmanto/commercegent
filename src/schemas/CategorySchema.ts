@@ -2,20 +2,12 @@ import { z } from 'zod'
 
 const categoryTypeEnum = z.enum(['parent', 'child'])
 
-/* ============================= */
-/* CREATE CATEGORY (body) */
-/* ============================= */
-
 export const createCategorySchema = z.object({
   categoryName: z.string().min(1, 'categoryName wajib diisi'),
   categoryReference: z.string().optional(),
   categoryIcon: z.string().optional(),
   categoryType: categoryTypeEnum.optional()
 })
-
-/* ============================= */
-/* UPDATE CATEGORY (body) */
-/* ============================= */
 
 export const updateCategorySchema = z
   .object({
@@ -30,20 +22,12 @@ export const updateCategorySchema = z
     { message: 'categoryName atau categoryIcon harus diisi', path: ['categoryName'] }
   )
 
-/* ============================= */
-/* REMOVE CATEGORY (query) */
-/* ============================= */
-
 export const removeCategoryQuerySchema = z.object({
   categoryId: z.coerce
     .number({ invalid_type_error: 'categoryId harus berupa angka' })
     .int()
     .positive()
 })
-
-/* ============================= */
-/* FIND ALL (query) */
-/* ============================= */
 
 export const findAllCategorySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -63,10 +47,6 @@ export const findAllCategorySchema = z.object({
   categoryType: categoryTypeEnum.optional()
 })
 
-/* ============================= */
-/* FIND DETAIL (params) */
-/* ============================= */
-
 export const findDetailCategoryParamsSchema = z.object({
   categoryId: z.coerce
     .number({ invalid_type_error: 'categoryId harus berupa angka' })
@@ -74,8 +54,8 @@ export const findDetailCategoryParamsSchema = z.object({
     .positive()
 })
 
-export type ICreateCategoryBody = z.infer<typeof createCategorySchema>
-export type IUpdateCategoryBody = z.infer<typeof updateCategorySchema>
-export type IRemoveCategoryQuery = z.infer<typeof removeCategoryQuerySchema>
-export type IFindAllCategoryQuery = z.infer<typeof findAllCategorySchema>
-export type IFindDetailCategoryParams = z.infer<typeof findDetailCategoryParamsSchema>
+export type ICreateCategory = z.infer<typeof createCategorySchema>
+export type IUpdateCategory = z.infer<typeof updateCategorySchema>
+export type IRemoveCategory = z.infer<typeof removeCategoryQuerySchema>
+export type IFindAllCategories = z.infer<typeof findAllCategorySchema>
+export type IFindDetailCategory = z.infer<typeof findDetailCategoryParamsSchema>

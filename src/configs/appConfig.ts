@@ -2,6 +2,10 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 export const appConfigs = {
+  biteShip: {
+    baseURL: process.env.BITESHIP_BASE_URL,
+    apiKey: process.env.BITESHIP_API_KEY
+  },
   app: {
     appVersion: process.env.APP_VERSION ?? '',
     appMode: process.env.APP_MODE ?? 'development',

@@ -29,10 +29,6 @@ export const userUpdateSchema = z.object({
   userPartnerCode: z.string().optional()
 })
 
-/* ============================= */
-/* AUTH (body) */
-/* ============================= */
-
 export const userLoginSchema = z.object({
   userWhatsAppNumber: z.string().min(8).max(20),
   userPassword: z.string().min(6)
@@ -49,10 +45,6 @@ export const userUpdatePasswordSchema = z.object({
   userPassword: z.string().min(6),
   userWhatsAppNumber: z.string()
 })
-
-/* ============================= */
-/* USERS (query/params/body) */
-/* ============================= */
 
 export const requestOtpSchema = z.object({
   whatsappNumber: z
@@ -112,23 +104,13 @@ export const updateUserCoinSchema = z.object({
 })
 
 export type ICreateUser = z.infer<typeof userSchema>
-
 export type IUpdateUser = z.infer<typeof userUpdateSchema>
-
-export type IUserLoginBody = z.infer<typeof userLoginSchema>
-
-export type IUserRegisterBody = z.infer<typeof userRegisterSchema>
-
+export type ILoginUser = z.infer<typeof userLoginSchema>
+export type ISignupUser = z.infer<typeof userRegisterSchema>
 export type IUpdateUserPassword = z.infer<typeof userUpdatePasswordSchema>
-
 export type IRequestOtp = z.infer<typeof requestOtpSchema>
-
 export type IVerifyOtp = z.infer<typeof verifyOtpSchema>
-
 export type IFindAllUsers = z.infer<typeof findAllUsersSchema>
-
-export type IUserDetailParams = z.infer<typeof userDetailParamsSchema>
-
-export type IRemoveUserQuery = z.infer<typeof removeUserQuerySchema>
-
-export type IUpdateUserCoinBody = z.infer<typeof updateUserCoinSchema>
+export type IFindDetailUser = z.infer<typeof userDetailParamsSchema>
+export type IRemoveUser = z.infer<typeof removeUserQuerySchema>
+export type IUpdateUserCoin = z.infer<typeof updateUserCoinSchema>

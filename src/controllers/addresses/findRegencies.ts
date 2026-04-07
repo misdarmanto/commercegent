@@ -3,11 +3,11 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
-import { type IRegenciesParams } from '../../schemas/AddressSchema'
+import { type IFindRegencies } from '../../schemas/AddressSchema'
 
 export const findRegencies = async (req: Request, res: Response): Promise<Response> => {
   try {
-    const payload = req.params as unknown as IRegenciesParams
+    const payload = req.params as unknown as IFindRegencies
     const result = await AddressService.getRegencies(payload.provinceId)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (serverError) {

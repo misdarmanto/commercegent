@@ -4,7 +4,6 @@ import { jwtPayloadSchema } from './jwtPayloadSchema'
 const AdminRoleEnum = z.enum(['user', 'admin', 'superAdmin'])
 
 export const adminSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
   adminName: z.string(),
   adminEmail: z.string().email(),
   adminPassword: z.string().min(6),
@@ -14,7 +13,6 @@ export const adminSchema = z.object({
 })
 
 export const updateAdminSchema = z.object({
-  jwtPayload: jwtPayloadSchema,
   adminName: z.string().optional(),
   adminEmail: z.string().email().optional(),
   adminPassword: z.string().min(6).optional(),

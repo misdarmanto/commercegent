@@ -1,13 +1,14 @@
-import { BiteShipService } from './biteShipService'
+import { BiteShipService } from './BiteShip.service'
 import { OrdersModel } from '../models/orders'
 import { OrderItemsModel } from '../models/orderItems'
 import { ProductModel } from '../models/products'
 import { AddressesModel } from '../models/address'
 import { sequelize } from '../models'
 import logger from '../utilities/logger'
-import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { AppError } from '../utilities/appError'
+import { IConfirmDraftOrder } from '../schemas/OrderSchema'
+import { ITrackShipment } from '../schemas/ShippingSchema'
 
 interface CreateDraftParams {
   userId: number
@@ -20,9 +21,9 @@ interface GetRatesItem {
 }
 
 export class ShippingService {
-  static async getShippingRates(userId: number, items: GetRatesItem[]) {
+  static async getShippingRates(userId: number, payload: GetRatesItem[]) {
     try {
-      const productIds = items.map((item) => item.productId)
+      const productIds = payload.map((item) => item.productId)
 
       const products = await ProductModel.findAll({
         where: {
@@ -31,7 +32,7 @@ export class ShippingService {
         }
       })
 
-      if (products.length !== items.length) {
+      if (products.length !== payload.length) {
         throw new AppError('One or more products not found', StatusCodes.NOT_FOUND)
       }
 
@@ -58,7 +59,7 @@ export class ShippingService {
         throw new AppError('Destination address not found', StatusCodes.NOT_FOUND)
       }
 
-      const biteshipItems = items.map((payloadItem) => {
+      const biteshipItems = payload.map((payloadItem) => {
         const product = products.find((p) => p.productId === payloadItem.productId)!
 
         return {
@@ -79,145 +80,162 @@ export class ShippingService {
       })
 
       return biteshipResponse.data
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ShippingService] getShippingRates failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ShippingService] getShippingRates failed: ${String(serviceError)}`)
       throw new AppError(
-        'Gagal mengambil shipping rates',
+        'Failed to get shipping rates',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
   }
 
-  static async createDraftFromOrder(params: CreateDraftParams) {
-    const { orderId, userId } = params
-
-    /* ===================== 1. FETCH ORDER + ITEMS ===================== */
-    const order = await OrdersModel.findByPk(orderId)
-    if (!order) throw new AppError('Order not found', StatusCodes.NOT_FOUND)
-
-    if (String(order.orderUserId) !== String(userId)) {
-      throw new AppError('access denied!', StatusCodes.FORBIDDEN)
-    }
-
-    if (order.orderStatus !== 'process') {
-      throw new AppError(
-        'Draft can only be created when order status is PROCESS',
-        StatusCodes.BAD_REQUEST
-      )
-    }
-
-    if (order.orderDraftId) {
-      throw new AppError('Draft order already exists', StatusCodes.CONFLICT)
-    }
-
-    const [destination, origin, orderItems] = await Promise.all([
-      AddressesModel.findOne({
-        where: { addressUserId: order.orderUserId, addressCategory: 'user' }
-      }),
-      AddressesModel.findOne({
-        where: { addressCategory: 'admin' }
-      }),
-      OrderItemsModel.findAll({
-        where: { orderId: order.orderId },
-        include: [
-          {
-            model: ProductModel,
-            attributes: ['productDescription', 'productWeight']
-          }
-        ]
-      })
-    ])
-
-    if (!destination)
-      throw new AppError('User address not found', StatusCodes.BAD_REQUEST)
-    if (!origin) throw new AppError('Admin address not found', StatusCodes.BAD_REQUEST)
-    if (!orderItems.length)
-      throw new AppError('Order items empty', StatusCodes.BAD_REQUEST)
-
-    /* ===================== 2. BUILD ITEMS ===================== */
-
-    const items = orderItems.map((item: any) => ({
-      name: item.productNameSnapshot,
-      description: item.product?.productDescription ?? '',
-      value: Number(item.productPriceSnapshot),
-      quantity: item.quantity,
-      weight: Math.max(item.product?.productWeight ?? 1, 1)
-    }))
-
-    const payload = {
-      reference_id: order.orderReferenceId,
-
-      shipper_contact_name: origin.addressUserName,
-      shipper_contact_phone: origin.addressKontak,
-      shipper_organization: 'LEORA ECOMMERCE',
-
-      origin_contact_name: origin.addressUserName,
-      origin_contact_phone: origin.addressKontak,
-      origin_address: origin.addressDetail,
-      origin_postal_code: origin.addressPostalCode,
-      origin_coordinate: {
-        latitude: Number(origin.addressLatitude),
-        longitude: Number(origin.addressLongitude)
-      },
-
-      destination_contact_name: destination.addressUserName,
-      destination_contact_phone: destination.addressKontak,
-      destination_address: destination.addressDetail,
-      destination_postal_code: destination.addressPostalCode,
-      destination_coordinate: {
-        latitude: Number(destination.addressLatitude),
-        longitude: Number(destination.addressLongitude)
-      },
-
-      courier_company: order.orderCourierCompany,
-      courier_type: order.orderCourierType,
-      delivery_type: 'now',
-      shipment_category: 'parcel',
-
-      order_note: `Order #${order.orderReferenceId}`,
-      metadata: {
-        orderId: order.orderReferenceId,
-        userId: order.orderUserId
-      },
-
-      items
-    }
-
-    /* ===================== 4. CALL BITESHIP ===================== */
-
-    type DraftResponse = {
-      id: string
-    }
-
-    let draftResponse = {} as DraftResponse
-
+  static async createDraftFromOrder(payload: CreateDraftParams) {
     try {
-      const { data } = await BiteShipService.post('/draft_orders', payload)
-      draftResponse = data
-    } catch (err: any) {
-      logger.error('[BITESHIP_ERROR]', err?.response?.data || err)
+      const { userId, orderId } = payload
+
+      /* ===================== 1. FETCH ORDER + ITEMS ===================== */
+      const order = await OrdersModel.findByPk(orderId)
+      if (order == null) {
+        throw new AppError('Order not found', StatusCodes.NOT_FOUND)
+      }
+
+      if (String(order.orderUserId) !== String(userId)) {
+        throw new AppError('access denied!', StatusCodes.FORBIDDEN)
+      }
+
+      if (order.orderStatus !== 'process') {
+        throw new AppError(
+          'Draft can only be created when order status is PROCESS',
+          StatusCodes.BAD_REQUEST
+        )
+      }
+
+      if (order.orderDraftId) {
+        throw new AppError('Draft order already exists', StatusCodes.CONFLICT)
+      }
+
+      const [destination, origin, orderItems] = await Promise.all([
+        AddressesModel.findOne({
+          where: { addressUserId: order.orderUserId, addressCategory: 'user' }
+        }),
+        AddressesModel.findOne({
+          where: { addressCategory: 'admin' }
+        }),
+        OrderItemsModel.findAll({
+          where: { orderId: order.orderId },
+          include: [
+            {
+              model: ProductModel,
+              attributes: ['productDescription', 'productWeight']
+            }
+          ]
+        })
+      ])
+
+      if (!destination)
+        throw new AppError('User address not found', StatusCodes.BAD_REQUEST)
+      if (!origin) throw new AppError('Admin address not found', StatusCodes.BAD_REQUEST)
+      if (!orderItems.length)
+        throw new AppError('Order items empty', StatusCodes.BAD_REQUEST)
+
+      /* ===================== 2. BUILD ITEMS ===================== */
+
+      const items = orderItems.map((item: any) => ({
+        name: item.productNameSnapshot,
+        description: item.product?.productDescription ?? '',
+        value: Number(item.productPriceSnapshot),
+        quantity: item.quantity,
+        weight: Math.max(item.product?.productWeight ?? 1, 1)
+      }))
+
+      const biteshipPayload = {
+        reference_id: order.orderReferenceId,
+
+        shipper_contact_name: origin.addressUserName,
+        shipper_contact_phone: origin.addressKontak,
+        shipper_organization: 'LEORA ECOMMERCE',
+
+        origin_contact_name: origin.addressUserName,
+        origin_contact_phone: origin.addressKontak,
+        origin_address: origin.addressDetail,
+        origin_postal_code: origin.addressPostalCode,
+        origin_coordinate: {
+          latitude: Number(origin.addressLatitude),
+          longitude: Number(origin.addressLongitude)
+        },
+
+        destination_contact_name: destination.addressUserName,
+        destination_contact_phone: destination.addressKontak,
+        destination_address: destination.addressDetail,
+        destination_postal_code: destination.addressPostalCode,
+        destination_coordinate: {
+          latitude: Number(destination.addressLatitude),
+          longitude: Number(destination.addressLongitude)
+        },
+
+        courier_company: order.orderCourierCompany,
+        courier_type: order.orderCourierType,
+        delivery_type: 'now',
+        shipment_category: 'parcel',
+
+        order_note: `Order #${order.orderReferenceId}`,
+        metadata: {
+          orderId: order.orderReferenceId,
+          userId: order.orderUserId
+        },
+
+        items
+      }
+
+      /* ===================== 4. CALL BITESHIP ===================== */
+
+      type DraftResponse = {
+        id: string
+      }
+
+      let draftResponse = {} as DraftResponse
+
+      try {
+        const { data } = await BiteShipService.post('/draft_orders', biteshipPayload)
+        draftResponse = data
+      } catch (serviceError) {
+        if (serviceError instanceof AppError) throw serviceError
+        logger.error(
+          `[ShippingService] createDraftFromOrder failed: ${String(serviceError)}`
+        )
+        throw new AppError(
+          'Failed to create draft order from shipping provider',
+          StatusCodes.BAD_GATEWAY
+        )
+      }
+
+      /* ===================== 5. SAVE DRAFT ID (DB TX) ===================== */
+      await sequelize.transaction(async (tx) => {
+        await order.update(
+          { orderDraftId: draftResponse.id, orderStatus: 'draft' },
+          { transaction: tx }
+        )
+      })
+
+      return {
+        draftOrderId: draftResponse.id,
+        biteshipResponse: draftResponse
+      }
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[ShippingService] createDraftFromOrder failed: ${String(serviceError)}`
+      )
       throw new AppError(
         'Failed to create draft order from shipping provider',
         StatusCodes.BAD_GATEWAY
       )
     }
-
-    /* ===================== 5. SAVE DRAFT ID (DB TX) ===================== */
-    await sequelize.transaction(async (tx) => {
-      await order.update(
-        { orderDraftId: draftResponse.id, orderStatus: 'draft' },
-        { transaction: tx }
-      )
-    })
-
-    return {
-      draftOrderId: draftResponse.id,
-      biteshipResponse: draftResponse
-    }
   }
 
-  static async confirmDraftOrder(userId: number, orderId: number) {
+  static async confirmDraftOrder(userId: number, payload: IConfirmDraftOrder) {
+    const { orderId } = payload
     try {
       const order = await OrdersModel.findByPk(orderId)
 
@@ -225,8 +243,8 @@ export class ShippingService {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
       }
 
-      if (String(order.orderUserId) !== String(userId)) {
-        throw new AppError('access denied!', StatusCodes.FORBIDDEN)
+      if (order.orderUserId !== String(userId)) {
+        throw new AppError('Access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (!order.orderDraftId) {
@@ -258,23 +276,26 @@ export class ShippingService {
         trackingId: confirmResponse?.tracking_id,
         courier: confirmResponse?.courier
       }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ShippingService] confirmDraftOrder failed: ${String(error)}`)
-      throw new AppError('Failed to confirm draft order', StatusCodes.BAD_GATEWAY)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ShippingService] confirmDraftOrder failed: ${String(serviceError)}`)
+      throw new AppError(
+        'Failed to confirm draft order',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
     }
   }
 
-  static async trackShipment(userId: number, orderId: number) {
+  static async trackShipment(userId: number, payload: ITrackShipment) {
     try {
-      const order = await OrdersModel.findByPk(orderId)
+      const order = await OrdersModel.findByPk(payload.orderId)
 
       if (order == null) {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
       }
 
-      if (String(order.orderUserId) !== String(userId)) {
-        throw new AppError('access denied!', StatusCodes.FORBIDDEN)
+      if (order.orderUserId !== String(userId)) {
+        throw new AppError('Access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (!order.orderWaybillId || !order.orderCourierCompany) {
@@ -286,10 +307,10 @@ export class ShippingService {
       )
 
       return data
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ShippingService] trackShipment failed: ${String(error)}`)
-      throw new AppError('Internal server error', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ShippingService] trackShipment failed: ${String(serviceError)}`)
+      throw new AppError('Failed to track shipment', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

@@ -9,10 +9,6 @@ const orderStatusEnum = z.enum([
   'cancel'
 ])
 
-/* ============================= */
-/* CREATE PRODUCT (public, body) */
-/* ============================= */
-
 export const createProductPublicSchema = z.object({
   code: z
     .string({ required_error: 'Kode produk wajib diisi' })
@@ -52,10 +48,6 @@ export const createProductPublicSchema = z.object({
     invalid_type_error: 'Status visible harus berupa true atau false'
   })
 })
-
-/* ============================= */
-/* UPDATE PRODUCT (public, body) */
-/* ============================= */
 
 export const updateProductPublicSchema = z.object({
   code: z
@@ -103,10 +95,6 @@ export const updateProductPublicSchema = z.object({
     .optional()
 })
 
-/* ============================= */
-/* FIND ORDERS (public, query) */
-/* ============================= */
-
 export const findAllOrderPublicQuerySchema = z
   .object({
     page: z.coerce.number().int().min(1).default(1),
@@ -141,6 +129,6 @@ export const findAllOrderPublicQuerySchema = z
     }
   )
 
-export type ICreateProductPublicBody = z.infer<typeof createProductPublicSchema>
-export type IUpdateProductPublicBody = z.infer<typeof updateProductPublicSchema>
-export type IFindAllOrderPublicQuery = z.infer<typeof findAllOrderPublicQuerySchema>
+export type ICreateProductPublic = z.infer<typeof createProductPublicSchema>
+export type IUpdateProductPublic = z.infer<typeof updateProductPublicSchema>
+export type IFindAllOrderPublic = z.infer<typeof findAllOrderPublicQuerySchema>

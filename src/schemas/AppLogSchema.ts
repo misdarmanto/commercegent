@@ -2,10 +2,6 @@ import { z } from 'zod'
 
 const logLevelEnum = z.enum(['error', 'warn', 'info'])
 
-/* ============================= */
-/* CREATE LOG (body) */
-/* ============================= */
-
 export const createAppLogSchema = z.object({
   appLogLevel: logLevelEnum,
   appLogMessage: z.string().min(1),
@@ -18,10 +14,6 @@ export const createAppLogSchema = z.object({
     .optional()
     .transform((v) => (v === '' ? null : v ?? null))
 })
-
-/* ============================= */
-/* FIND ALL LOGS (query) */
-/* ============================= */
 
 export const findAllAppLogsSchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

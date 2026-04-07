@@ -53,10 +53,10 @@ export class StatisticService {
         totalUserPria,
         totalUserWanita
       }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[StatisticService] findTotal failed: ${String(error)}`)
-      throw new AppError('Gagal mengambil statistic', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[StatisticService] findTotal failed: ${String(serviceError)}`)
+      throw new AppError('Failed to get statistic', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

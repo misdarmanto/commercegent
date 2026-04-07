@@ -1,182 +1,189 @@
-import fs from 'fs'
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { ProductModel } from '../models/products'
 import { CategoryModel } from '../models/categories'
-import { FileUploadModel, type FileUploadAttributes } from '../models/fileUpload'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { calculateSellPrice } from '../utilities/priceCalculator'
-import { addProductFileToQueue } from '../queues/productFileQueue'
 import type {
-  ICreateProductBody,
-  IFindAllProductsQuery,
-  IProductDetailParams,
-  IRemoveProductQuery,
-  IUpdateProductBody,
-  IUploadHistoriesQuery
+  ICreateProduct,
+  IFindAllProducts,
+  IFindDetailProduct,
+  IRemoveProduct,
+  IUpdateProduct
 } from '../schemas/ProductSchema'
 
+type FindAllProductsWhere = {
+  deleted: { [Op.eq]: number }
+  productIsVisible?: { [Op.eq]: boolean }
+  [Op.or]?: Array<{ productName: { [Op.like]: string } }>
+  productCategoryId?: { [Op.eq]: number }
+  productSubCategoryId?: { [Op.eq]: number }
+}
+
 export class ProductService {
-  static async findAllProducts(query: IFindAllProductsQuery) {
+  private static buildFindAllWhere(
+    payload: IFindAllProducts,
+    opts: { onlyVisible: boolean }
+  ): FindAllProductsWhere {
+    const where: FindAllProductsWhere = {
+      deleted: { [Op.eq]: 0 }
+    }
+
+    if (opts.onlyVisible) {
+      where.productIsVisible = { [Op.eq]: true }
+    }
+
+    if (payload.search != null) {
+      where[Op.or] = [{ productName: { [Op.like]: `%${payload.search}%` } }]
+    }
+
+    if (payload.productCategoryId != null) {
+      where.productCategoryId = { [Op.eq]: payload.productCategoryId }
+    }
+
+    if (payload.productSubCategoryId != null) {
+      where.productSubCategoryId = { [Op.eq]: payload.productSubCategoryId }
+    }
+
+    return where
+  }
+
+  static async findAllProducts(payload: IFindAllProducts) {
     try {
-      const page = new Pagination(query.page, query.size)
+      const page = new Pagination(payload.page, payload.size)
 
       const result = await ProductModel.findAndCountAll({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          productIsVisible: { [Op.eq]: true },
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ productName: { [Op.like]: `%${query.search}%` } }]
-          }),
-          ...(Boolean(query.productCategoryId) && {
-            productCategoryId: { [Op.eq]: query.productCategoryId }
-          }),
-          ...(Boolean(query.productSubCategoryId) && {
-            productSubCategoryId: { [Op.eq]: query.productSubCategoryId }
-          })
-        },
+        where: this.buildFindAllWhere(payload, { onlyVisible: true }),
         include: [{ model: CategoryModel }],
         order: [['productId', 'desc']],
-        ...(query.pagination === true && {
+        ...(payload.pagination === true && {
           limit: page.limit,
           offset: page.offset
         })
       })
 
       return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] findAllProducts failed: ${String(error)}`)
-      throw new AppError(
-        'Gagal mengambil daftar produk',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ProductService] findAllProducts failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find all products', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async findAllProductsAdmin(query: IFindAllProductsQuery) {
+  static async findAllProductsAdmin(payload: IFindAllProducts) {
     try {
-      const page = new Pagination(query.page, query.size)
+      const page = new Pagination(payload.page, payload.size)
 
       const result = await ProductModel.findAndCountAll({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ productName: { [Op.like]: `%${query.search}%` } }]
-          }),
-          ...(Boolean(query.productCategoryId) && {
-            productCategoryId: { [Op.eq]: query.productCategoryId }
-          }),
-          ...(Boolean(query.productSubCategoryId) && {
-            productSubCategoryId: { [Op.eq]: query.productSubCategoryId }
-          })
-        },
+        where: this.buildFindAllWhere(payload, { onlyVisible: false }),
         include: [{ model: CategoryModel }],
         order: [['productId', 'desc']],
-        ...(query.pagination === true && {
+        ...(payload.pagination === true && {
           limit: page.limit,
           offset: page.offset
         })
       })
 
       return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] findAllProductsAdmin failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[ProductService] findAllProductsAdmin failed: ${String(serviceError)}`
+      )
       throw new AppError(
-        'Gagal mengambil daftar produk (admin)',
+        'Failed to find all products (admin)',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
   }
 
-  static async findDetailProduct(params: IProductDetailParams) {
+  static async findDetailProduct(payload: IFindDetailProduct) {
     try {
       const result = await ProductModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          productId: { [Op.eq]: params.productId }
+          productId: { [Op.eq]: payload.productId }
         },
         include: [{ model: CategoryModel }]
       })
 
       if (result == null) {
-        throw new AppError('Produk tidak ditemukan', StatusCodes.NOT_FOUND)
+        throw new AppError('Product not found', StatusCodes.NOT_FOUND)
       }
 
       return result
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] findDetailProduct failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ProductService] findDetailProduct failed: ${String(serviceError)}`)
       throw new AppError(
-        'Gagal mengambil detail produk',
+        'Failed to find detail product',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
   }
 
-  static async createProduct(body: ICreateProductBody) {
+  static async createProduct(payload: ICreateProduct) {
     try {
       const existingProduct = await ProductModel.findOne({
         where: {
           deleted: 0,
           [Op.or]: [
-            { productCode: body.productCode },
-            { productBarcode: body.productBarcode }
+            { productCode: payload.productCode },
+            { productBarcode: payload.productBarcode }
           ]
         }
       })
 
       if (existingProduct != null) {
-        let message = 'Product sudah terdaftar'
+        let message = 'Product already registered'
 
         if (
-          existingProduct.productCode === body.productCode &&
-          existingProduct.productBarcode === body.productBarcode
+          existingProduct.productCode === payload.productCode &&
+          existingProduct.productBarcode === payload.productBarcode
         ) {
-          message = 'Product code dan barcode sudah terdaftar'
-        } else if (existingProduct.productCode === body.productCode) {
-          message = 'Product code sudah terdaftar'
-        } else if (existingProduct.productBarcode === body.productBarcode) {
-          message = 'Product barcode sudah terdaftar'
+          message = 'Product code and barcode already registered'
+        } else if (existingProduct.productCode === payload.productCode) {
+          message = 'Product code already registered'
+        } else if (existingProduct.productBarcode === payload.productBarcode) {
+          message = 'Product barcode already registered'
         }
 
         throw new AppError(message, StatusCodes.BAD_REQUEST)
       }
 
       const productSellPrice = calculateSellPrice({
-        originalPrice: Number(body.productPrice),
-        discountPercent: Number(body.productDiscount)
+        originalPrice: Number(payload.productPrice),
+        discountPercent: Number(payload.productDiscount)
       })
 
       await ProductModel.create({
-        ...body,
+        ...payload,
         productSellPrice,
         deleted: 0,
         productIsHighlight: false,
-        productDescription: body.productDescription ?? '',
-        productCategoryId: String(body.productCategoryId),
-        productSubCategoryId: String(body.productSubCategoryId),
-        productBarcode: body.productBarcode ?? '',
-        productIsVisible: body.productIsVisible ?? false
+        productDescription: payload.productDescription ?? '',
+        productCategoryId: String(payload.productCategoryId),
+        productSubCategoryId: String(payload.productSubCategoryId),
+        productBarcode: payload.productBarcode ?? '',
+        productIsVisible: payload.productIsVisible ?? false
       })
 
       return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] createProduct failed: ${String(error)}`)
-      throw new AppError('Gagal membuat produk', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ProductService] createProduct failed: ${String(serviceError)}`)
+      throw new AppError('Failed to create product', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updateProduct(body: IUpdateProductBody) {
+  static async updateProduct(payload: IUpdateProduct) {
     try {
       const product = await ProductModel.findOne({
         where: {
           deleted: 0,
-          productId: body.productId
+          productId: payload.productId
         }
       })
 
@@ -184,56 +191,56 @@ export class ProductService {
         throw new AppError('Product not found', StatusCodes.NOT_FOUND)
       }
 
-      if (body.productCode != null || body.productBarcode != null) {
+      if (payload.productCode != null || payload.productBarcode != null) {
         const orConditions: Array<{ productCode?: string; productBarcode?: string }> = []
 
-        if (body.productCode != null) {
-          orConditions.push({ productCode: body.productCode })
+        if (payload.productCode != null) {
+          orConditions.push({ productCode: payload.productCode })
         }
 
-        if (body.productBarcode != null) {
-          orConditions.push({ productBarcode: body.productBarcode })
+        if (payload.productBarcode != null) {
+          orConditions.push({ productBarcode: payload.productBarcode })
         }
 
         const duplicateProduct = await ProductModel.findOne({
           where: {
             deleted: 0,
-            productId: { [Op.ne]: body.productId },
+            productId: { [Op.ne]: payload.productId },
             [Op.or]: orConditions
           }
         })
 
         if (duplicateProduct != null) {
-          let message = 'Product sudah terdaftar'
+          let message = 'Product already registered'
 
           if (
-            body.productCode != null &&
-            body.productBarcode != null &&
-            duplicateProduct.productCode === body.productCode &&
-            duplicateProduct.productBarcode === body.productBarcode
+            payload.productCode != null &&
+            payload.productBarcode != null &&
+            duplicateProduct.productCode === payload.productCode &&
+            duplicateProduct.productBarcode === payload.productBarcode
           ) {
-            message = 'Product code dan barcode sudah terdaftar'
+            message = 'Product code and barcode already registered'
           } else if (
-            body.productCode != null &&
-            duplicateProduct.productCode === body.productCode
+            payload.productCode != null &&
+            duplicateProduct.productCode === payload.productCode
           ) {
-            message = 'Product code sudah terdaftar'
+            message = 'Product code already registered'
           } else if (
-            body.productBarcode != null &&
-            duplicateProduct.productBarcode === body.productBarcode
+            payload.productBarcode != null &&
+            duplicateProduct.productBarcode === payload.productBarcode
           ) {
-            message = 'Product barcode sudah terdaftar'
+            message = 'Product barcode already registered'
           }
 
           throw new AppError(message, StatusCodes.BAD_REQUEST)
         }
       }
 
-      const updatedPrice = body.productPrice ?? product.productPrice
-      const updatedDiscount = body.productDiscount ?? product.productDiscount
+      const updatedPrice = payload.productPrice ?? product.productPrice
+      const updatedDiscount = payload.productDiscount ?? product.productDiscount
 
       let productSellPrice: number | undefined
-      if (body.productPrice !== undefined || body.productDiscount !== undefined) {
+      if (payload.productPrice !== undefined || payload.productDiscount !== undefined) {
         productSellPrice = calculateSellPrice({
           originalPrice: Number(updatedPrice),
           discountPercent: Number(updatedDiscount)
@@ -245,7 +252,16 @@ export class ProductService {
         productSubCategoryId,
         productId: _omitId,
         ...restUpdate
-      } = body
+      } = payload
+
+      if (
+        Object.keys(restUpdate).length === 0 &&
+        productCategoryId === undefined &&
+        productSubCategoryId === undefined &&
+        productSellPrice === undefined
+      ) {
+        throw new AppError('No fields to update', StatusCodes.BAD_REQUEST)
+      }
 
       await product.update({
         ...restUpdate,
@@ -259,89 +275,34 @@ export class ProductService {
       })
 
       return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] updateProduct failed: ${String(error)}`)
-      throw new AppError('Gagal memperbarui produk', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ProductService] updateProduct failed: ${String(serviceError)}`)
+      throw new AppError('Failed to update product', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async removeProduct(query: IRemoveProductQuery) {
+  static async removeProduct(payload: IRemoveProduct) {
     try {
-      const result = await ProductModel.findOne({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          productId: { [Op.eq]: query.productId }
+      const [updatedRows] = await ProductModel.update(
+        { deleted: 1 },
+        {
+          where: {
+            deleted: { [Op.eq]: 0 },
+            productId: { [Op.eq]: payload.productId }
+          }
         }
-      })
+      )
 
-      if (result == null) {
-        throw new AppError('Produk tidak ditemukan', StatusCodes.NOT_FOUND)
+      if (updatedRows === 0) {
+        throw new AppError('Product not found', StatusCodes.NOT_FOUND)
       }
-
-      result.deleted = 1
-      await result.save()
 
       return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] removeProduct failed: ${String(error)}`)
-      throw new AppError('Gagal menghapus produk', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async recordExcelUpload(file: { path: string; originalname: string }) {
-    const payload = {
-      fileName: file.originalname,
-      filePath: file.path,
-      status: 'PENDING'
-    } as FileUploadAttributes
-
-    try {
-      const fileRecord = await FileUploadModel.create(payload)
-      await addProductFileToQueue(fileRecord.fileId, file.path)
-
-      return {
-        fileId: fileRecord.fileId,
-        fileName: fileRecord.fileName,
-        status: fileRecord.status
-      }
-    } catch (error) {
-      if (fs.existsSync(file.path)) {
-        fs.unlink(file.path, () => {})
-      }
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] recordExcelUpload failed: ${String(error)}`)
-      throw new AppError('Gagal memproses upload file', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async findUploadHistories(query: IUploadHistoriesQuery) {
-    try {
-      const page = new Pagination(query.page, query.size)
-
-      const result = await FileUploadModel.findAndCountAll({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          ...(Boolean(query.status) && {
-            status: { [Op.eq]: query.status }
-          })
-        },
-        order: [['fileId', 'desc']],
-        ...(query.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
-        })
-      })
-
-      return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[ProductService] findUploadHistories failed: ${String(error)}`)
-      throw new AppError(
-        'Gagal mengambil riwayat upload',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ProductService] removeProduct failed: ${String(serviceError)}`)
+      throw new AppError('Failed to remove product', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }
