@@ -2,13 +2,13 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 'use strict'
 
-const { ZygoteModel } = require('../zygote')
+const { BaseModelFields } = require('../baseModel')
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
     await queryInterface.createTable('products', {
-      ...ZygoteModel,
+      ...BaseModelFields,
       product_id: {
         type: DataTypes.BIGINT,
         autoIncrement: true,

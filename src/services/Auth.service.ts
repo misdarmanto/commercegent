@@ -42,7 +42,7 @@ export class AuthService {
       return { token }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[UserService] login failed: ${String(serviceError)}`)
+      logger.error(`[AuthService] userLogin failed: ${String(serviceError)}`)
       throw new AppError('Failed to login', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
@@ -77,7 +77,7 @@ export class AuthService {
       await UserModel.create(createPayload)
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[UserService] register failed: ${String(serviceError)}`)
+      logger.error(`[AuthService] userSignup failed: ${String(serviceError)}`)
       throw new AppError('Failed to register', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
@@ -118,7 +118,7 @@ export class AuthService {
       return { token }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AdminService] loginAdmin failed: ${String(serviceError)}`)
+      logger.error(`[AuthService] adminLogin failed: ${String(serviceError)}`)
       throw new AppError('Failed to login admin', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }

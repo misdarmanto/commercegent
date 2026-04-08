@@ -1,6 +1,6 @@
 /**
  * @swagger
- * /api/v1/users/login:
+ * /api/v1/auth/user/login:
  *   post:
  *     summary: Login
  *     tags: [AUTH]
@@ -28,7 +28,7 @@
 
 /**
  * @swagger
- * /api/v1/users/register:
+ * /api/v1/auth/user/register:
  *   post:
  *     summary: Register a new user
  *     tags: [AUTH]
@@ -73,7 +73,7 @@
 
 /**
  * @swagger
- * /api/v1/admins/login:
+ * /api/v1/auth/admin/login:
  *   post:
  *     summary: Login
  *     tags: [AUTH]
@@ -101,9 +101,9 @@
 
 /**
  * @swagger
- * /api/v1/admins/register:
+ * /api/v1/auth/admin/user/register:
  *   post:
- *     summary: Register a new user
+ *     summary: Register a new admin
  *     tags: [AUTH]
  *     requestBody:
  *       required: true
