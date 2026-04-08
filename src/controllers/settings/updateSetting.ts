@@ -4,14 +4,14 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { SettingService } from '../../services/Setting.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdateSettingBody } from '../../schemas/SettingSchema'
+import { type IUpdateSetting } from '../../schemas/SettingSchema'
 
 export const updateSetting = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as IUpdateSettingBody
+    const payload = req.body as unknown as IUpdateSetting
 
     await SettingService.updateSetting(payload)
     return res

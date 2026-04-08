@@ -4,14 +4,14 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { TransactionService } from '../../services/Transaction.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IRemoveTransactionQuery } from '../../schemas/TransactionSchema'
+import { type IRemoveTransaction } from '../../schemas/TransactionSchema'
 
 export const removeTransaction = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.query as unknown as IRemoveTransactionQuery
+    const payload = req.query as unknown as IRemoveTransaction
 
     await TransactionService.removeTransaction(payload)
     return res

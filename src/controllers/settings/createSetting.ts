@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { SettingService } from '../../services/Setting.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type ICreateSettingBody } from '../../schemas/SettingSchema'
+import { type ICreateSetting } from '../../schemas/SettingSchema'
 import { AppError } from '../../utilities/appError'
 
 export const createSetting = async (
@@ -12,7 +12,7 @@ export const createSetting = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as ICreateSettingBody
+    const payload = req.body as unknown as ICreateSetting
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {

@@ -4,14 +4,14 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { PromotionService } from '../../services/Promotion.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IRemovePromotionQuery } from '../../schemas/PromotionSchema'
+import { type IRemovePromotion } from '../../schemas/PromotionSchema'
 
 export const removePromotion = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.query as unknown as IRemovePromotionQuery
+    const payload = req.query as unknown as IRemovePromotion
 
     await PromotionService.removeProductHighlight(payload)
     return res

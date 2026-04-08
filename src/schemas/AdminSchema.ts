@@ -1,5 +1,4 @@
 import { z } from 'zod'
-import { jwtPayloadSchema } from './jwtPayloadSchema'
 
 const AdminRoleEnum = z.enum(['user', 'admin', 'superAdmin'])
 

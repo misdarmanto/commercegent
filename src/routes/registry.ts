@@ -14,7 +14,6 @@ import ShippingRoute from './Shipping.route'
 import StatisticRoute from './Statistic.route'
 import TransactionRoute from './Transaction.route'
 import UserRoute from './User.route'
-import WablasRoute from './WaBlas.route'
 import WebhookRouter from './Webhook.route'
 import RegionRoute from './Region.route'
 import OtpRoute from './Otp.route'
@@ -35,7 +34,6 @@ const RoutesRegistry = {
   StatisticRoute,
   TransactionRoute,
   UserRoute,
-  WablasRoute,
   ShippingRoute,
   WebhookRouter,
   PromotionRoute,

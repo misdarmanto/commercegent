@@ -15,27 +15,27 @@ TransactionRoute.use(MiddleWares.authorization)
 TransactionRoute.get(
   '/',
   MiddleWares.validate({ query: findAllTransactionQuerySchema }),
-  TransactionController.findAll
+  TransactionController.findAllTransactions
 )
 TransactionRoute.get(
   '/detail/:transactionId',
   MiddleWares.validate({ params: transactionDetailParamsSchema }),
-  TransactionController.findOne
+  TransactionController.findDetailTransaction
 )
 TransactionRoute.post(
   '/',
   MiddleWares.validate({ body: createTransactionBodySchema }),
-  TransactionController.create
+  TransactionController.createTransaction
 )
 TransactionRoute.patch(
   '/',
   MiddleWares.validate({ body: updateTransactionBodySchema }),
-  TransactionController.update
+  TransactionController.updateTransaction
 )
 TransactionRoute.delete(
   '/',
   MiddleWares.validate({ query: removeTransactionQuerySchema }),
-  TransactionController.remove
+  TransactionController.removeTransaction
 )
 
 export default TransactionRoute

@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { UserService } from '../../services/User.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdateUserCoinBody } from '../../schemas/UserSchema'
+import { type IUpdateUserCoin } from '../../schemas/UserSchema'
 import { AppError } from '../../utilities/appError'
 
 export const updateUserCoin = async (
@@ -12,7 +12,7 @@ export const updateUserCoin = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as IUpdateUserCoinBody
+    const payload = req.body as unknown as IUpdateUserCoin
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {

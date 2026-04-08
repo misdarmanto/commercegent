@@ -161,8 +161,6 @@ export class ProductService {
         productBarcode: payload.productBarcode ?? '',
         productIsVisible: payload.productIsVisible ?? false
       })
-
-      return { message: 'success' as const }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] createProduct failed: ${String(serviceError)}`)
@@ -265,8 +263,6 @@ export class ProductService {
           productSubCategoryId: String(productSubCategoryId)
         })
       })
-
-      return { message: 'success' as const }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] updateProduct failed: ${String(serviceError)}`)
@@ -289,8 +285,6 @@ export class ProductService {
       if (updatedRows === 0) {
         throw new AppError('Product not found', StatusCodes.NOT_FOUND)
       }
-
-      return { message: 'success' as const }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] removeProduct failed: ${String(serviceError)}`)

@@ -5,15 +5,15 @@ import { Op } from 'sequelize'
 import { ProductAttributes, ProductModel } from '../models/products'
 import { FileUploadModel } from '../models/fileUpload'
 import { appConfigs } from '../configs/appConfig'
-import logger from '../logs'
 import { calculateSellPrice } from '../utilities/priceCalculator'
+import logger from '../utilities/logger'
 
 new Worker(
   'product-file-queue',
   async (job) => {
     const { fileId, filePath } = job.data
 
-    logger.info(`[FileWorker]-Processing file upload job for file ID: ${fileId}`)
+    logger.info(`[ProductFileWorker]-Processing file upload job for file ID: ${fileId}`)
 
     await FileUploadModel.update({ status: 'PROCESSING' }, { where: { fileId } })
 
@@ -116,13 +116,15 @@ new Worker(
       await FileUploadModel.update({ status: 'SUCCESS' }, { where: { fileId } })
 
       fs.unlinkSync(filePath)
-    } catch (err) {
-      logger.error(`[FileWorker]-Error processing file ID ${fileId}:`, err)
+    } catch (workerError) {
+      logger.error(
+        `[ProductFileWorker]-Error processing file ID ${fileId}: ${String(workerError)}`
+      )
 
       await FileUploadModel.update(
         {
           status: 'FAILED',
-          message: (err as Error).message
+          message: (workerError as Error).message
         },
         { where: { fileId } }
       )

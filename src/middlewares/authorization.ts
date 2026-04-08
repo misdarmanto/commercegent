@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../utilities/response'
 import { verifyAccessToken } from '../utilities/jwt'
 import { type IAuthenticatedRequest } from '../interfaces/shared'
-import { handleServerError } from '../utilities/requestHandler'
+import { handleError } from '../utilities/requestHandler'
 
 export const authorization = (
   req: IAuthenticatedRequest,
@@ -15,24 +15,24 @@ export const authorization = (
       req.headers.authorization == null ||
       !req.headers.authorization.startsWith('Bearer ')
     ) {
-      const message = 'Missing Authorization.'
-      const response = ResponseData.error(message)
-      return res.status(StatusCodes.BAD_REQUEST).json(response)
+      return res
+        .status(StatusCodes.BAD_REQUEST)
+        .json(ResponseData.error({ message: 'Missing Authorization.' }))
     }
 
     const token = req.headers.authorization.split(' ')[1]
     const verify = verifyAccessToken(token)
 
     if (!verify) {
-      const message = 'Invalid Authorization.'
-      const response = ResponseData.error(message)
-      return res.status(StatusCodes.UNAUTHORIZED).json(response)
+      return res
+        .status(StatusCodes.UNAUTHORIZED)
+        .json(ResponseData.error({ message: 'Invalid Authorization.' }))
     }
 
     req.jwtPayload = verify
 
     next()
   } catch (serverError) {
-    return handleServerError(res, serverError)
+    return handleError(res, serverError)
   }
 }

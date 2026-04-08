@@ -1,7 +1,7 @@
 import app from './src/app'
 import { appConfigs } from './src/configs/appConfig'
-import logger from './src/logs'
 import './src/worker/productFileWorker'
+import logger from './src/utilities/logger'
 
 const PORT = appConfigs.app.port || 8000
 

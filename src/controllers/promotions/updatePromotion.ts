@@ -4,14 +4,14 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { PromotionService } from '../../services/Promotion.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdatePromotionBody } from '../../schemas/PromotionSchema'
+import { type IUpdatePromotion } from '../../schemas/PromotionSchema'
 
 export const updatePromotion = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as IUpdatePromotionBody
+    const payload = req.body as unknown as IUpdatePromotion
 
     await PromotionService.updateHighlights(payload)
     return res

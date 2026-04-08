@@ -43,11 +43,9 @@ export class OtpService {
         phone: payload.whatsappNumber,
         message
       })
-
-      return { message: 'success' as const }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[UserService] requestOtp failed: ${String(serviceError)}`)
+      logger.error(`[OtpService] requestOtp failed: ${String(serviceError)}`)
       throw new AppError('Failed to request OTP', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
@@ -61,10 +59,9 @@ export class OtpService {
       }
 
       await redis.del(`otp:${payload.otpCode}`)
-      return { message: 'success' as const }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[UserService] verifyOtp failed: ${String(serviceError)}`)
+      logger.error(`[OtpService] verifyOtp failed: ${String(serviceError)}`)
       throw new AppError('Failed to verify OTP', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }

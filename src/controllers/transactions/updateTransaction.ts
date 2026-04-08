@@ -4,14 +4,14 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { TransactionService } from '../../services/Transaction.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdateTransactionBody } from '../../schemas/TransactionSchema'
+import { type IUpdateTransaction } from '../../schemas/TransactionSchema'
 
 export const updateTransaction = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as IUpdateTransactionBody
+    const payload = req.body as unknown as IUpdateTransaction
 
     await TransactionService.updateTransaction(payload)
     return res
