@@ -1,14 +1,14 @@
 import jwt from 'jsonwebtoken'
 import { appConfigs } from '../configs/appConfig'
-import { IJwtPayload } from '../interfaces/shared/jwt.interface'
+import { IJwtPayload } from '../interfaces/shared'
 
-export const generateAccessToken = (user: IJwtPayload): any => {
-  return jwt.sign(user, appConfigs.secret.jwtToken ?? '')
+export const generateAccessToken = (user: IJwtPayload): string => {
+  return jwt.sign(user, appConfigs.secret.token ?? '')
 }
 
-export const verifyAccessToken = (token: string): any => {
+export const verifyAccessToken = (token: string) => {
   try {
-    return jwt.verify(token, appConfigs.secret.jwtToken ?? '')
+    return jwt.verify(token, appConfigs.secret.token ?? '')
   } catch {
     return false
   }

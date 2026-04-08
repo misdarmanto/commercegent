@@ -5,10 +5,6 @@ const productImagesField = z
   .optional()
   .transform((v) => (v == null ? [] : Array.isArray(v) ? v : [v]))
 
-/* ============================= */
-/* CREATE PRODUCT (body) */
-/* ============================= */
-
 export const createProductSchema = z.object({
   productName: z
     .string({ required_error: 'Nama produk wajib diisi' })
@@ -66,10 +62,6 @@ export const createProductSchema = z.object({
   productSellPrice: z.number().optional()
 })
 
-/* ============================= */
-/* UPDATE PRODUCT (body) */
-/* ============================= */
-
 export const updateProductSchema = z
   .object({
     productId: z.number().int().positive(),
@@ -98,10 +90,6 @@ export const updateProductSchema = z
   })
   .strict()
 
-/* ============================= */
-/* FIND PRODUCTS (query) */
-/* ============================= */
-
 export const findAllProductsQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(10),
@@ -119,10 +107,6 @@ export const findAllProductsQuerySchema = z.object({
 
 export const findAllProductsAdminQuerySchema = findAllProductsQuerySchema
 
-/* ============================= */
-/* PRODUCT DETAIL (params) */
-/* ============================= */
-
 export const productDetailParamsSchema = z.object({
   productId: z.coerce
     .number({ invalid_type_error: 'productId harus berupa angka' })
@@ -130,20 +114,12 @@ export const productDetailParamsSchema = z.object({
     .positive('productId harus lebih dari 0')
 })
 
-/* ============================= */
-/* REMOVE PRODUCT (query) */
-/* ============================= */
-
 export const removeProductQuerySchema = z.object({
   productId: z.coerce
     .number({ invalid_type_error: 'productId harus berupa angka' })
     .int('productId harus bilangan bulat')
     .positive('productId harus lebih dari 0')
 })
-
-/* ============================= */
-/* UPLOAD HISTORIES (query) */
-/* ============================= */
 
 export const uploadHistoriesQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
@@ -155,9 +131,9 @@ export const uploadHistoriesQuerySchema = z.object({
   status: z.string().optional()
 })
 
-export type ICreateProductBody = z.infer<typeof createProductSchema>
-export type IUpdateProductBody = z.infer<typeof updateProductSchema>
-export type IFindAllProductsQuery = z.infer<typeof findAllProductsQuerySchema>
-export type IProductDetailParams = z.infer<typeof productDetailParamsSchema>
-export type IRemoveProductQuery = z.infer<typeof removeProductQuerySchema>
-export type IUploadHistoriesQuery = z.infer<typeof uploadHistoriesQuerySchema>
+export type ICreateProduct = z.infer<typeof createProductSchema>
+export type IUpdateProduct = z.infer<typeof updateProductSchema>
+export type IFindAllProducts = z.infer<typeof findAllProductsQuerySchema>
+export type IFindDetailProduct = z.infer<typeof productDetailParamsSchema>
+export type IRemoveProduct = z.infer<typeof removeProductQuerySchema>
+export type IUploadHistories = z.infer<typeof uploadHistoriesQuerySchema>

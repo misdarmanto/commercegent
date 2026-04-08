@@ -5,10 +5,10 @@ import { SettingAttributes, SettingModel } from '../models/settings'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type {
-  ICreateSettingBody,
-  IFindSettingQuery,
-  IRemoveSettingParams,
-  IUpdateSettingBody
+  IFindSetting,
+  ICreateSetting,
+  IUpdateSetting,
+  IRemoveSetting
 } from '../schemas/SettingSchema'
 
 const UPDATABLE_FIELDS = [
@@ -23,27 +23,9 @@ const UPDATABLE_FIELDS = [
 ] as const
 
 export class SettingService {
-  private static async assertSuperAdmin(userId: number | undefined) {
-    if (userId == null) {
-      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
-    }
-
-    const row = await UserModel.findOne({
-      where: {
-        deleted: { [Op.eq]: 0 },
-        userId,
-        userRole: { [Op.eq]: 'superAdmin' }
-      }
-    })
-
-    if (row == null) {
-      throw new AppError('access denied!', StatusCodes.FORBIDDEN)
-    }
-  }
-
-  static async findSettings(query: IFindSettingQuery) {
+  static async findSettings(payload: IFindSetting) {
     try {
-      const { settingType } = query
+      const { settingType } = payload
 
       const whereCondition: Record<string, unknown> = {
         deleted: { [Op.eq]: 0 }
@@ -115,43 +97,61 @@ export class SettingService {
       })
 
       return results
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[SettingService] findSettings failed: ${String(error)}`)
-      throw new AppError('Gagal mengambil pengaturan', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[SettingService] findSettings failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find settings', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async createSetting(userId: number | undefined, body: ICreateSettingBody) {
+  private static async assertSuperAdmin(userId: number) {
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
+    }
+
+    const row = await UserModel.findOne({
+      where: {
+        deleted: { [Op.eq]: 0 },
+        userId,
+        userRole: { [Op.eq]: 'superAdmin' }
+      }
+    })
+
+    if (row == null) {
+      throw new AppError('access denied!', StatusCodes.FORBIDDEN)
+    }
+  }
+
+  static async createSetting(userId: number, payload: ICreateSetting) {
     await this.assertSuperAdmin(userId)
 
     try {
       const uniqueTypes = ['general', 'wa_blas']
 
       let existingSetting: Awaited<ReturnType<typeof SettingModel.findOne>> = null
-      if (uniqueTypes.includes(body.settingType)) {
+      if (uniqueTypes.includes(payload.settingType)) {
         existingSetting = await SettingModel.findOne({
           where: {
             deleted: { [Op.eq]: 0 },
-            settingType: { [Op.eq]: body.settingType }
+            settingType: { [Op.eq]: payload.settingType }
           }
         })
       }
 
       const newSettingData: Partial<SettingAttributes> = {
-        settingType: body.settingType
+        settingType: payload.settingType
       }
 
-      switch (body.settingType) {
+      switch (payload.settingType) {
         case 'general':
           newSettingData.banner =
-            (body.banner as SettingAttributes['banner'] | undefined) ?? null
-          newSettingData.whatsappNumber = body.whatsappNumber ?? null
+            (payload.banner as SettingAttributes['banner'] | undefined) ?? null
+          newSettingData.whatsappNumber = payload.whatsappNumber ?? null
           break
 
         case 'wa_blas':
-          newSettingData.waBlasToken = body.waBlasToken ?? null
-          newSettingData.waBlasServer = body.waBlasServer ?? null
+          newSettingData.waBlasToken = payload.waBlasToken ?? null
+          newSettingData.waBlasServer = payload.waBlasServer ?? null
           break
 
         default:
@@ -167,19 +167,19 @@ export class SettingService {
         newSettingData as SettingAttributes
       )
       return { status: 'created' as const, data: createdSetting }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[SettingService] createSetting failed: ${String(error)}`)
-      throw new AppError('Gagal menyimpan pengaturan', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[SettingService] createSetting failed: ${String(serviceError)}`)
+      throw new AppError('Failed to create setting', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updateSetting(body: IUpdateSettingBody) {
+  static async updateSetting(payload: IUpdateSetting) {
     try {
       const existingSetting = await SettingModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          settingId: { [Op.eq]: body.settingId }
+          settingId: { [Op.eq]: payload.settingId }
         }
       })
 
@@ -190,7 +190,7 @@ export class SettingService {
       const newData: Partial<SettingAttributes> = {}
 
       for (const key of UPDATABLE_FIELDS) {
-        const value = body[key as keyof IUpdateSettingBody]
+        const value = payload[key as keyof IUpdateSetting]
         if (value !== undefined && value !== null && value !== '') {
           ;(newData as Record<string, unknown>)[key] = value
         }
@@ -199,29 +199,24 @@ export class SettingService {
       await SettingModel.update(newData, {
         where: {
           deleted: { [Op.eq]: 0 },
-          settingId: { [Op.eq]: body.settingId }
+          settingId: { [Op.eq]: payload.settingId }
         }
       })
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[SettingService] updateSetting failed: ${String(error)}`)
-      throw new AppError(
-        'Gagal memperbarui pengaturan',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[SettingService] updateSetting failed: ${String(serviceError)}`)
+      throw new AppError('Failed to update setting', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async removeSetting(userId: number | undefined, params: IRemoveSettingParams) {
+  static async removeSetting(userId: number, payload: IRemoveSetting) {
     await this.assertSuperAdmin(userId)
 
     try {
       const row = await SettingModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          settingId: { [Op.eq]: params.settingId }
+          settingId: { [Op.eq]: payload.settingId }
         }
       })
 
@@ -233,16 +228,14 @@ export class SettingService {
         { deleted: 1 },
         {
           where: {
-            settingId: { [Op.eq]: params.settingId }
+            settingId: { [Op.eq]: payload.settingId }
           }
         }
       )
-
-      return { message: 'setting deleted successfully!' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[SettingService] removeSetting failed: ${String(error)}`)
-      throw new AppError('Gagal menghapus pengaturan', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[SettingService] removeSetting failed: ${String(serviceError)}`)
+      throw new AppError('Failed to remove setting', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

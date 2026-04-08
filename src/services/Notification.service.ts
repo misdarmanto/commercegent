@@ -7,27 +7,23 @@ import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type {
-  ICreateNotificationBody,
-  IFindAllNotificationQuery,
-  IUpdateNotificationBody,
-  IUpdatePushTokenBody
+  ICreateNotification,
+  IFindAllNotification,
+  IFindDetailNotification,
+  IUpdateNotification,
+  IUpdatePushToken
 } from '../schemas/NotificationSchema'
-
-interface PushPayload {
-  title: string
-  body: string
-}
 
 async function sendExpoPushNotification(
   expoPushToken: string,
-  data: PushPayload
+  payload: ICreateNotification
 ): Promise<string> {
   const expo = new Expo({
     accessToken: process.env.ACCESS_TOKEN,
     useFcmV1: true
   })
 
-  const chunks = expo.chunkPushNotifications([{ to: expoPushToken, ...data }])
+  const chunks = expo.chunkPushNotifications([{ to: expoPushToken, ...payload }])
   const tickets: Array<{ status: string; id?: string; details?: { error?: string } }> = []
 
   for (const chunk of chunks) {
@@ -39,25 +35,25 @@ async function sendExpoPushNotification(
     }
   }
 
-  let response = ''
+  let result = ''
 
   for (const ticket of tickets) {
     if (ticket.status === 'error') {
       if (ticket.details != null && ticket.details.error === 'DeviceNotRegistered') {
-        response = 'DeviceNotRegistered'
+        result = 'DeviceNotRegistered'
       }
     }
 
     if (ticket.status === 'ok' && ticket.id != null) {
-      response = ticket.id
+      result = ticket.id
     }
   }
 
-  return response
+  return result
 }
 
 export class NotificationService {
-  static async createNotification(body: ICreateNotificationBody) {
+  static async createNotification(payload: ICreateNotification) {
     try {
       const users = await UserModel.findAll({
         where: {
@@ -69,22 +65,22 @@ export class NotificationService {
       for (const user of users) {
         if (user.userFcmId != null && user.userFcmId !== '') {
           void sendExpoPushNotification(user.userFcmId, {
-            title: body.notificationName,
-            body: body.notificationMessage
+            notificationName: payload.notificationName,
+            notificationMessage: payload.notificationMessage
           })
         }
       }
 
       await NotificationModel.create({
-        notificationName: body.notificationName,
-        notificationMessage: body.notificationMessage,
+        notificationName: payload.notificationName,
+        notificationMessage: payload.notificationMessage,
         deleted: 0
       })
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[NotificationService] createNotification failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[NotificationService] createNotification failed: ${String(serviceError)}`
+      )
       throw new AppError(
         'Failed to create notification',
         StatusCodes.INTERNAL_SERVER_ERROR
@@ -92,12 +88,12 @@ export class NotificationService {
     }
   }
 
-  static async updateNotification(body: IUpdateNotificationBody) {
+  static async updateNotification(payload: IUpdateNotification) {
     try {
       const existing = await NotificationModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          notificationId: { [Op.eq]: body.notificationId }
+          notificationId: { [Op.eq]: payload.notificationId }
         }
       })
 
@@ -106,24 +102,24 @@ export class NotificationService {
       }
 
       const newData: Record<string, unknown> = {}
-      if (body.notificationName != null && body.notificationName.length > 0) {
-        newData.notificationName = body.notificationName
+      if (payload.notificationName != null && payload.notificationName.length > 0) {
+        newData.notificationName = payload.notificationName
       }
-      if (body.notificationMessage != null && body.notificationMessage.length > 0) {
-        newData.notificationMessage = body.notificationMessage
+      if (payload.notificationMessage != null && payload.notificationMessage.length > 0) {
+        newData.notificationMessage = payload.notificationMessage
       }
 
       await NotificationModel.update(newData, {
         where: {
           deleted: { [Op.eq]: 0 },
-          notificationId: { [Op.eq]: body.notificationId }
+          notificationId: { [Op.eq]: payload.notificationId }
         }
       })
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[NotificationService] updateNotification failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[NotificationService] updateNotification failed: ${String(serviceError)}`
+      )
       throw new AppError(
         'Failed to update notification',
         StatusCodes.INTERNAL_SERVER_ERROR
@@ -146,11 +142,11 @@ export class NotificationService {
 
       row.deleted = 1
       await row.save()
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[NotificationService] removeNotification failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[NotificationService] removeNotification failed: ${String(serviceError)}`
+      )
       throw new AppError(
         'Failed to remove notification',
         StatusCodes.INTERNAL_SERVER_ERROR
@@ -158,65 +154,64 @@ export class NotificationService {
     }
   }
 
-  static async findAllNotifications(query: IFindAllNotificationQuery) {
+  static async findAllNotifications(payload: IFindAllNotification) {
     try {
-      const page = new Pagination(query.page, query.size)
+      const page = new Pagination(payload.page, payload.size)
 
       const result = await NotificationModel.findAndCountAll({
         where: {
           deleted: { [Op.eq]: 0 },
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ notificationName: { [Op.like]: `%${query.search}%` } }]
+          ...(Boolean(payload.search) && {
+            [Op.or]: [{ notificationName: { [Op.like]: `%${payload.search}%` } }]
           })
         },
         order: [['notificationId', 'desc']],
-        ...(query.pagination === true && {
+        ...(payload.pagination === true && {
           limit: page.limit,
           offset: page.offset
         })
       })
 
       return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[NotificationService] findAllNotifications failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[NotificationService] findAllNotifications failed: ${String(serviceError)}`
+      )
       throw new AppError(
-        'Failed to fetch notifications',
+        'Failed to find notifications',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
   }
 
-  static async findDetailNotification(notificationId: number) {
+  static async findDetailNotification(payload: IFindDetailNotification) {
     try {
-      const row = await NotificationModel.findOne({
+      const result = await NotificationModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          notificationId: { [Op.eq]: notificationId }
+          notificationId: { [Op.eq]: payload.notificationId }
         }
       })
 
-      if (row == null) {
+      if (result == null) {
         throw new AppError('not found!', StatusCodes.NOT_FOUND)
       }
 
-      return row
-    } catch (error) {
-      if (error instanceof AppError) throw error
+      return result
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
       logger.error(
-        `[NotificationService] findDetailNotification failed: ${String(error)}`
+        `[NotificationService] findDetailNotification failed: ${String(serviceError)}`
       )
-      throw new AppError(
-        'Failed to fetch notification',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
+      throw new AppError('Failed to find notification', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updatePushToken(userId: number, body: IUpdatePushTokenBody) {
+  static async updatePushToken(userId: number, payload: IUpdatePushToken) {
     try {
       await UserModel.update(
-        { userFcmId: body.userFcmId },
+        { userFcmId: payload.userFcmId },
         {
           where: {
             deleted: { [Op.eq]: 0 },
@@ -224,11 +219,11 @@ export class NotificationService {
           }
         }
       )
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[NotificationService] updatePushToken failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[NotificationService] updatePushToken failed: ${String(serviceError)}`
+      )
       throw new AppError('Failed to update push token', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }

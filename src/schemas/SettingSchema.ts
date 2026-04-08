@@ -2,17 +2,9 @@ import { z } from 'zod'
 
 const settingTypeFilterEnum = z.enum(['bank', 'qris', 'general', 'wa_blas'])
 
-/* ============================= */
-/* FIND SETTINGS (query) */
-/* ============================= */
-
 export const findSettingQuerySchema = z.object({
   settingType: settingTypeFilterEnum.optional()
 })
-
-/* ============================= */
-/* CREATE SETTING (body) */
-/* ============================= */
 
 export const createSettingBodySchema = z.object({
   settingType: z.enum(['general', 'wa_blas']),
@@ -21,10 +13,6 @@ export const createSettingBodySchema = z.object({
   waBlasToken: z.string().optional().nullable(),
   waBlasServer: z.string().optional().nullable()
 })
-
-/* ============================= */
-/* UPDATE SETTING (body) */
-/* ============================= */
 
 export const updateSettingBodySchema = z.object({
   settingId: z.coerce
@@ -42,10 +30,6 @@ export const updateSettingBodySchema = z.object({
   waBlasServer: z.string().optional()
 })
 
-/* ============================= */
-/* REMOVE SETTING (params) */
-/* ============================= */
-
 export const removeSettingParamsSchema = z.object({
   settingId: z.coerce
     .number({ invalid_type_error: 'settingId harus berupa angka' })
@@ -53,7 +37,7 @@ export const removeSettingParamsSchema = z.object({
     .positive('settingId harus lebih dari 0')
 })
 
-export type IFindSettingQuery = z.infer<typeof findSettingQuerySchema>
-export type ICreateSettingBody = z.infer<typeof createSettingBodySchema>
-export type IUpdateSettingBody = z.infer<typeof updateSettingBodySchema>
-export type IRemoveSettingParams = z.infer<typeof removeSettingParamsSchema>
+export type IFindSetting = z.infer<typeof findSettingQuerySchema>
+export type ICreateSetting = z.infer<typeof createSettingBodySchema>
+export type IUpdateSetting = z.infer<typeof updateSettingBodySchema>
+export type IRemoveSetting = z.infer<typeof removeSettingParamsSchema>

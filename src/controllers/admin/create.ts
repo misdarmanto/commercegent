@@ -9,10 +9,11 @@ export const createAdmin = async (req: Request, res: Response): Promise<Response
   try {
     const payload = req.body as unknown as ICreateAdmin
     await AdminService.createAdmin(payload)
+
     return res
       .status(StatusCodes.CREATED)
       .json(ResponseData.success({ message: 'Admin created successfully' }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

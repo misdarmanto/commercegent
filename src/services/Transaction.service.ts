@@ -1,21 +1,36 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { TransactionsModel } from '../models/transactions'
-import { UserModel } from '../models/user'
+import { TransactionsAttributes, TransactionsModel } from '../models/transactions'
+import { UserAttributes, UserModel } from '../models/user'
 import { OrdersModel } from '../models/orders'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type {
-  ICreateTransactionBody,
-  IFindAllTransactionQuery,
-  IRemoveTransactionQuery,
-  ITransactionDetailParams,
-  IUpdateTransactionBody
+  IFindAllTransaction,
+  ICreateTransaction,
+  IUpdateTransaction,
+  IRemoveTransaction,
+  IFindDetailTransaction
 } from '../schemas/TransactionSchema'
 
 export class TransactionService {
-  static async findAllTransactions(userId: number, query: IFindAllTransactionQuery) {
+  private static buildFindAllWhere(
+    userId: number,
+    userRole: string
+  ): WhereOptions<TransactionsAttributes> {
+    const where: WhereOptions<TransactionsAttributes> = {
+      deleted: { [Op.eq]: 0 }
+    }
+
+    if (userRole === 'user') {
+      where.transactionUserId = { [Op.eq]: String(userId) }
+    }
+
+    return where
+  }
+
+  static async findAllTransactions(userId: number, payload: IFindAllTransaction) {
     try {
       const user = await UserModel.findOne({
         where: {
@@ -24,18 +39,14 @@ export class TransactionService {
         }
       })
 
-      const page = new Pagination(query.page, query.size)
+      if (user == null) {
+        throw new AppError('User not found!', StatusCodes.NOT_FOUND)
+      }
+
+      const pager = new Pagination(payload.page, payload.size)
 
       const result = await TransactionsModel.findAndCountAll({
-        where: {
-          ...(Boolean(user?.dataValues.userRole === 'user') && {
-            transactionUserId: { [Op.eq]: userId }
-          }),
-          deleted: { [Op.eq]: 0 },
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ transactionId: { [Op.like]: `%${query.search}%` } }]
-          })
-        },
+        where: this.buildFindAllWhere(userId, user.userRole),
         include: [
           {
             model: UserModel,
@@ -44,29 +55,31 @@ export class TransactionService {
           { model: OrdersModel }
         ],
         order: [['transactionId', 'desc']],
-        ...(query.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
+        ...(payload.pagination === true && {
+          limit: pager.limit,
+          offset: pager.offset
         })
       })
 
-      return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[TransactionService] findAllTransactions failed: ${String(error)}`)
+      return pager.formatData(result)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[TransactionService] findAllTransactions failed: ${String(serviceError)}`
+      )
       throw new AppError(
-        'Gagal mengambil daftar transaksi',
+        'Failed to get all transactions',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
   }
 
-  static async findDetailTransaction(params: ITransactionDetailParams) {
+  static async findDetailTransaction(payload: IFindDetailTransaction) {
     try {
       const result = await TransactionsModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          transactionId: { [Op.eq]: params.transactionId }
+          transactionId: { [Op.eq]: payload.transactionId }
         },
         include: [
           {
@@ -78,92 +91,105 @@ export class TransactionService {
       })
 
       if (result == null) {
-        throw new AppError('not found!', StatusCodes.NOT_FOUND)
+        throw new AppError('Transaction not found!', StatusCodes.NOT_FOUND)
       }
 
       return result
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[TransactionService] findDetailTransaction failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[TransactionService] findDetailTransaction failed: ${String(serviceError)}`
+      )
       throw new AppError(
-        'Gagal mengambil detail transaksi',
+        'Failed to get detail transaction',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
   }
 
-  static async createTransaction(userId: number, body: ICreateTransactionBody) {
+  static async createTransaction(userId: number, payload: ICreateTransaction) {
     try {
-      const payload = {
-        ...body,
+      const createPayload = {
+        ...payload,
         transactionUserId: String(userId),
         deleted: 0
-      }
+      } as TransactionsAttributes
 
-      await TransactionsModel.create(payload as any)
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[TransactionService] createTransaction failed: ${String(error)}`)
-      throw new AppError('Gagal membuat transaksi', StatusCodes.INTERNAL_SERVER_ERROR)
+      await TransactionsModel.create(createPayload as TransactionsAttributes)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[TransactionService] createTransaction failed: ${String(serviceError)}`
+      )
+      throw new AppError(
+        'Failed to create transaction',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
     }
   }
 
-  static async updateTransaction(body: IUpdateTransactionBody) {
+  static async updateTransaction(payload: IUpdateTransaction) {
     try {
       const existing = await TransactionsModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          transactionId: { [Op.eq]: body.transactionId }
+          transactionId: { [Op.eq]: payload.transactionId }
         }
       })
 
       if (existing == null) {
-        throw new AppError('not found!', StatusCodes.NOT_FOUND)
+        throw new AppError('Transaction not found!', StatusCodes.NOT_FOUND)
       }
 
       const updatePayload: Record<string, unknown> = {}
 
-      if (body.transactionStatus != null) {
-        updatePayload.transactionStatus = body.transactionStatus
+      if (payload.transactionStatus != null) {
+        updatePayload.transactionStatus = payload.transactionStatus
       }
-      if (body.transactionPaymentType != null) {
-        updatePayload.transactionPaymentType = body.transactionPaymentType
+      if (payload.transactionPaymentType != null) {
+        updatePayload.transactionPaymentType = payload.transactionPaymentType
       }
-      if (body.transactionRawResponse != null) {
-        updatePayload.transactionRawResponse = body.transactionRawResponse
+      if (payload.transactionRawResponse != null) {
+        updatePayload.transactionRawResponse = payload.transactionRawResponse
       }
 
       await existing.update(updatePayload)
-
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[TransactionService] updateTransaction failed: ${String(error)}`)
-      throw new AppError('Gagal memperbarui transaksi', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[TransactionService] updateTransaction failed: ${String(serviceError)}`
+      )
+      throw new AppError(
+        'Failed to update transaction',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
     }
   }
 
-  static async removeTransaction(query: IRemoveTransactionQuery) {
+  static async removeTransaction(payload: IRemoveTransaction) {
     try {
       const row = await TransactionsModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
-          transactionId: { [Op.eq]: query.transactionId }
+          transactionId: { [Op.eq]: payload.transactionId }
         }
       })
 
       if (row == null) {
-        throw new AppError('transation not found!', StatusCodes.NOT_FOUND)
+        throw new AppError('Transaction not found!', StatusCodes.NOT_FOUND)
       }
 
       row.deleted = 1
       await row.save()
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[TransactionService] removeTransaction failed: ${String(error)}`)
-      throw new AppError('Gagal menghapus transaksi', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[TransactionService] removeTransaction failed: ${String(serviceError)}`
+      )
+      throw new AppError(
+        'Failed to remove transaction',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
     }
   }
 }

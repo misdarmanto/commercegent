@@ -1,9 +1,5 @@
 import { z } from 'zod'
 
-/* ============================= */
-/* MIDTRANS WEBHOOK (body) */
-/* ============================= */
-
 export const midtransWebhookBodySchema = z.object({
   order_id: z.string().min(1),
   transaction_status: z.string().min(1),
@@ -12,10 +8,6 @@ export const midtransWebhookBodySchema = z.object({
   payment_type: z.string().optional(),
   signature_key: z.string().min(1)
 })
-
-/* ============================= */
-/* BITESHIP WEBHOOK (body) */
-/* ============================= */
 
 export const bitshipWebhookBodySchema = z.object({
   event: z.string().optional(),
@@ -28,5 +20,5 @@ export const bitshipWebhookBodySchema = z.object({
   status: z.string().optional()
 })
 
-export type IMidtransWebhookBody = z.infer<typeof midtransWebhookBodySchema>
-export type IBitshipWebhookBody = z.infer<typeof bitshipWebhookBodySchema>
+export type IMidtransWebhook = z.infer<typeof midtransWebhookBodySchema>
+export type IBitshipWebhook = z.infer<typeof bitshipWebhookBodySchema>

@@ -12,15 +12,18 @@ export const updateSelfUser = async (
   res: Response
 ): Promise<Response> => {
   try {
+    const payload = req.body as unknown as IUpdateUser
     const userId = req.jwtPayload?.userId
+
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const body = req.body as unknown as IUpdateUser
-    const result = await UserService.updateSelf(userId, body)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await UserService.updateSelf(userId, payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'User updated successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

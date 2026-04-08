@@ -1,6 +1,6 @@
 import { Queue } from 'bullmq'
 import { appConfigs } from '../configs/appConfig'
-import logger from '../logs'
+import logger from '../utilities/logger'
 
 const productFileQueue = new Queue('product-file-queue', {
   connection: {
@@ -10,7 +10,9 @@ const productFileQueue = new Queue('product-file-queue', {
 })
 
 export async function addProductFileToQueue(fileId: number, filePath: string) {
-  logger.info('Adding job to product file queue:', { fileId, filePath })
+  logger.info(
+    `[ProductFileQueue]-Adding job to product file queue: ${fileId} ${filePath}`
+  )
 
   await productFileQueue.add(
     'process-product-file',

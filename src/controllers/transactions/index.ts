@@ -5,9 +5,9 @@ import { removeTransaction } from './removeTransaction'
 import { updateTransaction } from './updateTransaction'
 
 export const TransactionController = {
-  create: createTransaction,
-  findAll: findAllTransactions,
-  findOne: findDetailTransaction,
-  remove: removeTransaction,
-  update: updateTransaction
+  createTransaction,
+  findAllTransactions,
+  findDetailTransaction,
+  removeTransaction,
+  updateTransaction
 }

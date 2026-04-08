@@ -4,21 +4,20 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { UserService } from '../../services/User.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { AppError } from '../../utilities/appError'
+import { type IRemoveUser } from '../../schemas/UserSchema'
 
 export const removeUser = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const userId = req.jwtPayload?.userId
-    if (userId == null) {
-      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
-    }
+    const payload = req.query as unknown as IRemoveUser
 
-    const result = await UserService.removeUser(userId)
-    return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await UserService.removeUser(payload)
+    return res
+      .status(StatusCodes.OK)
+      .json(ResponseData.success({ message: 'User removed successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

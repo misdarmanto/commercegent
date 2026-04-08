@@ -1,60 +1,71 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { sequelize } from '../models'
-import { ProductModel } from '../models/products'
+import { ProductAttributes, ProductModel } from '../models/products'
 import { CategoryModel } from '../models/categories'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type {
-  IFindAllPromotionQuery,
-  IRemovePromotionQuery,
-  IUpdatePromotionBody
+  IFindAllPromotion,
+  IRemovePromotion,
+  IUpdatePromotion
 } from '../schemas/PromotionSchema'
 
 export class PromotionService {
-  static async findAllPromotions(query: IFindAllPromotionQuery) {
+  private static buildFindAllWhere(
+    payload: IFindAllPromotion
+  ): WhereOptions<ProductAttributes> {
+    const where: WhereOptions<ProductAttributes> = {
+      deleted: { [Op.eq]: 0 },
+      productIsHighlight: true
+    }
+
+    if (payload.search != null) {
+      where.productName = { [Op.like]: `%${payload.search}%` }
+    }
+
+    if (payload.productCategoryId != null) {
+      where.productCategoryId = { [Op.eq]: payload.productCategoryId }
+    }
+
+    if (payload.productSubCategoryId != null) {
+      where.productSubCategoryId = { [Op.eq]: payload.productSubCategoryId }
+    }
+
+    return where
+  }
+
+  static async findAllPromotions(payload: IFindAllPromotion) {
     try {
-      const page = new Pagination(query.page, query.size)
+      const pager = new Pagination(payload.page, payload.size)
 
       const result = await ProductModel.findAndCountAll({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          productIsHighlight: true,
-          ...(Boolean(query.search) && {
-            [Op.or]: [{ productName: { [Op.like]: `%${query.search}%` } }]
-          }),
-          ...(Boolean(query.productCategoryId) && {
-            productCategoryId: { [Op.eq]: query.productCategoryId }
-          }),
-          ...(Boolean(query.productSubCategoryId) && {
-            productSubCategoryId: { [Op.eq]: query.productSubCategoryId }
-          })
-        },
+        where: this.buildFindAllWhere(payload),
         include: [{ model: CategoryModel }],
         order: [['productId', 'desc']],
-        ...(query.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
+        ...(payload.pagination === true && {
+          limit: pager.limit,
+          offset: pager.offset
         })
       })
 
-      return page.formatData(result)
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[PromotionService] findAllPromotions failed: ${String(error)}`)
+      return pager.formatData(result)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[PromotionService] findAllPromotions failed: ${String(serviceError)}`)
       throw new AppError(
-        'Gagal mengambil daftar promosi',
+        'Failed to find all promotions',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
   }
 
-  static async updateHighlights(body: IUpdatePromotionBody) {
+  static async updateHighlights(payload: IUpdatePromotion) {
     const transaction = await sequelize.transaction()
 
     try {
-      for (const item of body.products) {
+      for (const item of payload.products) {
         await ProductModel.update(
           { productIsHighlight: item.productIsHighlight },
           {
@@ -65,31 +76,27 @@ export class PromotionService {
       }
 
       await transaction.commit()
-      return { message: 'Product highlight updated successfully' as const }
-    } catch (error) {
+    } catch (serviceError) {
       await transaction.rollback()
-      if (error instanceof AppError) throw error
-      logger.error(`[PromotionService] updateHighlights failed: ${String(error)}`)
-      throw new AppError(
-        'Gagal memperbarui highlight produk',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[PromotionService] updateHighlights failed: ${String(serviceError)}`)
+      throw new AppError('Failed to update highlights', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async removeProductHighlight(query: IRemovePromotionQuery) {
+  static async removeProductHighlight(payload: IRemovePromotion) {
     try {
       await ProductModel.update(
         { productIsHighlight: false },
-        { where: { productId: query.productId } }
+        { where: { productId: payload.productId } }
       )
-
-      return { message: 'Product promotion removed successfully' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[PromotionService] removeProductHighlight failed: ${String(error)}`)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[PromotionService] removeProductHighlight failed: ${String(serviceError)}`
+      )
       throw new AppError(
-        'Gagal menghapus promosi produk',
+        'Failed to remove product highlights',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }

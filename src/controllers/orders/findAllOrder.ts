@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { OrderService } from '../../services/Order.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IFindAllOrderQuery } from '../../schemas/OrderSchema'
+import { type IFindAllOrder } from '../../schemas/OrderSchema'
 import { AppError } from '../../utilities/appError'
 
 export const findAllOrder = async (
@@ -12,16 +12,20 @@ export const findAllOrder = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllOrderQuery
+    const payload = req.query as unknown as IFindAllOrder
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await OrderService.findAllOrders(userId, query)
+    const result = await OrderService.findAllOrders(
+      userId,
+      payload,
+      req.jwtPayload?.userRole
+    )
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

@@ -1,9 +1,5 @@
 import { z } from 'zod'
 
-/* ============================= */
-/* CREATE / UPDATE ADDRESS (body) */
-/* ============================= */
-
 export const createAddressSchema = z.object({
   addressUserName: z
     .string({ required_error: 'Nama penerima wajib diisi' })
@@ -54,17 +50,9 @@ export const createAddressSchema = z.object({
     .regex(/^-?\d+(\.\d+)?$/, 'Format latitude tidak valid')
 })
 
-/* ============================= */
-/* REMOVE ADDRESS (query) */
-/* ============================= */
-
 export const removeAddressQuerySchema = z.object({
   addressId: z.coerce.number().int().positive()
 })
-
-/* ============================= */
-/* REGION (params) */
-/* ============================= */
 
 export const regenciesParamsSchema = z.object({
   provinceId: z.string().min(1)
@@ -78,8 +66,8 @@ export const villagesParamsSchema = z.object({
   districtId: z.string().min(1)
 })
 
-export type ICreateAddressBody = z.infer<typeof createAddressSchema>
-export type IRemoveAddressQuery = z.infer<typeof removeAddressQuerySchema>
-export type IRegenciesParams = z.infer<typeof regenciesParamsSchema>
-export type IDistrictsParams = z.infer<typeof districtsParamsSchema>
-export type IVillagesParams = z.infer<typeof villagesParamsSchema>
+export type ICreateAddress = z.infer<typeof createAddressSchema>
+export type IRemoveAddress = z.infer<typeof removeAddressQuerySchema>
+export type IFindRegencies = z.infer<typeof regenciesParamsSchema>
+export type IFindDistricts = z.infer<typeof districtsParamsSchema>
+export type IFindVillages = z.infer<typeof villagesParamsSchema>

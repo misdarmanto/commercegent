@@ -1,9 +1,5 @@
 import { z } from 'zod'
 
-/* ============================= */
-/* GET SHIPPING RATES (body) */
-/* ============================= */
-
 export const getShippingRatesBodySchema = z
   .array(
     z.object({
@@ -19,20 +15,12 @@ export const getShippingRatesBodySchema = z
   )
   .min(1, 'Minimal satu item')
 
-/* ============================= */
-/* CREATE DRAFT (body) */
-/* ============================= */
-
 export const createShippingDraftBodySchema = z.object({
   orderId: z.coerce
     .number({ invalid_type_error: 'orderId harus berupa angka' })
     .int('orderId harus bilangan bulat')
     .positive('orderId harus lebih dari 0')
 })
-
-/* ============================= */
-/* CONFIRM DRAFT (body) */
-/* ============================= */
 
 export const confirmDraftOrderBodySchema = z.object({
   orderId: z.coerce
@@ -41,10 +29,6 @@ export const confirmDraftOrderBodySchema = z.object({
     .positive('orderId harus lebih dari 0')
 })
 
-/* ============================= */
-/* TRACKING (query) */
-/* ============================= */
-
 export const trackShipmentQuerySchema = z.object({
   orderId: z.coerce
     .number({ invalid_type_error: 'orderId harus berupa angka' })
@@ -52,7 +36,7 @@ export const trackShipmentQuerySchema = z.object({
     .positive('orderId harus lebih dari 0')
 })
 
-export type IGetShippingRatesBody = z.infer<typeof getShippingRatesBodySchema>
-export type ICreateShippingDraftBody = z.infer<typeof createShippingDraftBodySchema>
-export type IConfirmDraftOrderBody = z.infer<typeof confirmDraftOrderBodySchema>
-export type ITrackShipmentQuery = z.infer<typeof trackShipmentQuerySchema>
+export type IGetShippingRates = z.infer<typeof getShippingRatesBodySchema>
+export type ICreateShippingDraft = z.infer<typeof createShippingDraftBodySchema>
+export type IConfirmDraftOrder = z.infer<typeof confirmDraftOrderBodySchema>
+export type ITrackShipment = z.infer<typeof trackShipmentQuerySchema>

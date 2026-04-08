@@ -8,9 +8,12 @@ import { ICreateAppLog } from '../../schemas/AppLogSchema'
 export const createAppLog = async (req: Request, res: Response): Promise<Response> => {
   try {
     const payload = req.body as unknown as ICreateAppLog
-    const result = await AppLogService.create(payload)
-    return res.status(StatusCodes.CREATED).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+    await AppLogService.create(payload)
+
+    return res
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'App log created successfully' }))
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

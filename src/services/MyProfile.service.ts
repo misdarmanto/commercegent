@@ -1,15 +1,15 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel } from '../models/user'
+import { UserModel, type UserAttributes } from '../models/user'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { hashPassword } from '../utilities/scurePassword'
-import type { IUpdateMyProfileBody } from '../schemas/MyProfileSchema'
+import type { IUpdateMyProfile } from '../schemas/MyProfileSchema'
 
 export class MyProfileService {
   static async findMyProfile(userId: number) {
     try {
-      const row = await UserModel.findOne({
+      const result = await UserModel.findOne({
         where: {
           deleted: 0,
           userId
@@ -26,43 +26,51 @@ export class MyProfileService {
         ]
       })
 
-      if (row == null) {
+      if (result == null) {
         throw new AppError('user not found!', StatusCodes.NOT_FOUND)
       }
 
-      return row
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[MyProfileService] findMyProfile failed: ${String(error)}`)
-      throw new AppError('Failed to fetch profile', StatusCodes.INTERNAL_SERVER_ERROR)
+      return result
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[MyProfileService] findMyProfile failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find profile', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 
-  static async updateMyProfile(userId: number, body: IUpdateMyProfileBody) {
+  static async updateMyProfile(userId: number, payload: IUpdateMyProfile) {
     try {
-      const newData: Record<string, unknown> = {}
+      const newData: Partial<
+        Pick<UserAttributes, 'userName' | 'userPassword' | 'userRole'>
+      > = {}
 
-      if (body.userName != null && body.userName.length > 0) {
-        newData.userName = body.userName
+      if (payload.userName != null && payload.userName.length > 0) {
+        newData.userName = payload.userName
       }
-      if (body.userPassword != null && body.userPassword.length > 0) {
-        newData.userPassword = hashPassword(body.userPassword)
+      if (payload.userPassword != null && payload.userPassword.length > 0) {
+        newData.userPassword = hashPassword(payload.userPassword)
       }
-      if (body.userRole != null) {
-        newData.userRole = body.userRole
+      if (payload.userRole != null) {
+        newData.userRole = payload.userRole as unknown as UserAttributes['userRole']
       }
 
-      await UserModel.update(newData, {
+      if (Object.keys(newData).length === 0) {
+        throw new AppError('No fields to update', StatusCodes.BAD_REQUEST)
+      }
+
+      const [updatedRows] = await UserModel.update(newData, {
         where: {
           deleted: { [Op.eq]: 0 },
           userId: { [Op.eq]: userId }
         }
       })
 
-      return { message: 'success' as const }
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[MyProfileService] updateMyProfile failed: ${String(error)}`)
+      if (updatedRows === 0) {
+        throw new AppError('user not found!', StatusCodes.NOT_FOUND)
+      }
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[MyProfileService] updateMyProfile failed: ${String(serviceError)}`)
       throw new AppError('Failed to update profile', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }

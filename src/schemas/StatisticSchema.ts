@@ -1,9 +1,5 @@
 import { z } from 'zod'
 
-/* ============================= */
-/* FIND TOTAL (query) */
-/* ============================= */
+export const findTotalStatisticSchema = z.object({})
 
-export const findTotalStatisticQuerySchema = z.object({})
-
-export type IFindTotalStatisticQuery = z.infer<typeof findTotalStatisticQuerySchema>
+export type IFindTotalStatistic = z.infer<typeof findTotalStatisticSchema>

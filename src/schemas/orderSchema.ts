@@ -55,10 +55,6 @@ export const findAllOrderQuerySchema = z.object({
     .optional()
 })
 
-/* ============================= */
-/* ORDER DETAIL (params) */
-/* ============================= */
-
 export const orderDetailParamsSchema = z.object({
   orderId: z.coerce
     .number({ invalid_type_error: 'orderId harus berupa angka' })
@@ -66,20 +62,12 @@ export const orderDetailParamsSchema = z.object({
     .positive('orderId harus lebih dari 0')
 })
 
-/* ============================= */
-/* UPDATE ORDER (body) */
-/* ============================= */
-
 export const updateOrderBodySchema = z.object({
   orderId: z.coerce
     .number({ invalid_type_error: 'orderId harus berupa angka' })
     .int('orderId harus bilangan bulat')
     .positive('orderId harus lebih dari 0')
 })
-
-/* ============================= */
-/* SHIPPING / DRAFT (shared) */
-/* ============================= */
 
 export const createDraftFromOrderSchema = z.object({
   orderId: z.coerce.number().int().positive('orderId harus lebih dari 0')
@@ -93,10 +81,10 @@ export const trackOrderSchema = z.object({
   orderId: z.coerce.number().int().positive('orderId harus lebih dari 0')
 })
 
-export type ICreateOrderBody = z.infer<typeof createOrderSchema>
-export type IFindAllOrderQuery = z.infer<typeof findAllOrderQuerySchema>
-export type IOrderDetailParams = z.infer<typeof orderDetailParamsSchema>
-export type IUpdateOrderBody = z.infer<typeof updateOrderBodySchema>
-export type ICreateDraftFromOrderBody = z.infer<typeof createDraftFromOrderSchema>
-export type IConfirmDraftOrderBody = z.infer<typeof confirmDraftOrderSchema>
-export type ITrackOrderQuery = z.infer<typeof trackOrderSchema>
+export type ICreateOrder = z.infer<typeof createOrderSchema>
+export type IFindAllOrder = z.infer<typeof findAllOrderQuerySchema>
+export type IFindDetailOrder = z.infer<typeof orderDetailParamsSchema>
+export type IUpdateOrder = z.infer<typeof updateOrderBodySchema>
+export type ICreateDraftFromOrder = z.infer<typeof createDraftFromOrderSchema>
+export type IConfirmDraftOrder = z.infer<typeof confirmDraftOrderSchema>
+export type ITrackOrder = z.infer<typeof trackOrderSchema>

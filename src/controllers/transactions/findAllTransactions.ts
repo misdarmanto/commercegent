@@ -4,24 +4,24 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { TransactionService } from '../../services/Transaction.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IFindAllTransactionQuery } from '../../schemas/TransactionSchema'
 import { AppError } from '../../utilities/appError'
+import { type IFindAllTransaction } from '../../schemas/TransactionSchema'
 
 export const findAllTransactions = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const query = req.query as unknown as IFindAllTransactionQuery
+    const payload = req.query as unknown as IFindAllTransaction
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await TransactionService.findAllTransactions(userId, query)
+    const result = await TransactionService.findAllTransactions(userId, payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
-  } catch (error) {
-    return handleError(res, error)
+  } catch (serverError) {
+    return handleError(res, serverError)
   }
 }

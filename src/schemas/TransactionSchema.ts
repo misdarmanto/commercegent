@@ -2,10 +2,6 @@ import { z } from 'zod'
 
 const transactionStatusEnum = z.enum(['pending', 'success', 'failed', 'expire', 'cancel'])
 
-/* ============================= */
-/* FIND ALL TRANSACTIONS (query) */
-/* ============================= */
-
 export const findAllTransactionQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),
   size: z.coerce.number().int().min(1).max(100).default(10),
@@ -19,20 +15,12 @@ export const findAllTransactionQuerySchema = z.object({
     .transform((v) => v === 'true')
 })
 
-/* ============================= */
-/* TRANSACTION DETAIL (params) */
-/* ============================= */
-
 export const transactionDetailParamsSchema = z.object({
   transactionId: z.coerce
     .number({ invalid_type_error: 'transactionId harus berupa angka' })
     .int('transactionId harus bilangan bulat')
     .positive('transactionId harus lebih dari 0')
 })
-
-/* ============================= */
-/* CREATE TRANSACTION (body) */
-/* ============================= */
 
 export const createTransactionBodySchema = z.object({
   transactionOrderId: z.coerce
@@ -57,10 +45,6 @@ export const createTransactionBodySchema = z.object({
   transactionRawResponse: z.unknown().optional()
 })
 
-/* ============================= */
-/* UPDATE TRANSACTION (body) */
-/* ============================= */
-
 export const updateTransactionBodySchema = z.object({
   transactionId: z.coerce
     .number({ invalid_type_error: 'transactionId harus berupa angka' })
@@ -72,10 +56,6 @@ export const updateTransactionBodySchema = z.object({
   transactionRawResponse: z.unknown().optional()
 })
 
-/* ============================= */
-/* REMOVE TRANSACTION (query) */
-/* ============================= */
-
 export const removeTransactionQuerySchema = z.object({
   transactionId: z.coerce
     .number({ invalid_type_error: 'transactionId harus berupa angka' })
@@ -83,8 +63,8 @@ export const removeTransactionQuerySchema = z.object({
     .positive('transactionId harus lebih dari 0')
 })
 
-export type IFindAllTransactionQuery = z.infer<typeof findAllTransactionQuerySchema>
-export type ITransactionDetailParams = z.infer<typeof transactionDetailParamsSchema>
-export type ICreateTransactionBody = z.infer<typeof createTransactionBodySchema>
-export type IUpdateTransactionBody = z.infer<typeof updateTransactionBodySchema>
-export type IRemoveTransactionQuery = z.infer<typeof removeTransactionQuerySchema>
+export type IFindAllTransaction = z.infer<typeof findAllTransactionQuerySchema>
+export type IFindDetailTransaction = z.infer<typeof transactionDetailParamsSchema>
+export type ICreateTransaction = z.infer<typeof createTransactionBodySchema>
+export type IUpdateTransaction = z.infer<typeof updateTransactionBodySchema>
+export type IRemoveTransaction = z.infer<typeof removeTransactionQuerySchema>

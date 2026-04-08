@@ -24,10 +24,13 @@ routers.use('/api/v1/statistic', RoutesRegistry.StatisticRoute)
 routers.use('/api/v1/transactions', RoutesRegistry.TransactionRoute)
 routers.use('/api/v1/users', RoutesRegistry.UserRoute)
 routers.use('/api/v1/shipping', RoutesRegistry.ShippingRoute)
-routers.use('/api/v1/wa-blas', RoutesRegistry.WablasRoute)
 routers.use('/api/v1/webhooks', RoutesRegistry.WebhookRouter)
 routers.use('/api/v1/promotions', RoutesRegistry.PromotionRoute)
 routers.use('/api/v1/public', RoutesRegistry.PublicRouter)
+routers.use('/api/v1/regions', RoutesRegistry.RegionRoute)
+routers.use('/api/v1/otp', RoutesRegistry.OtpRoute)
+routers.use('/api/v1/auth', RoutesRegistry.AuthRoute)
+routers.use('/api/v1/upload-products', RoutesRegistry.UploadProductRoute)
 
 routers.use(
   '/api/v1/docs',
