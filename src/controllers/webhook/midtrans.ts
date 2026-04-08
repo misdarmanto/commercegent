@@ -3,15 +3,16 @@ import { ResponseData } from '../../utilities/response'
 import { StatusCodes } from 'http-status-codes'
 import { handleError } from '../../utilities/requestHandler'
 import { WebhookService } from '../../services/Webhook.service'
-import { type IMidtransWebhookBody } from '../../schemas/WebhookSchema'
+import { type IMidtransWebhook } from '../../schemas/WebhookSchema'
 
 export const midtransWebhookHandler = async (
   req: Request,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as IMidtransWebhookBody
+    const payload = req.body as unknown as IMidtransWebhook
     const result = await WebhookService.handleMidtransWebhook(payload)
+
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (serverError) {
     return handleError(res, serverError)

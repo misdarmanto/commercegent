@@ -1,6 +1,6 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { ProductModel } from '../models/products'
+import { ProductAttributes, ProductModel } from '../models/products'
 import { CategoryModel } from '../models/categories'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
@@ -14,20 +14,12 @@ import type {
   IUpdateProduct
 } from '../schemas/ProductSchema'
 
-type FindAllProductsWhere = {
-  deleted: { [Op.eq]: number }
-  productIsVisible?: { [Op.eq]: boolean }
-  [Op.or]?: Array<{ productName: { [Op.like]: string } }>
-  productCategoryId?: { [Op.eq]: number }
-  productSubCategoryId?: { [Op.eq]: number }
-}
-
 export class ProductService {
   private static buildFindAllWhere(
     payload: IFindAllProducts,
     opts: { onlyVisible: boolean }
-  ): FindAllProductsWhere {
-    const where: FindAllProductsWhere = {
+  ): WhereOptions<ProductAttributes> {
+    const where: WhereOptions<ProductAttributes> = {
       deleted: { [Op.eq]: 0 }
     }
 
@@ -36,7 +28,7 @@ export class ProductService {
     }
 
     if (payload.search != null) {
-      where[Op.or] = [{ productName: { [Op.like]: `%${payload.search}%` } }]
+      where.productName = { [Op.like]: `%${payload.search}%` }
     }
 
     if (payload.productCategoryId != null) {
@@ -52,19 +44,19 @@ export class ProductService {
 
   static async findAllProducts(payload: IFindAllProducts) {
     try {
-      const page = new Pagination(payload.page, payload.size)
+      const pager = new Pagination(payload.page, payload.size)
 
       const result = await ProductModel.findAndCountAll({
         where: this.buildFindAllWhere(payload, { onlyVisible: true }),
         include: [{ model: CategoryModel }],
         order: [['productId', 'desc']],
         ...(payload.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
+          limit: pager.limit,
+          offset: pager.offset
         })
       })
 
-      return page.formatData(result)
+      return pager.formatData(result)
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] findAllProducts failed: ${String(serviceError)}`)
@@ -74,19 +66,19 @@ export class ProductService {
 
   static async findAllProductsAdmin(payload: IFindAllProducts) {
     try {
-      const page = new Pagination(payload.page, payload.size)
+      const pager = new Pagination(payload.page, payload.size)
 
       const result = await ProductModel.findAndCountAll({
         where: this.buildFindAllWhere(payload, { onlyVisible: false }),
         include: [{ model: CategoryModel }],
         order: [['productId', 'desc']],
         ...(payload.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
+          limit: pager.limit,
+          offset: pager.offset
         })
       })
 
-      return page.formatData(result)
+      return pager.formatData(result)
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(

@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { appConfigs } from '../configs/appConfig'
+import { appConfigs } from '../../configs/appConfig'
 
-export const BiteShipService = axios.create({
+export const BiteShipAPIService = axios.create({
   baseURL: appConfigs.biteShip.baseURL,
   headers: {
     Authorization: `Bearer ${appConfigs.biteShip.apiKey}`,

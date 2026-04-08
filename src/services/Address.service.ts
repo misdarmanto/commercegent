@@ -3,10 +3,43 @@ import { StatusCodes } from 'http-status-codes'
 import { AddressesModel } from '../models/address'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import { RegionService } from './Region.service'
 import type { ICreateAddress } from '../schemas/AddressSchema'
 
 export class AddressService {
+  static async findUserAddress(userId: number) {
+    try {
+      return await AddressesModel.findOne({
+        where: {
+          deleted: { [Op.eq]: 0 },
+          addressUserId: { [Op.eq]: userId },
+          addressCategory: 'user'
+        }
+      })
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[AddressService] findUserAddress failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find user address', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  static async findAdminAddress() {
+    try {
+      return await AddressesModel.findOne({
+        where: {
+          deleted: { [Op.eq]: 0 },
+          addressCategory: 'admin'
+        }
+      })
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[AddressService] findAdminAddress failed: ${String(serviceError)}`)
+      throw new AppError(
+        'Failed to find admin address',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    }
+  }
+
   static async createUserAddress(userId: number, payload: ICreateAddress) {
     try {
       const createPayload = {
@@ -85,80 +118,6 @@ export class AddressService {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[AddressService] removeAddress failed: ${String(serviceError)}`)
       throw new AppError('Failed to remove address', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async findUserAddress(userId: number) {
-    try {
-      return await AddressesModel.findOne({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          addressUserId: { [Op.eq]: userId },
-          addressCategory: 'user'
-        }
-      })
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AddressService] findUserAddress failed: ${String(serviceError)}`)
-      throw new AppError('Failed to find user address', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async findAdminAddress() {
-    try {
-      return await AddressesModel.findOne({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          addressCategory: 'admin'
-        }
-      })
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AddressService] findAdminAddress failed: ${String(serviceError)}`)
-      throw new AppError(
-        'Failed to find admin address',
-        StatusCodes.INTERNAL_SERVER_ERROR
-      )
-    }
-  }
-
-  static async getProvinces() {
-    try {
-      return await RegionService.getProvinces()
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AddressService] getProvinces failed: ${String(serviceError)}`)
-      throw new AppError('Failed to get provinces', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async getRegencies(provinceId: string) {
-    try {
-      return await RegionService.getRegencies(provinceId)
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AddressService] getRegencies failed: ${String(serviceError)}`)
-      throw new AppError('Failed to get regencies', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async getDistricts(regencyId: string) {
-    try {
-      return await RegionService.getDistricts(regencyId)
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AddressService] getDistricts failed: ${String(serviceError)}`)
-      throw new AppError('Failed to get districts', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async getVillages(districtId: string) {
-    try {
-      return await RegionService.getVillages(districtId)
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AddressService] getVillages failed: ${String(serviceError)}`)
-      throw new AppError('Failed to get villages', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

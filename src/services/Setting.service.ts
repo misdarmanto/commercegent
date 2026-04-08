@@ -23,24 +23,6 @@ const UPDATABLE_FIELDS = [
 ] as const
 
 export class SettingService {
-  private static async assertSuperAdmin(userId: number) {
-    if (userId == null) {
-      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
-    }
-
-    const row = await UserModel.findOne({
-      where: {
-        deleted: { [Op.eq]: 0 },
-        userId,
-        userRole: { [Op.eq]: 'superAdmin' }
-      }
-    })
-
-    if (row == null) {
-      throw new AppError('access denied!', StatusCodes.FORBIDDEN)
-    }
-  }
-
   static async findSettings(payload: IFindSetting) {
     try {
       const { settingType } = payload
@@ -115,10 +97,28 @@ export class SettingService {
       })
 
       return results
-    } catch (error) {
-      if (error instanceof AppError) throw error
-      logger.error(`[SettingService] findSettings failed: ${String(error)}`)
-      throw new AppError('Gagal mengambil pengaturan', StatusCodes.INTERNAL_SERVER_ERROR)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[SettingService] findSettings failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find settings', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
+  private static async assertSuperAdmin(userId: number) {
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
+    }
+
+    const row = await UserModel.findOne({
+      where: {
+        deleted: { [Op.eq]: 0 },
+        userId,
+        userRole: { [Op.eq]: 'superAdmin' }
+      }
+    })
+
+    if (row == null) {
+      throw new AppError('access denied!', StatusCodes.FORBIDDEN)
     }
   }
 

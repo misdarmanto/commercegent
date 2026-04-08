@@ -1,19 +1,18 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { AppLogModel } from '../models/AppLogModel'
+import { AppLogModel, IAppLogAttributes } from '../models/AppLogModel'
 import { Pagination } from '../utilities/pagination'
 import logger from '../utilities/logger'
 import { AppError } from '../utilities/appError'
 import { ICreateAppLog, IFindAllAppLogs } from '../schemas/AppLogSchema'
 
-type FindAllAppLogsWhere = {
-  appLogLevel?: 'error' | 'warn' | 'info'
-  appLogMessage?: { [Op.like]: string }
-}
-
 export class AppLogService {
-  private static buildFindAllWhere(payload: IFindAllAppLogs): FindAllAppLogsWhere {
-    const where: FindAllAppLogsWhere = {}
+  private static buildFindAllWhere(
+    payload: IFindAllAppLogs
+  ): WhereOptions<IAppLogAttributes> {
+    const where: WhereOptions<IAppLogAttributes> = {
+      deleted: { [Op.eq]: 0 }
+    }
 
     if (payload.level != null) {
       where.appLogLevel = payload.level

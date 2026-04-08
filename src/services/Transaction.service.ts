@@ -1,7 +1,7 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { TransactionsAttributes, TransactionsModel } from '../models/transactions'
-import { UserModel } from '../models/user'
+import { UserAttributes, UserModel } from '../models/user'
 import { OrdersModel } from '../models/orders'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
@@ -15,6 +15,21 @@ import type {
 } from '../schemas/TransactionSchema'
 
 export class TransactionService {
+  private static buildFindAllWhere(
+    userId: number,
+    userRole: string
+  ): WhereOptions<TransactionsAttributes> {
+    const where: WhereOptions<TransactionsAttributes> = {
+      deleted: { [Op.eq]: 0 }
+    }
+
+    if (userRole === 'user') {
+      where.transactionUserId = { [Op.eq]: String(userId) }
+    }
+
+    return where
+  }
+
   static async findAllTransactions(userId: number, payload: IFindAllTransaction) {
     try {
       const user = await UserModel.findOne({
@@ -24,18 +39,14 @@ export class TransactionService {
         }
       })
 
-      const page = new Pagination(payload.page, payload.size)
+      if (user == null) {
+        throw new AppError('User not found!', StatusCodes.NOT_FOUND)
+      }
+
+      const pager = new Pagination(payload.page, payload.size)
 
       const result = await TransactionsModel.findAndCountAll({
-        where: {
-          ...(Boolean(user?.dataValues.userRole === 'user') && {
-            transactionUserId: { [Op.eq]: userId }
-          }),
-          deleted: { [Op.eq]: 0 },
-          ...(Boolean(payload.search) && {
-            [Op.or]: [{ transactionId: { [Op.like]: `%${payload.search}%` } }]
-          })
-        },
+        where: this.buildFindAllWhere(userId, user.userRole),
         include: [
           {
             model: UserModel,
@@ -45,12 +56,12 @@ export class TransactionService {
         ],
         order: [['transactionId', 'desc']],
         ...(payload.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
+          limit: pager.limit,
+          offset: pager.offset
         })
       })
 
-      return page.formatData(result)
+      return pager.formatData(result)
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(

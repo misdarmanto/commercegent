@@ -6,7 +6,7 @@ import {
   findDetailAdminSchema,
   updateAdminSchema
 } from '../schemas/AdminSchema'
-import { loginAdminSchema, signupAdminSchema } from '../schemas/AuthSchema'
+import { signupAdminSchema } from '../schemas/AuthSchema'
 
 const AdminRoute = Router()
 
@@ -36,12 +36,6 @@ AdminRoute.post(
   MiddleWares.authorization,
   MiddleWares.validate({ body: signupAdminSchema }),
   AdminController.createAdmin
-)
-
-AdminRoute.post(
-  '/login',
-  MiddleWares.validate({ body: loginAdminSchema }),
-  AdminController.loginAdmin
 )
 
 export default AdminRoute

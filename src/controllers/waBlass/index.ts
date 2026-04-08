@@ -3,8 +3,8 @@ import { removeWablasHistory } from './remove'
 import { waBlasSendMessage } from './sendMessage'
 
 export const WaBlasController = {
-  findAllHistory: waBlasHistoryFindAll,
-  findDetailHistory: waBlasHistoryFindOne,
+  waBlasHistoryFindAll,
+  waBlasHistoryFindOne,
   removeWablasHistory,
-  send: waBlasSendMessage
+  waBlasSendMessage
 }

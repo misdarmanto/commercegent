@@ -1,7 +1,7 @@
-import { col, fn, Op } from 'sequelize'
+import { col, fn, Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { ProductModel } from '../models/products'
-import { OrdersModel } from '../models/orders'
+import { OrdersModel, OrdersAttributes } from '../models/orders'
 import { UserModel } from '../models/user'
 import { OrderItemsModel } from '../models/orderItems'
 import { Pagination } from '../utilities/pagination'
@@ -15,6 +15,109 @@ import type {
 } from '../schemas/PublicApiSchema'
 
 export class PublicApiService {
+  private static buildFindAllWhere(
+    payload: IFindAllOrderPublic
+  ): WhereOptions<OrdersAttributes> {
+    const where: WhereOptions<OrdersAttributes> = {
+      deleted: { [Op.eq]: 0 }
+    }
+
+    const dateFilter: Record<string, unknown> = {}
+
+    if (payload.startDate != null && payload.endDate != null) {
+      dateFilter.created_at = {
+        [Op.between]: [`${payload.startDate} 00:00:00`, `${payload.endDate} 23:59:59`]
+      }
+    }
+
+    if (payload.search != null) {
+      where.orderReferenceId = { [Op.like]: `%${payload.search}%` }
+    }
+
+    if (payload.orderStatus != null) {
+      where.orderStatus = { [Op.eq]: payload.orderStatus }
+    }
+
+    return where
+  }
+
+  static async findAllOrdersPublic(payload: IFindAllOrderPublic) {
+    try {
+      const pager = new Pagination(payload.page, payload.size)
+
+      const result = await OrdersModel.findAndCountAll({
+        where: this.buildFindAllWhere(payload),
+        attributes: [
+          'orderId',
+          'orderSubtotal',
+          'orderShippingFee',
+          'orderGrandTotal',
+          'orderTotalItem',
+          'orderCourierCompany',
+          'orderTrackingId',
+          'orderWaybillId',
+          'orderPaymentUrl',
+          'orderReferenceId',
+          'orderStatus',
+          [fn('DATE', col('orders.created_at')), 'orderDate'],
+          [fn('TIME', col('orders.created_at')), 'orderTime']
+        ],
+        include: [
+          {
+            model: UserModel,
+            where: {
+              deleted: { [Op.eq]: 0 },
+              ...(Boolean(payload.search) && {
+                [Op.or]: [{ userName: { [Op.like]: `%${payload.search}%` } }]
+              })
+            },
+            attributes: ['userName', 'userWhatsAppNumber']
+          },
+          {
+            model: OrderItemsModel,
+            as: 'orderItems',
+            attributes: [
+              'productNameSnapshot',
+              'productPriceSnapshot',
+              'productDiscountSnapshot',
+              'productSellPriceSnapshot',
+              'quantity',
+              'totalPrice'
+            ],
+            include: [
+              {
+                model: ProductModel,
+                attributes: [
+                  'productId',
+                  'productName',
+                  'productCode',
+                  'productStock',
+                  'productWeight',
+                  'productIsVisible',
+                  'productBarcode',
+                  'productUnit'
+                ]
+              }
+            ]
+          }
+        ],
+        order: [['orderId', 'desc']],
+        ...(payload.pagination === true && {
+          limit: pager.limit,
+          offset: pager.offset
+        })
+      })
+
+      return pager.formatData(result)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[PublicApiService] findAllOrdersPublic failed: ${String(serviceError)}`
+      )
+      throw new AppError('Failed to find all orders', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
   static async createProductPublic(payload: ICreateProductPublic) {
     try {
       const orConditions: Array<{ productCode?: string; productBarcode?: string }> = []
@@ -149,100 +252,6 @@ export class PublicApiService {
         `[PublicApiService] updateProductPublic failed: ${String(serviceError)}`
       )
       throw new AppError('Failed to update product', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
-  static async findAllOrdersPublic(payload: IFindAllOrderPublic) {
-    try {
-      const page = new Pagination(payload.page, payload.size)
-
-      const dateFilter: Record<string, unknown> = {}
-
-      if (payload.startDate != null && payload.endDate != null) {
-        dateFilter.created_at = {
-          [Op.between]: [`${payload.startDate} 00:00:00`, `${payload.endDate} 23:59:59`]
-        }
-      }
-
-      const result = await OrdersModel.findAndCountAll({
-        where: {
-          deleted: { [Op.eq]: 0 },
-          ...dateFilter,
-          ...(Boolean(payload.search) && {
-            [Op.or]: [{ orderReferenceId: { [Op.like]: `%${payload.search}%` } }]
-          }),
-          ...(Boolean(payload.orderStatus) && {
-            orderStatus: { [Op.eq]: payload.orderStatus }
-          })
-        },
-        attributes: [
-          'orderId',
-          'orderSubtotal',
-          'orderShippingFee',
-          'orderGrandTotal',
-          'orderTotalItem',
-          'orderCourierCompany',
-          'orderTrackingId',
-          'orderWaybillId',
-          'orderPaymentUrl',
-          'orderReferenceId',
-          'orderStatus',
-          [fn('DATE', col('orders.created_at')), 'orderDate'],
-          [fn('TIME', col('orders.created_at')), 'orderTime']
-        ],
-        include: [
-          {
-            model: UserModel,
-            where: {
-              deleted: { [Op.eq]: 0 },
-              ...(Boolean(payload.search) && {
-                [Op.or]: [{ userName: { [Op.like]: `%${payload.search}%` } }]
-              })
-            },
-            attributes: ['userName', 'userWhatsAppNumber']
-          },
-          {
-            model: OrderItemsModel,
-            as: 'orderItems',
-            attributes: [
-              'productNameSnapshot',
-              'productPriceSnapshot',
-              'productDiscountSnapshot',
-              'productSellPriceSnapshot',
-              'quantity',
-              'totalPrice'
-            ],
-            include: [
-              {
-                model: ProductModel,
-                attributes: [
-                  'productId',
-                  'productName',
-                  'productCode',
-                  'productStock',
-                  'productWeight',
-                  'productIsVisible',
-                  'productBarcode',
-                  'productUnit'
-                ]
-              }
-            ]
-          }
-        ],
-        order: [['orderId', 'desc']],
-        ...(payload.pagination === true && {
-          limit: page.limit,
-          offset: page.offset
-        })
-      })
-
-      return page.formatData(result)
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(
-        `[PublicApiService] findAllOrdersPublic failed: ${String(serviceError)}`
-      )
-      throw new AppError('Failed to find all orders', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
 }

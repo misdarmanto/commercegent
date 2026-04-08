@@ -4,16 +4,12 @@ import { findAllProducts } from './findAllProducts'
 import { findDetailProduct } from './findDetailProduct'
 import { removeProduct } from './removeProduct'
 import { updateProduct } from './updateProduct'
-import { uploadProductExcel } from './uploadProductExcel'
-import { uploadHistories } from './uploadHistories'
 
 export const ProductController = {
-  create: createProduct,
-  findAll: findAllProducts,
-  findOne: findDetailProduct,
-  remove: removeProduct,
-  update: updateProduct,
-  upload: uploadProductExcel,
-  uploadHistories,
+  createProduct,
+  findAllProducts,
+  findDetailProduct,
+  removeProduct,
+  updateProduct,
   findAllProductsAdmin
 }

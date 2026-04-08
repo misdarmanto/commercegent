@@ -1,9 +1,8 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { UserModel, type UserAttributes } from '../models/user'
 import { Pagination } from '../utilities/pagination'
 import { hashPassword } from '../utilities/scurePassword'
-import { generateAccessToken } from '../utilities/jwt'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import {
@@ -12,28 +11,20 @@ import {
   IUpdateAdmin,
   type ICreateAdmin
 } from '../schemas/AdminSchema'
-import { ILoginAdmin } from '../schemas/AuthSchema'
-
-type FindAllAdminsWhere = {
-  deleted: { [Op.eq]: number }
-  userRole: { [Op.not]: 'user' }
-  userId: { [Op.not]: number }
-  [Op.or]?: Array<{ userName: { [Op.like]: string } }>
-}
 
 export class AdminService {
   private static buildFindAllWhere(
     userId: number,
     payload: IFindAllAdmins
-  ): FindAllAdminsWhere {
-    const where: FindAllAdminsWhere = {
+  ): WhereOptions<UserAttributes> {
+    const where: WhereOptions<UserAttributes> = {
       deleted: { [Op.eq]: 0 },
       userRole: { [Op.not]: 'user' },
       userId: { [Op.not]: userId }
     }
 
     if (payload.search != null) {
-      where[Op.or] = [{ userName: { [Op.like]: `%${payload.search}%` } }]
+      where.userName = { [Op.like]: `%${payload.search}%` }
     }
 
     return where
@@ -63,7 +54,7 @@ export class AdminService {
 
   static async findDetailAdmin(payload: IFindDetailAdmin) {
     try {
-      const user = await UserModel.findOne({
+      const result = await UserModel.findOne({
         where: {
           deleted: { [Op.eq]: 0 },
           userRole: { [Op.not]: 'user' },
@@ -79,11 +70,11 @@ export class AdminService {
         ]
       })
 
-      if (user == null) {
-        throw new AppError('admin not found!', StatusCodes.FORBIDDEN)
+      if (result == null) {
+        throw new AppError('Admin not found!', StatusCodes.FORBIDDEN)
       }
 
-      return user
+      return result
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[AdminService] findDetailAdmin failed: ${String(serviceError)}`)
@@ -127,48 +118,6 @@ export class AdminService {
       throw new AppError('Failed to create admin', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
-
-  static async loginAdmin(payload: ILoginAdmin) {
-    try {
-      const user = await UserModel.findOne({
-        raw: true,
-        where: {
-          deleted: { [Op.eq]: 0 },
-          userWhatsAppNumber: { [Op.eq]: payload.adminWhatsAppNumber },
-          [Op.or]: [
-            { userRole: { [Op.eq]: 'admin' } },
-            { userRole: { [Op.eq]: 'superAdmin' } }
-          ]
-        }
-      })
-
-      if (user == null) {
-        throw new AppError(
-          'Akun tidak ditemukan. Silahkan lakukan pendaftaran terlebih dahulu sebagai admin!',
-          StatusCodes.NOT_FOUND
-        )
-      }
-
-      if (hashPassword(payload.adminPassword) !== user.userPassword) {
-        throw new AppError(
-          'kombinasi nomor wa dan password tidak ditemukan!',
-          StatusCodes.UNAUTHORIZED
-        )
-      }
-
-      const token = generateAccessToken({
-        userId: user.userId,
-        userRole: user.userRole
-      })
-
-      return { token }
-    } catch (serviceError) {
-      if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AdminService] loginAdmin failed: ${String(serviceError)}`)
-      throw new AppError('Failed to login admin', StatusCodes.INTERNAL_SERVER_ERROR)
-    }
-  }
-
   static async updateAdmin(userId: number, payload: IUpdateAdmin) {
     try {
       let hashedPassword: string | undefined

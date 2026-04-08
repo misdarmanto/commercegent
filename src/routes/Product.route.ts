@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { MiddleWares } from '../middlewares'
-import { handleProductExcelUpload } from '../middlewares/productExcelUpload'
 import { ProductController } from '../controllers/products'
 import { PromotionController } from '../controllers/promotions'
 import {
@@ -9,8 +8,7 @@ import {
   findAllProductsQuerySchema,
   productDetailParamsSchema,
   removeProductQuerySchema,
-  updateProductSchema,
-  uploadHistoriesQuerySchema
+  updateProductSchema
 } from '../schemas/ProductSchema'
 
 const ProductRoute = Router()
@@ -18,7 +16,7 @@ const ProductRoute = Router()
 ProductRoute.get(
   '/',
   MiddleWares.validate({ query: findAllProductsQuerySchema }),
-  ProductController.findAll
+  ProductController.findAllProducts
 )
 
 ProductRoute.get(
@@ -32,7 +30,7 @@ ProductRoute.get('/highlights', PromotionController.findAllPromotion)
 ProductRoute.get(
   '/detail/:productId',
   MiddleWares.validate({ params: productDetailParamsSchema }),
-  ProductController.findOne
+  ProductController.findDetailProduct
 )
 
 ProductRoute.post(
@@ -40,7 +38,7 @@ ProductRoute.post(
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
   MiddleWares.validate({ body: createProductSchema }),
-  ProductController.create
+  ProductController.createProduct
 )
 
 ProductRoute.patch(
@@ -48,7 +46,7 @@ ProductRoute.patch(
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
   MiddleWares.validate({ body: updateProductSchema }),
-  ProductController.update
+  ProductController.updateProduct
 )
 
 ProductRoute.delete(
@@ -56,23 +54,7 @@ ProductRoute.delete(
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
   MiddleWares.validate({ query: removeProductQuerySchema }),
-  ProductController.remove
-)
-
-ProductRoute.post(
-  '/upload-excel',
-  MiddleWares.authorization,
-  MiddleWares.allowAppRoles('admin', 'superAdmin'),
-  handleProductExcelUpload,
-  ProductController.upload
-)
-
-ProductRoute.get(
-  '/upload-histories',
-  MiddleWares.authorization,
-  MiddleWares.allowAppRoles('admin', 'superAdmin'),
-  MiddleWares.validate({ query: uploadHistoriesQuerySchema }),
-  ProductController.uploadHistories
+  ProductController.removeProduct
 )
 
 export default ProductRoute

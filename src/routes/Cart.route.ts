@@ -5,7 +5,7 @@ import {
   findAllCartSchema,
   createCartSchema,
   removeCartQuerySchema
-} from '../schemas/cartSchema'
+} from '../schemas/CartSchema'
 
 const CartRoute = Router()
 

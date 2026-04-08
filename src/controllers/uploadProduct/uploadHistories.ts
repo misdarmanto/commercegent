@@ -16,7 +16,12 @@ export const uploadHistories = async (
 
     return res
       .status(StatusCodes.OK)
-      .json(ResponseData.success({ data: result, message: 'Upload histories found successfully' }))
+      .json(
+        ResponseData.success({
+          data: result,
+          message: 'Upload histories found successfully'
+        })
+      )
   } catch (serverError) {
     return handleError(res, serverError)
   }

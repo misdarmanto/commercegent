@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import {
   CategoryModel,
@@ -16,21 +16,16 @@ import type {
   IRemoveCategory
 } from '../schemas/CategorySchema'
 
-type CategoryListWhere = {
-  deleted: { [Op.eq]: number }
-  [Op.or]?: Array<{ categoryName: { [Op.like]: string } }>
-  categoryReference?: string
-  categoryType?: CategoryAttributes['categoryType']
-}
-
 export class CategoryService {
-  private static buildFindAllWhere(payload: IFindAllCategories): CategoryListWhere {
-    const where: CategoryListWhere = {
+  private static buildFindAllWhere(
+    payload: IFindAllCategories
+  ): WhereOptions<CategoryAttributes> {
+    const where: WhereOptions<CategoryAttributes> = {
       deleted: { [Op.eq]: 0 }
     }
 
     if (payload.search != null) {
-      where[Op.or] = [{ categoryName: { [Op.like]: `%${payload.search}%` } }]
+      where.categoryName = { [Op.like]: `%${payload.search}%` }
     }
 
     if (payload.categoryReference != null) {

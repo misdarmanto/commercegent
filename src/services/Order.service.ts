@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { sequelize } from '../models'
 import { OrdersModel, type OrdersAttributes } from '../models/orders'
@@ -10,35 +10,28 @@ import { UserModel } from '../models/user'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import { MidtransSnap } from '../configs/midtrans'
 import type {
   ICreateOrder,
   IFindAllOrder,
   IFindDetailOrder,
   IUpdateOrder
 } from '../schemas/OrderSchema'
+import { MidtransAPIService } from './external/Midtrans.service'
 
 type OrderLineItem = ICreateOrder['items'][number]
-
-type FindAllOrdersWhere = {
-  deleted: { [Op.eq]: number }
-  [Op.or]?: Array<{ orderReferenceId: { [Op.like]: string } }>
-  orderUserId?: { [Op.eq]: number }
-  orderStatus?: OrdersAttributes['orderStatus']
-}
 
 export class OrderService {
   private static buildFindAllWhere(
     userId: number,
     userRole: string | undefined,
     payload: IFindAllOrder
-  ): FindAllOrdersWhere {
-    const where: FindAllOrdersWhere = {
+  ): WhereOptions<OrdersAttributes> {
+    const where: WhereOptions<OrdersAttributes> = {
       deleted: { [Op.eq]: 0 }
     }
 
     if (payload.search != null) {
-      where[Op.or] = [{ orderReferenceId: { [Op.like]: `%${payload.search}%` } }]
+      where.orderReferenceId = { [Op.like]: `%${payload.search}%` }
     }
     if (userRole === 'user') {
       where.orderUserId = { [Op.eq]: userId }
@@ -285,7 +278,7 @@ export class OrderService {
         ]
       }
 
-      const midtransResponse = await MidtransSnap.createTransaction(midtransParams)
+      const midtransResponse = await MidtransAPIService.createTransaction(midtransParams)
 
       await order.update(
         {

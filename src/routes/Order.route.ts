@@ -15,26 +15,26 @@ OrderRoute.use(MiddleWares.authorization)
 OrderRoute.get(
   '/',
   MiddleWares.validate({ query: findAllOrderQuerySchema }),
-  OrderController.findAll
+  OrderController.findAllOrder
 )
 
 OrderRoute.get(
   '/detail/:orderId',
   MiddleWares.validate({ params: orderDetailParamsSchema }),
-  OrderController.findOne
+  OrderController.findDetailOrder
 )
 
 OrderRoute.post(
   '/',
   MiddleWares.allowAppRoles('user'),
   MiddleWares.validate({ body: createOrderSchema }),
-  OrderController.create
+  OrderController.createOrder
 )
 
 OrderRoute.patch(
   '/',
   MiddleWares.validate({ body: updateOrderBodySchema }),
-  OrderController.update
+  OrderController.updateOrder
 )
 
 export default OrderRoute

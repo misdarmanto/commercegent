@@ -1,31 +1,25 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { CartsModel } from '../models/carts'
+import { CartsModel, type CartsAttributes } from '../models/carts'
 import { ProductModel } from '../models/products'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { ICreateCart, IFindAllCarts, IRemoveCart } from '../schemas/CartSchema'
 
-type FindAllCartsWhere = {
-  deleted: { [Op.eq]: number }
-  cartUserId: { [Op.eq]: number }
-  [Op.or]?: Array<{ cartProductId: { [Op.like]: string } }>
-}
-
 export class CartService {
   private static buildFindAllWhere(
     userId: number,
     payload: IFindAllCarts
-  ): FindAllCartsWhere {
-    const where: FindAllCartsWhere = {
+  ): WhereOptions<CartsAttributes> {
+    const where: WhereOptions<CartsAttributes> = {
       deleted: { [Op.eq]: 0 },
       cartUserId: { [Op.eq]: userId }
     }
 
-    if (payload.search != null) {
-      where[Op.or] = [{ cartProductId: { [Op.like]: `%${payload.search}%` } }]
-    }
+    // if (payload.search != null) {
+    //   where.cartId = { [Op.like]: `%${payload.search}%` }
+    // }
 
     return where
   }

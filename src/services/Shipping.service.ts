@@ -1,4 +1,4 @@
-import { BiteShipService } from './BiteShip.service'
+import { BiteShipAPIService } from './external/BiteShipApi.service'
 import { OrdersModel } from '../models/orders'
 import { OrderItemsModel } from '../models/orderItems'
 import { ProductModel } from '../models/products'
@@ -70,7 +70,7 @@ export class ShippingService {
         }
       })
 
-      const biteshipResponse = await BiteShipService.post('/rates/couriers', {
+      const biteshipResponse = await BiteShipAPIService.post('/rates/couriers', {
         origin_latitude: Number(originAddress.addressLatitude),
         origin_longitude: Number(originAddress.addressLongitude),
         destination_latitude: Number(destinationAddress.addressLatitude),
@@ -197,7 +197,7 @@ export class ShippingService {
       let draftResponse = {} as DraftResponse
 
       try {
-        const { data } = await BiteShipService.post('/draft_orders', biteshipPayload)
+        const { data } = await BiteShipAPIService.post('/draft_orders', biteshipPayload)
         draftResponse = data
       } catch (serviceError) {
         if (serviceError instanceof AppError) throw serviceError
@@ -255,7 +255,7 @@ export class ShippingService {
         throw new AppError('Order must be in DRAFT status', StatusCodes.BAD_REQUEST)
       }
 
-      const { data: confirmResponse } = await BiteShipService.post(
+      const { data: confirmResponse } = await BiteShipAPIService.post(
         `/draft_orders/${order.orderDraftId}/confirm`
       )
 
@@ -302,7 +302,7 @@ export class ShippingService {
         throw new AppError('Shipment data not available', StatusCodes.BAD_REQUEST)
       }
 
-      const { data } = await BiteShipService.get(
+      const { data } = await BiteShipAPIService.get(
         `/trackings/${order.orderWaybillId}/couriers/${order.orderCourierCompany}`
       )
 
