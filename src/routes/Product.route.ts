@@ -10,6 +10,7 @@ import {
   removeProductQuerySchema,
   updateProductSchema
 } from '../schemas/ProductSchema'
+import { findProductByBarcodeSchema } from '../schemas/ProductSchema'
 
 const ProductRoute = Router()
 
@@ -26,6 +27,12 @@ ProductRoute.get(
 )
 
 ProductRoute.get('/highlights', PromotionController.findAllPromotion)
+
+ProductRoute.get(
+  '/barcode/:barcode',
+  MiddleWares.validate({ params: findProductByBarcodeSchema }),
+  ProductController.findProductByBarcode
+)
 
 ProductRoute.get(
   '/detail/:productId',

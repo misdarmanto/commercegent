@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { AddressesModel } from '../models/address'
+import { AddressesModel } from '../models/AddressModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type { ICreateAddress } from '../schemas/AddressSchema'
@@ -10,7 +10,7 @@ export class AddressService {
     try {
       return await AddressesModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           addressUserId: { [Op.eq]: userId },
           addressCategory: 'user'
         }
@@ -26,7 +26,7 @@ export class AddressService {
     try {
       return await AddressesModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           addressCategory: 'admin'
         }
       })
@@ -46,11 +46,11 @@ export class AddressService {
         ...payload,
         addressUserId: userId,
         addressCategory: 'user' as const,
-        deleted: 0
+        deleted: false
       }
 
       const where = {
-        deleted: { [Op.eq]: 0 },
+        deleted: { [Op.eq]: false },
         addressUserId: userId,
         addressCategory: 'user'
       }
@@ -76,11 +76,11 @@ export class AddressService {
         ...payload,
         addressUserId: userId,
         addressCategory: 'admin' as const,
-        deleted: 0
+        deleted: false
       }
 
       const where = {
-        deleted: { [Op.eq]: 0 },
+        deleted: { [Op.eq]: false },
         addressCategory: 'admin'
       }
 
@@ -102,10 +102,10 @@ export class AddressService {
   static async removeAddress(addressId: number) {
     try {
       const [updatedRows] = await AddressesModel.update(
-        { deleted: 1 },
+        { deleted: true },
         {
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             addressId: { [Op.eq]: addressId }
           }
         }

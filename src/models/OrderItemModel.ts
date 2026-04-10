@@ -1,14 +1,14 @@
 /* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { ZygoteModel, type ZygoteAttributes } from './zygote'
-import { ProductModel } from './products'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
+import { ProductModel } from './ProductModel'
 
 /**
  * ORDER ITEMS
  * many items belong to one order
  */
-export interface OrderItemsAttributes extends ZygoteAttributes {
+export interface OrderItemsAttributes extends IBaseModelFields {
   orderItemId: number
   orderId: number
   productId: number
@@ -29,10 +29,10 @@ interface OrderItemsInstance
   extends Model<OrderItemsAttributes, OrderItemsCreationAttributes>,
     OrderItemsAttributes {}
 
-export const OrderItemsModel = sequelize.define<OrderItemsInstance>(
+export const OrderItemsModel = sequelizeInit.define<OrderItemsInstance>(
   'order_items',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
 
     orderItemId: {
       type: DataTypes.BIGINT,

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 
-export interface NotificationAttributes extends ZygoteAttributes {
+export interface NotificationAttributes extends IBaseModelFields {
   notificationId: number
   notificationName: string
   notificationMessage: string
@@ -22,10 +22,10 @@ interface NotificationInstance
   extends Model<NotificationAttributes, NotificationCreationAttributes>,
     NotificationAttributes {}
 
-export const NotificationModel = sequelize.define<NotificationInstance>(
+export const NotificationModel = sequelizeInit.define<NotificationInstance>(
   'notifications',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     notificationId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -42,7 +42,6 @@ export const NotificationModel = sequelize.define<NotificationInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'notifications',
     deletedAt: false,

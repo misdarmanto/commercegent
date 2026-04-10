@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { ZygoteModel, type ZygoteAttributes } from './zygote'
-import { UserModel } from './user'
-import { AddressesModel } from './address'
-import { OrderItemsModel } from './orderItems'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
+import { UserModel } from './UserModel'
+import { AddressesModel } from './AddressModel'
+import { OrderItemsModel } from './OrderItemModel'
 
 /**
  * ORDER HEADER
  * 1 order = many order_items
  */
-export interface OrdersAttributes extends ZygoteAttributes {
+export interface OrdersAttributes extends IBaseModelFields {
   orderId: number
   orderUserId: string
 
@@ -41,10 +41,10 @@ interface OrdersInstance
   extends Model<OrdersAttributes, OrdersCreationAttributes>,
     OrdersAttributes {}
 
-export const OrdersModel = sequelize.define<OrdersInstance>(
+export const OrdersModel = sequelizeInit.define<OrdersInstance>(
   'orders',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     orderId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,

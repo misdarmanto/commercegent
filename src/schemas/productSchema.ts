@@ -131,9 +131,14 @@ export const uploadHistoriesQuerySchema = z.object({
   status: z.string().optional()
 })
 
+export const findProductByBarcodeSchema = z.object({
+  barcode: z.string().min(1).max(50)
+})
+
 export type ICreateProduct = z.infer<typeof createProductSchema>
 export type IUpdateProduct = z.infer<typeof updateProductSchema>
 export type IFindAllProducts = z.infer<typeof findAllProductsQuerySchema>
 export type IFindDetailProduct = z.infer<typeof productDetailParamsSchema>
 export type IRemoveProduct = z.infer<typeof removeProductQuerySchema>
 export type IUploadHistories = z.infer<typeof uploadHistoriesQuerySchema>
+export type IFindProductByBarcode = z.infer<typeof findProductByBarcodeSchema>

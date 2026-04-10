@@ -1,6 +1,6 @@
 import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel, type UserAttributes } from '../models/user'
+import { UserModel, type UserAttributes } from '../models/UserModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -17,7 +17,7 @@ import type {
 export class UserService {
   private static buildFindAllWhere(payload: IFindAllUsers): WhereOptions<UserAttributes> {
     const where: WhereOptions<UserAttributes> = {
-      deleted: { [Op.eq]: 0 }
+      deleted: { [Op.eq]: false }
     }
 
     if (payload.userRole != null) {
@@ -70,7 +70,7 @@ export class UserService {
     try {
       const user = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userId: { [Op.eq]: payload.userId }
         },
         attributes: [
@@ -100,7 +100,7 @@ export class UserService {
   static async updateSelf(userId: number, payload: IUpdateUser) {
     try {
       const user = await UserModel.findOne({
-        where: { deleted: 0, userId }
+        where: { deleted: false, userId }
       })
 
       if (user == null) {
@@ -137,14 +137,14 @@ export class UserService {
   static async removeUser(payload: IRemoveUser) {
     try {
       const user = await UserModel.findOne({
-        where: { deleted: { [Op.eq]: 0 }, userId: { [Op.eq]: payload.userId } }
+        where: { deleted: { [Op.eq]: false }, userId: { [Op.eq]: payload.userId } }
       })
 
       if (user == null) {
         throw new AppError('user not found!', StatusCodes.NOT_FOUND)
       }
 
-      user.deleted = 1
+      user.deleted = true
       await user.save()
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
@@ -156,7 +156,7 @@ export class UserService {
   static async updateUserCoin(payload: IUpdateUserCoin) {
     try {
       const user = await UserModel.findOne({
-        where: { deleted: { [Op.eq]: 0 }, userId: { [Op.eq]: payload.userId } }
+        where: { deleted: { [Op.eq]: false }, userId: { [Op.eq]: payload.userId } }
       })
 
       if (user == null) {
@@ -176,7 +176,7 @@ export class UserService {
     try {
       const user = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber },
           userRole: 'user'
         }

@@ -2,7 +2,7 @@
  * @swagger
  * /api/v1/transactions:
  *   get:
- *     summary: Trieve transactions for the authenticated user
+ *     summary: Retrieve transactions for the authenticated user
  *     tags: [TRANSACTIONS]
  *     security:
  *       - bearerAuth: []

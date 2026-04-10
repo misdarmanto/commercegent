@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel } from '../models/user'
+import { UserModel } from '../models/UserModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import redis from '../configs/redis'
@@ -12,7 +12,7 @@ export class OtpService {
     try {
       const existingUser = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userWhatsAppNumber: { [Op.eq]: payload.whatsappNumber }
         }
       })

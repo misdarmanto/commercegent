@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel, type UserAttributes } from '../models/user'
+import { UserModel, type UserAttributes } from '../models/UserModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { hashPassword } from '../utilities/scurePassword'
@@ -14,7 +14,7 @@ export class AuthService {
     try {
       const user = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber },
           userRole: 'user'
         }
@@ -52,7 +52,7 @@ export class AuthService {
       const existing = await UserModel.findOne({
         raw: true,
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           [Op.or]: [{ userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber } }]
         }
       })
@@ -70,7 +70,7 @@ export class AuthService {
         userPassword: hashPassword(payload.userPassword),
         userGender: payload.userGender,
         userRole: 'user',
-        deleted: 0,
+        deleted: false,
         userPartnerCode: `${generateUniqueId()}-${payload.userWhatsAppNumber}`
       } as unknown as UserAttributes
 
@@ -87,7 +87,7 @@ export class AuthService {
       const user = await UserModel.findOne({
         raw: true,
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userWhatsAppNumber: { [Op.eq]: payload.adminWhatsAppNumber },
           [Op.or]: [
             { userRole: { [Op.eq]: 'admin' } },

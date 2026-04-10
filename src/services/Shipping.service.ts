@@ -1,9 +1,9 @@
 import { BiteShipAPIService } from './external/BiteShipApi.service'
-import { OrdersModel } from '../models/orders'
-import { OrderItemsModel } from '../models/orderItems'
-import { ProductModel } from '../models/products'
-import { AddressesModel } from '../models/address'
-import { sequelize } from '../models'
+import { OrdersModel } from '../models/OrderModel'
+import { OrderItemsModel } from '../models/OrderItemModel'
+import { ProductModel } from '../models/ProductModel'
+import { AddressesModel } from '../models/AddressModel'
+import { sequelizeInit } from '../configs/database'
 import logger from '../utilities/logger'
 import { StatusCodes } from 'http-status-codes'
 import { AppError } from '../utilities/appError'
@@ -28,7 +28,7 @@ export class ShippingService {
       const products = await ProductModel.findAll({
         where: {
           productId: productIds,
-          deleted: 0
+          deleted: false
         }
       })
 
@@ -39,7 +39,7 @@ export class ShippingService {
       const originAddress = await AddressesModel.findOne({
         where: {
           addressCategory: 'admin',
-          deleted: 0
+          deleted: false
         }
       })
 
@@ -51,7 +51,7 @@ export class ShippingService {
         where: {
           addressUserId: userId,
           addressCategory: 'user',
-          deleted: 0
+          deleted: false
         }
       })
 
@@ -211,7 +211,7 @@ export class ShippingService {
       }
 
       /* ===================== 5. SAVE DRAFT ID (DB TX) ===================== */
-      await sequelize.transaction(async (tx) => {
+      await sequelizeInit.transaction(async (tx) => {
         await order.update(
           { orderDraftId: draftResponse.id, orderStatus: 'draft' },
           { transaction: tx }
@@ -259,7 +259,7 @@ export class ShippingService {
         `/draft_orders/${order.orderDraftId}/confirm`
       )
 
-      await sequelize.transaction(async (tx) => {
+      await sequelizeInit.transaction(async (tx) => {
         await order.update(
           {
             orderStatus: 'delivery',

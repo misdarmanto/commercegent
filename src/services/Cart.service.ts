@@ -1,7 +1,7 @@
 import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { CartsModel, type CartsAttributes } from '../models/carts'
-import { ProductModel } from '../models/products'
+import { CartsModel, type CartsAttributes } from '../models/CartModel'
+import { ProductModel } from '../models/ProductModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -13,7 +13,7 @@ export class CartService {
     payload: IFindAllCarts
   ): WhereOptions<CartsAttributes> {
     const where: WhereOptions<CartsAttributes> = {
-      deleted: { [Op.eq]: 0 },
+      deleted: { [Op.eq]: false },
       cartUserId: { [Op.eq]: userId }
     }
 
@@ -54,7 +54,7 @@ export class CartService {
     try {
       const existingCart = await CartsModel.findOne({
         where: {
-          deleted: 0,
+          deleted: false,
           cartUserId: userId,
           cartProductId: payload.cartProductId
         }
@@ -69,7 +69,7 @@ export class CartService {
         cartProductId: payload.cartProductId,
         cartTotalItem: payload.cartTotalItem,
         cartUserId: userId,
-        deleted: 0
+        deleted: false
       })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
@@ -81,10 +81,10 @@ export class CartService {
   static async removeCart(userId: number, payload: IRemoveCart) {
     try {
       const [updatedRows] = await CartsModel.update(
-        { deleted: 1 },
+        { deleted: true },
         {
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             cartId: { [Op.eq]: payload.cartId },
             cartUserId: { [Op.eq]: userId }
           }

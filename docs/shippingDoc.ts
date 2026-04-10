@@ -4,10 +4,6 @@
  *   post:
  *     tags: [SHIPPING]
  *     summary: Hitung ongkos kirim
- *     description: |
- *       Menghitung ongkos kirim berdasarkan beberapa produk menggunakan Biteship Rates API.
- *       Endpoint ini menerima array produk (cart items) dan akan menghitung total ongkir
- *       berdasarkan berat dan quantity masing-masing produk.
  *     requestBody:
  *       required: true
  *       content:
@@ -24,12 +20,10 @@
  *                 productId:
  *                   type: integer
  *                   example: 1
- *                   description: ID produk
  *                 quantity:
  *                   type: integer
  *                   example: 2
  *                   minimum: 1
- *                   description: Jumlah produk
  *     responses:
  *       200:
  *         description: Success get shipping rates
@@ -43,7 +37,6 @@
  *                   example: true
  *                 data:
  *                   type: object
- *                   description: Response dari Biteship Rates API
  *       400:
  *         description: Invalid request body
  *       404:
@@ -56,7 +49,7 @@
  * @swagger
  * /api/v1/shipping/draft:
  *   post:
- *     summary: Create Biteship draft order from existing order
+ *     summary: Buat draft order dari order yang sudah ada
  *     tags: [SHIPPING]
  *     requestBody:
  *       required: true
@@ -90,7 +83,7 @@
  * @swagger
  * /api/v1/shipping/draft/confirm:
  *   post:
- *     summary: Confirm Biteship draft order (create shipment)
+ *     summary: Konfirmasi draft order (buat shipment)
  *     tags: [SHIPPING]
  *     security:
  *       - bearerAuth: []
@@ -123,7 +116,7 @@
  * @swagger
  * /api/v1/shipping/tracking:
  *   get:
- *     summary: Track shipment by order ID
+ *     summary: Track shipment berdasarkan ID order
  *     tags: [SHIPPING]
  *     security:
  *       - bearerAuth: []

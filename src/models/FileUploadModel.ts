@@ -1,8 +1,8 @@
 import { DataTypes, Model, Optional } from 'sequelize'
-import { sequelize } from '.'
-import { ZygoteAttributes, ZygoteModel } from './zygote'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 
-export interface FileUploadAttributes extends ZygoteAttributes {
+export interface FileUploadAttributes extends IBaseModelFields {
   fileId: number
   fileName: string
   filePath: string
@@ -23,10 +23,10 @@ interface OrdersInstance
   extends Model<FileUploadAttributes, FileUploadCreationAttributes>,
     FileUploadAttributes {}
 
-export const FileUploadModel = sequelize.define<OrdersInstance>(
+export const FileUploadModel = sequelizeInit.define<OrdersInstance>(
   'FileUpload',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     fileId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -51,7 +51,6 @@ export const FileUploadModel = sequelize.define<OrdersInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'file_uploads',
     deletedAt: false,

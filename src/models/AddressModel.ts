@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
+import { sequelizeInit } from '../configs/database'
 
-export interface AddressesAttributes extends ZygoteAttributes {
+export interface AddressesAttributes extends IBaseModelFields {
   addressId: number
   addressUserId: number
   addressUserName: string
@@ -32,10 +32,10 @@ interface AddressesInstance
   extends Model<AddressesAttributes, AddressesCreationAttributes>,
     AddressesAttributes {}
 
-export const AddressesModel = sequelize.define<AddressesInstance>(
+export const AddressesModel = sequelizeInit.define<AddressesInstance>(
   'addresses',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     addressId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -93,7 +93,6 @@ export const AddressesModel = sequelize.define<AddressesInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'addresses',
     deletedAt: false,

@@ -1,8 +1,8 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { ProductModel } from '../models/products'
-import { OrdersModel } from '../models/orders'
-import { UserModel } from '../models/user'
+import { ProductModel } from '../models/ProductModel'
+import { OrdersModel } from '../models/OrderModel'
+import { UserModel } from '../models/UserModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 
@@ -18,27 +18,27 @@ export class StatisticService {
         totalUserWanita
       ] = await Promise.all([
         ProductModel.count({
-          where: { deleted: { [Op.eq]: 0 } }
+          where: { deleted: { [Op.eq]: false } }
         }),
         OrdersModel.count({
-          where: { deleted: { [Op.eq]: 0 }, orderStatus: { [Op.not]: 'done' } }
+          where: { deleted: { [Op.eq]: false }, orderStatus: { [Op.not]: 'done' } }
         }),
         OrdersModel.count({
-          where: { deleted: { [Op.eq]: 0 }, orderStatus: { [Op.eq]: 'done' } }
+          where: { deleted: { [Op.eq]: false }, orderStatus: { [Op.eq]: 'done' } }
         }),
         UserModel.count({
-          where: { deleted: { [Op.eq]: 0 }, userRole: { [Op.eq]: 'user' } }
+          where: { deleted: { [Op.eq]: false }, userRole: { [Op.eq]: 'user' } }
         }),
         UserModel.count({
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             userGender: { [Op.eq]: 'pria' },
             userRole: { [Op.eq]: 'user' }
           }
         }),
         UserModel.count({
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             userGender: { [Op.eq]: 'wanita' },
             userRole: { [Op.eq]: 'user' }
           }

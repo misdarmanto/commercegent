@@ -1,7 +1,7 @@
 import fs from 'fs'
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { FileUploadModel } from '../models/fileUpload'
+import { FileUploadModel } from '../models/FileUploadModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -15,7 +15,7 @@ export class UploadProductService {
         fileName: file.originalname,
         filePath: file.path,
         status: 'PENDING' as const,
-        deleted: 0
+        deleted: false
       }
 
       const fileRecord = await FileUploadModel.create(payload)
@@ -47,7 +47,7 @@ export class UploadProductService {
 
       const result = await FileUploadModel.findAndCountAll({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           ...(payload.status != null &&
             payload.status.length > 0 && {
               status: { [Op.eq]: payload.status }

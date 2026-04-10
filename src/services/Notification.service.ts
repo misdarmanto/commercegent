@@ -1,8 +1,8 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { Expo } from 'expo-server-sdk'
-import { NotificationModel } from '../models/notifications'
-import { UserModel } from '../models/user'
+import { NotificationModel } from '../models/NotificationModel'
+import { UserModel } from '../models/UserModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -57,7 +57,7 @@ export class NotificationService {
     try {
       const users = await UserModel.findAll({
         where: {
-          deleted: { [Op.eq]: 0 }
+          deleted: { [Op.eq]: false }
         },
         attributes: ['userFcmId']
       })
@@ -74,7 +74,7 @@ export class NotificationService {
       await NotificationModel.create({
         notificationName: payload.notificationName,
         notificationMessage: payload.notificationMessage,
-        deleted: 0
+        deleted: false
       })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
@@ -92,7 +92,7 @@ export class NotificationService {
     try {
       const existing = await NotificationModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           notificationId: { [Op.eq]: payload.notificationId }
         }
       })
@@ -111,7 +111,7 @@ export class NotificationService {
 
       await NotificationModel.update(newData, {
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           notificationId: { [Op.eq]: payload.notificationId }
         }
       })
@@ -131,7 +131,7 @@ export class NotificationService {
     try {
       const row = await NotificationModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           notificationId: { [Op.eq]: notificationId }
         }
       })
@@ -140,7 +140,7 @@ export class NotificationService {
         throw new AppError('notification not found!', StatusCodes.NOT_FOUND)
       }
 
-      row.deleted = 1
+      row.deleted = true
       await row.save()
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
@@ -160,7 +160,7 @@ export class NotificationService {
 
       const result = await NotificationModel.findAndCountAll({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           ...(Boolean(payload.search) && {
             [Op.or]: [{ notificationName: { [Op.like]: `%${payload.search}%` } }]
           })
@@ -189,7 +189,7 @@ export class NotificationService {
     try {
       const result = await NotificationModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           notificationId: { [Op.eq]: payload.notificationId }
         }
       })
@@ -214,7 +214,7 @@ export class NotificationService {
         { userFcmId: payload.userFcmId },
         {
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             userId: { [Op.eq]: userId }
           }
         }

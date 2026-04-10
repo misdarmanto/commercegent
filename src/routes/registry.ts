@@ -19,10 +19,12 @@ import RegionRoute from './Region.route'
 import OtpRoute from './Otp.route'
 import AuthRoute from './Auth.route'
 import UploadProductRoute from './UploadProduct.route'
+import AppLogRoute from './AppLog.route'
 
 const RoutesRegistry = {
   AddressRoute,
   AdminRoute,
+  AppLogRoute,
   CartRoute,
   CategoryRoute,
   HealthRoute,

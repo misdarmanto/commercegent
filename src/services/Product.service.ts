@@ -1,7 +1,7 @@
 import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { ProductAttributes, ProductModel } from '../models/products'
-import { CategoryModel } from '../models/categories'
+import { ProductAttributes, ProductModel } from '../models/ProductModel'
+import { CategoryModel } from '../models/CategoryModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -10,6 +10,7 @@ import type {
   ICreateProduct,
   IFindAllProducts,
   IFindDetailProduct,
+  IFindProductByBarcode,
   IRemoveProduct,
   IUpdateProduct
 } from '../schemas/ProductSchema'
@@ -20,7 +21,7 @@ export class ProductService {
     opts: { onlyVisible: boolean }
   ): WhereOptions<ProductAttributes> {
     const where: WhereOptions<ProductAttributes> = {
-      deleted: { [Op.eq]: 0 }
+      deleted: { [Op.eq]: false }
     }
 
     if (opts.onlyVisible) {
@@ -95,7 +96,7 @@ export class ProductService {
     try {
       const result = await ProductModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           productId: { [Op.eq]: payload.productId }
         },
         include: [{ model: CategoryModel }]
@@ -116,11 +117,37 @@ export class ProductService {
     }
   }
 
+  static async findProductByBarcode(payload: IFindProductByBarcode) {
+    try {
+      const result = await ProductModel.findOne({
+        where: {
+          deleted: { [Op.eq]: false },
+          productBarcode: { [Op.eq]: payload.barcode }
+        }
+      })
+
+      if (result == null) {
+        throw new AppError('Product not found', StatusCodes.NOT_FOUND)
+      }
+
+      return result
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(
+        `[ProductService] findProductByBarcode failed: ${String(serviceError)}`
+      )
+      throw new AppError(
+        'Failed to find product by barcode',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    }
+  }
+
   static async createProduct(payload: ICreateProduct) {
     try {
       const existingProduct = await ProductModel.findOne({
         where: {
-          deleted: 0,
+          deleted: false,
           [Op.or]: [
             { productCode: payload.productCode },
             { productBarcode: payload.productBarcode }
@@ -153,7 +180,7 @@ export class ProductService {
       await ProductModel.create({
         ...payload,
         productSellPrice,
-        deleted: 0,
+        deleted: false,
         productIsHighlight: false,
         productDescription: payload.productDescription ?? '',
         productCategoryId: String(payload.productCategoryId),
@@ -172,7 +199,7 @@ export class ProductService {
     try {
       const product = await ProductModel.findOne({
         where: {
-          deleted: 0,
+          deleted: false,
           productId: payload.productId
         }
       })
@@ -194,7 +221,7 @@ export class ProductService {
 
         const duplicateProduct = await ProductModel.findOne({
           where: {
-            deleted: 0,
+            deleted: false,
             productId: { [Op.ne]: payload.productId },
             [Op.or]: orConditions
           }
@@ -273,10 +300,10 @@ export class ProductService {
   static async removeProduct(payload: IRemoveProduct) {
     try {
       const [updatedRows] = await ProductModel.update(
-        { deleted: 1 },
+        { deleted: true },
         {
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             productId: { [Op.eq]: payload.productId }
           }
         }

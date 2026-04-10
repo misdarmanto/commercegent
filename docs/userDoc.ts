@@ -11,7 +11,7 @@
  *         name: page
  *         schema:
  *           type: integer
- *           default: 0
+ *           default: 1
  *         description: Page number
  *       - in: query
  *         name: size

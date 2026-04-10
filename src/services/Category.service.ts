@@ -4,7 +4,7 @@ import {
   CategoryModel,
   type CategoryAttributes,
   type CategoryCreationAttributes
-} from '../models/categories'
+} from '../models/CategoryModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -21,7 +21,7 @@ export class CategoryService {
     payload: IFindAllCategories
   ): WhereOptions<CategoryAttributes> {
     const where: WhereOptions<CategoryAttributes> = {
-      deleted: { [Op.eq]: 0 }
+      deleted: { [Op.eq]: false }
     }
 
     if (payload.search != null) {
@@ -64,7 +64,7 @@ export class CategoryService {
     try {
       const result = await CategoryModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           categoryId: { [Op.eq]: payload.categoryId }
         }
       })
@@ -86,7 +86,6 @@ export class CategoryService {
       const payload: CategoryCreationAttributes = {
         categoryName: body.categoryName,
         categoryType: body.categoryType ?? 'parent',
-        deleted: 0,
         categoryReference: body.categoryReference ?? '',
         categoryIcon: body.categoryIcon ?? ''
       }
@@ -116,7 +115,7 @@ export class CategoryService {
 
       const [updatedRows] = await CategoryModel.update(newData, {
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           categoryId: { [Op.eq]: payload.categoryId }
         }
       })
@@ -134,10 +133,10 @@ export class CategoryService {
   static async removeCategory(payload: IRemoveCategory) {
     try {
       const [updatedRows] = await CategoryModel.update(
-        { deleted: 1 },
+        { deleted: true },
         {
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             categoryId: { [Op.eq]: payload.categoryId }
           }
         }

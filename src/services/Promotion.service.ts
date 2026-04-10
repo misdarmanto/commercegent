@@ -1,8 +1,8 @@
 import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { sequelize } from '../models'
-import { ProductAttributes, ProductModel } from '../models/products'
-import { CategoryModel } from '../models/categories'
+import { sequelizeInit } from '../configs/database'
+import { ProductAttributes, ProductModel } from '../models/ProductModel'
+import { CategoryModel } from '../models/CategoryModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -62,7 +62,7 @@ export class PromotionService {
   }
 
   static async updateHighlights(payload: IUpdatePromotion) {
-    const transaction = await sequelize.transaction()
+    const transaction = await sequelizeInit.transaction()
 
     try {
       for (const item of payload.products) {

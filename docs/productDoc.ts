@@ -98,7 +98,7 @@
  *         name: page
  *         schema:
  *           type: integer
- *           default: 0
+ *           default: 1
  *         description: Page number
  *       - in: query
  *         name: size
@@ -146,7 +146,7 @@
  *         name: page
  *         schema:
  *           type: integer
- *           default: 0
+ *           default: 1
  *         description: Page number
  *       - in: query
  *         name: size
@@ -194,6 +194,38 @@
  *         schema:
  *           type: string
  *         description: The ID of the product
+ *     responses:
+ *       200:
+ *         description: Product retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Product'
+ *       404:
+ *         description: Product not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/v1/products/barcode/{barcode}:
+ *   get:
+ *     summary: Get a product by barcode
+ *     tags: [PRODUCTS]
+ *     parameters:
+ *       - name: barcode
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The barcode of the product
  *     responses:
  *       200:
  *         description: Product retrieved successfully

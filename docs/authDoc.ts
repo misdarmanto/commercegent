@@ -16,9 +16,10 @@
  *             properties:
  *               userWhatsAppNumber:
  *                 type: string
+ *                 example: "628123456789"
  *               userPassword:
  *                 type: string
- *                 minLength: 6
+ *                 example: "qwerty"
  *     responses:
  *       201:
  *         description: Login successfully
@@ -46,22 +47,17 @@
  *             properties:
  *               userName:
  *                 type: string
+ *                 example: "John Doe"
  *               userPassword:
  *                 type: string
- *                 minLength: 6
+ *                 example: "qwerty"
  *               userWhatsAppNumber:
  *                 type: string
+ *                 example: "628123456789"
  *               userGender:
  *                 type: string
  *                 enum: [pria, wanita]
- *               userPhoto:
- *                 type: string
- *                 format: uri
- *               userRole:
- *                 type: string
- *                 enum: [user, admin, superAdmin]
- *               userFcmId:
- *                 type: string
+ *                 example: "pria"
  *     responses:
  *       201:
  *         description: User registered successfully
@@ -84,14 +80,15 @@
  *           schema:
  *             type: object
  *             required:
- *               - userWhatsAppNumber
- *               - userPassword
+ *               - adminWhatsAppNumber
+ *               - adminPassword
  *             properties:
- *               userWhatsAppNumber:
+ *               adminWhatsAppNumber:
  *                 type: string
- *               userPassword:
+ *                 example: "628123456789"
+ *               adminPassword:
  *                 type: string
- *                 minLength: 6
+ *                 example: "qwerty"
  *     responses:
  *       201:
  *         description: Login successfully
@@ -101,7 +98,7 @@
 
 /**
  * @swagger
- * /api/v1/auth/admin/user/register:
+ * /api/v1/auth/admin/register:
  *   post:
  *     summary: Register a new admin
  *     tags: [AUTH]
@@ -112,27 +109,31 @@
  *           schema:
  *             type: object
  *             required:
- *               - userName
- *               - userPassword
- *               - userWhatsAppNumber
+ *               - adminName
+ *               - adminPassword
+ *               - adminWhatsAppNumber
  *             properties:
- *               userName:
+ *               adminName:
  *                 type: string
- *               userPassword:
+ *                 example: "John Doe"
+ *               adminPassword:
  *                 type: string
- *                 minLength: 6
- *               userWhatsAppNumber:
+ *                 example: "qwerty"
+ *               adminWhatsAppNumber:
  *                 type: string
- *               userRole:
+ *                 example: "628123456789"
+ *               adminRole:
  *                 type: string
  *                 enum: [user, admin, superAdmin]
- *               userFcmId:
+ *                 example: "admin"
+ *               adminFcmId:
  *                 type: string
+ *                 example: "1234567890"
  *     responses:
  *       201:
- *         description: User registered successfully
+ *         description: Admin registered successfully
  *       400:
- *         description: Validation error or duplicate user
+ *         description: Validation error or duplicate admin
  *       500:
  *         description: Server error
  */

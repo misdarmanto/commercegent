@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/indent */
-import { DataTypes, type Model, type Optional, UUIDV4 } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
-import { ProductModel } from './products'
+import { DataTypes, type Model, type Optional } from 'sequelize'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
+import { ProductModel } from './ProductModel'
+import { sequelizeInit } from '../configs/database'
 
-export interface CartsAttributes extends ZygoteAttributes {
+export interface CartsAttributes extends IBaseModelFields {
   cartId: number
   cartUserId: number
   cartProductId: number
@@ -24,10 +24,10 @@ interface CartsInstance
   extends Model<CartsAttributes, CartsCreationAttributes>,
     CartsAttributes {}
 
-export const CartsModel = sequelize.define<CartsInstance>(
+export const CartsModel = sequelizeInit.define<CartsInstance>(
   'carts',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     cartId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -49,7 +49,6 @@ export const CartsModel = sequelize.define<CartsInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'carts',
     deletedAt: false,

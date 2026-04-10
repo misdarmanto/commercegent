@@ -1,9 +1,8 @@
-import moment from 'moment'
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 
-export interface SettingAttributes extends ZygoteAttributes {
+export interface SettingAttributes extends IBaseModelFields {
   settingId: number
   settingType: 'general' | 'wa_blas'
   banner?: string | null
@@ -21,10 +20,10 @@ interface SettingInstance
   extends Model<SettingAttributes, SettingCreationAttributes>,
     SettingAttributes {}
 
-export const SettingModel = sequelize.define<SettingInstance>(
+export const SettingModel = sequelizeInit.define<SettingInstance>(
   'settings',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     settingId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -53,23 +52,11 @@ export const SettingModel = sequelize.define<SettingInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'settings',
     paranoid: true,
     underscored: true,
     freezeTableName: true,
-    engine: 'InnoDB',
-    hooks: {
-      beforeCreate: (record) => {
-        const now = moment().add(7, 'hours').format('YYYY-MM-DD HH:mm:ss')
-        record.createdAt = now
-        record.updatedAt = null
-      },
-      beforeUpdate: (record) => {
-        const now = moment().add(7, 'hours').format('YYYY-MM-DD HH:mm:ss')
-        record.updatedAt = now
-      }
-    }
+    engine: 'InnoDB'
   }
 )

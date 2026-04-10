@@ -168,7 +168,7 @@
  *         name: page
  *         schema:
  *           type: integer
- *           default: 0
+ *           default: 1
  *       - in: query
  *         name: size
  *         schema:

@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
-import { OrdersModel } from './orders'
-import { UserModel } from './user'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
+import { OrdersModel } from './OrderModel'
+import { UserModel } from './UserModel'
 
-export interface TransactionsAttributes extends ZygoteAttributes {
+export interface TransactionsAttributes extends IBaseModelFields {
   transactionId: number
   transactionOrderId: number
   transactionUserId: string
@@ -32,10 +32,10 @@ interface TransactionsInstance
   extends Model<TransactionsAttributes, TransactionsCreationAttributes>,
     TransactionsAttributes {}
 
-export const TransactionsModel = sequelize.define<TransactionsInstance>(
+export const TransactionsModel = sequelizeInit.define<TransactionsInstance>(
   'transactions',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     transactionId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,

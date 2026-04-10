@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/indent */
-import { DataTypes, type Model, type Optional, UUIDV4 } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
+import { DataTypes, type Model, type Optional } from 'sequelize'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 
-export interface CategoryAttributes extends ZygoteAttributes {
+export interface CategoryAttributes extends IBaseModelFields {
   categoryId: number
   categoryReference: string
   categoryName: string
@@ -24,10 +24,10 @@ interface CategoryInstance
   extends Model<CategoryAttributes, CategoryCreationAttributes>,
     CategoryAttributes {}
 
-export const CategoryModel = sequelize.define<CategoryInstance>(
+export const CategoryModel = sequelizeInit.define<CategoryInstance>(
   'category',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     categoryId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -53,7 +53,6 @@ export const CategoryModel = sequelize.define<CategoryInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'categories',
     deletedAt: false,

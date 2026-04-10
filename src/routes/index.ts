@@ -11,9 +11,10 @@ import logger from '../utilities/logger'
 const routers = Router()
 
 routers.use('/api/v1/', RoutesRegistry.HealthRoute)
+routers.use('/api/v1/app-logs', RoutesRegistry.AppLogRoute)
 routers.use('/api/v1/addresses', RoutesRegistry.AddressRoute)
-routers.use('/api/v1/regions', RoutesRegistry.RegionRoute)
 routers.use('/api/v1/admins', RoutesRegistry.AdminRoute)
+routers.use('/api/v1/regions', RoutesRegistry.RegionRoute)
 routers.use('/api/v1/users', RoutesRegistry.UserRoute)
 routers.use('/api/v1/carts', RoutesRegistry.CartRoute)
 routers.use('/api/v1/categories', RoutesRegistry.CategoryRoute)

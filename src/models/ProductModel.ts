@@ -1,26 +1,18 @@
 /* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
-import { CategoryModel } from './categories'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
+import { CategoryModel } from './CategoryModel'
+import { ProductVariantModel } from './ProductVariantModel'
 
-export interface ProductAttributes extends ZygoteAttributes {
+export interface ProductAttributes extends IBaseModelFields {
   productId: number
   productName: string
   productDescription: string
-  productImages: string[]
-  productPrice: number
-  productDiscount: number
-  productSellPrice?: number
   productCategoryId?: string
   productSubCategoryId?: string
-  productTotalSale: number
   productCode: string
-  productStock: number
-  productWeight: number
   productIsHighlight: boolean
-
-  // new
   productBarcode: string
   productUnit?: string
   productIsVisible?: boolean
@@ -39,10 +31,10 @@ interface ProductInstance
   extends Model<ProductAttributes, ProductCreationAttributes>,
     ProductAttributes {}
 
-export const ProductModel = sequelize.define<ProductInstance>(
+export const ProductModel = sequelizeInit.define<ProductInstance>(
   'products',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     productId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -53,26 +45,9 @@ export const ProductModel = sequelize.define<ProductInstance>(
       type: DataTypes.STRING,
       allowNull: false
     },
-    productImages: {
-      type: DataTypes.JSON,
-      allowNull: false
-    },
     productDescription: {
       type: DataTypes.STRING,
       allowNull: false
-    },
-    productPrice: {
-      type: DataTypes.DECIMAL,
-      allowNull: false
-    },
-    productDiscount: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 0
-    },
-    productSellPrice: {
-      type: DataTypes.DECIMAL,
-      allowNull: true
     },
     productCategoryId: {
       type: DataTypes.STRING(100),
@@ -86,21 +61,6 @@ export const ProductModel = sequelize.define<ProductInstance>(
       type: DataTypes.STRING(100),
       allowNull: false,
       unique: true
-    },
-    productTotalSale: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      defaultValue: 0
-    },
-    productStock: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0
-    },
-    productWeight: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      defaultValue: 0
     },
     productIsHighlight: {
       type: DataTypes.BOOLEAN,
@@ -122,7 +82,6 @@ export const ProductModel = sequelize.define<ProductInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'products',
     deletedAt: false,
@@ -136,4 +95,13 @@ export const ProductModel = sequelize.define<ProductInstance>(
 ProductModel.hasOne(CategoryModel, {
   sourceKey: 'productCategoryId',
   foreignKey: 'categoryId'
+})
+
+ProductModel.hasMany(ProductVariantModel, {
+  as: 'variants',
+  foreignKey: 'productVariantProductId',
+  sourceKey: 'productId',
+  onDelete: 'CASCADE',
+  onUpdate: 'CASCADE',
+  hooks: true
 })

@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
-import { sequelize } from '.'
-import { type ZygoteAttributes, ZygoteModel } from './zygote'
+import { sequelizeInit } from '../configs/database'
+import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 
-export interface UserAttributes extends ZygoteAttributes {
+export interface UserAttributes extends IBaseModelFields {
   userId: number
   userName: string
   userPassword: string
@@ -28,10 +28,10 @@ interface UserInstance
   extends Model<UserAttributes, UserCreationAttributes>,
     UserAttributes {}
 
-export const UserModel = sequelize.define<UserInstance>(
+export const UserModel = sequelizeInit.define<UserInstance>(
   'users',
   {
-    ...ZygoteModel,
+    ...BaseModelFields,
     userId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
@@ -79,7 +79,6 @@ export const UserModel = sequelize.define<UserInstance>(
     }
   },
   {
-    ...sequelize,
     timestamps: false,
     tableName: 'users',
     deletedAt: false,
