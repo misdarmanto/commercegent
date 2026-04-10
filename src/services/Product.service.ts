@@ -137,7 +137,10 @@ export class ProductService {
 
       const result = await ProductModel.findAndCountAll({
         where: this.buildFindAllWhere(payload, { onlyVisible: true }),
-        include: [{ model: CategoryModel }],
+        include: [
+          { model: CategoryModel },
+          { model: ProductVariantModel, as: 'variants' }
+        ],
         order: [['productId', 'desc']],
         ...(payload.pagination === true && {
           limit: pager.limit,
@@ -159,7 +162,10 @@ export class ProductService {
 
       const result = await ProductModel.findAndCountAll({
         where: this.buildFindAllWhere(payload, { onlyVisible: false }),
-        include: [{ model: CategoryModel }],
+        include: [
+          { model: CategoryModel },
+          { model: ProductVariantModel, as: 'variants' }
+        ],
         order: [['productId', 'desc']],
         ...(payload.pagination === true && {
           limit: pager.limit,
@@ -187,7 +193,10 @@ export class ProductService {
           deleted: { [Op.eq]: false },
           productId: { [Op.eq]: payload.productId }
         },
-        include: [{ model: CategoryModel }]
+        include: [
+          { model: CategoryModel },
+          { model: ProductVariantModel, as: 'variants' }
+        ]
       })
 
       if (result == null) {
