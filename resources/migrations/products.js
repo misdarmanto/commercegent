@@ -16,31 +16,12 @@ module.exports = {
         allowNull: false
       },
       product_name: {
-        type: DataTypes.STRING(100),
-        allowNull: false
-      },
-      product_images: {
-        type: DataTypes.JSON,
+        type: DataTypes.STRING,
         allowNull: false
       },
       product_description: {
-        type: DataTypes.TEXT,
+        type: DataTypes.STRING,
         allowNull: false
-      },
-      product_price: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0
-      },
-      product_discount: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 0
-      },
-      product_sell_price: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 0
       },
       product_category_id: {
         type: DataTypes.STRING(100),
@@ -54,21 +35,6 @@ module.exports = {
         type: DataTypes.STRING(100),
         allowNull: false,
         unique: true
-      },
-      product_total_sale: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 0
-      },
-      product_stock: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-        defaultValue: 0
-      },
-      product_weight: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 0
       },
       product_is_highlight: {
         type: DataTypes.BOOLEAN,
