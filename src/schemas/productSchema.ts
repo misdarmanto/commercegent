@@ -4,11 +4,6 @@ import {
   updateProductVariantSchema
 } from './ProductVariantSchema'
 
-const productImagesField = z
-  .union([z.array(z.string()), z.string()])
-  .optional()
-  .transform((v) => (v == null ? [] : Array.isArray(v) ? v : [v]))
-
 export const createProductSchema = z.object({
   productName: z
     .string({ required_error: 'Nama produk wajib diisi' })
