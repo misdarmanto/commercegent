@@ -76,4 +76,3 @@ module.exports = {
     await queryInterface.dropTable('product_variants')
   }
 }
-
