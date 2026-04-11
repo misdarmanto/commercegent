@@ -3,11 +3,13 @@ import { createUserAddress } from './createUserAddress'
 import { findAdminAddress } from './findAdminAddress'
 import { findUserAddress } from './findUserAddress'
 import { removeAddress } from './removeAddress'
+import { updateAdminAddress } from './updateAdminAddress'
 
 export const AddressController = {
   createUserAddress,
   createAdminAddress,
   removeAddress,
   findUserAddress,
-  findAdminAddress
+  findAdminAddress,
+  updateAdminAddress
 }

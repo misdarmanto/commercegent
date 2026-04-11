@@ -110,11 +110,59 @@
  *         addressLatitude:
  *           type: string
  *           example: "42343"
+ *     UpdateAddress:
+ *       type: object
+ *       required:
+ *         - addressId
+ *         - addressUserName
+ *         - addressKontak
+ *         - addressDetail
+ *         - addressPostalCode
+ *         - addressProvinsi
+ *         - addressKabupaten
+ *         - addressKecamatan
+ *         - addressDesa
+ *         - addressLongitude
+ *         - addressLatitude
+ *       properties:
+ *         addressId:
+ *           type: string
+ *           example: "addr_001"
+ *         addressUserName:
+ *           type: string
+ *           example: "John Doe"
+ *         addressKontak:
+ *           type: string
+ *           example: "+628123456789"
+ *         addressDetail:
+ *           type: string
+ *           example: "Jl. Melati No. 45, Blok C"
+ *         addressPostalCode:
+ *           type: string
+ *           example: "40234"
+ *         addressProvinsi:
+ *           type: string
+ *           example: "Jawa Barat"
+ *         addressKabupaten:
+ *           type: string
+ *           example: "Bandung"
+ *         addressKecamatan:
+ *           type: string
+ *           example: "Coblong"
+ *         addressDesa:
+ *           type: string
+ *           example: "Desa"
+ *         addressLongitude:
+ *           type: string
+ *           example: "34324"
+ *         addressLatitude:
+ *           type: string
+ *           example: "42343"
  */
 
 /**
  * @swagger
- * /api/v1/addresses:
+ * /api/v1/addresses/users:
  *   get:
  *     summary: Get all addresses
  *     tags: [ADDRESSES]
@@ -165,17 +213,10 @@
 
 /**
  * @swagger
- * /api/v1/addresses/detail/{addressId}:
+ * /api/v1/addresses/admins:
  *   get:
- *     summary: Get an address by id
+ *     summary: Get admin address
  *     tags: [ADDRESSES]
- *     parameters:
- *       - name: addressId
- *         in: path
- *         required: true
- *         schema:
- *           type: string
- *         description: The ID of the address
  *     responses:
  *       200:
  *         description: Address retrieved successfully
@@ -197,7 +238,7 @@
 
 /**
  * @swagger
- * /api/v1/addresses:
+ * /api/v1/addresses/users:
  *   post:
  *     summary: Create a new address
  *     tags: [ADDRESSES]
@@ -221,6 +262,74 @@
  *                 message:
  *                   type: string
  *                   example: Address created successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/Address'
+ *       400:
+ *         description: Invalid input data
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/v1/addresses/admins:
+ *   post:
+ *     summary: Create a new address
+ *     tags: [ADDRESSES]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateAddress'
+ *     responses:
+ *       201:
+ *         description: Address created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Address created successfully
+ *                 data:
+ *                   $ref: '#/components/schemas/Address'
+ *       400:
+ *         description: Invalid input data
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/v1/addresses:
+ *   patch:
+ *     summary: Update an address
+ *     tags: [ADDRESSES]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateAddress'
+ *     responses:
+ *       200:
+ *         description: Address updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Address updated successfully
  *                 data:
  *                   $ref: '#/components/schemas/Address'
  *       400:

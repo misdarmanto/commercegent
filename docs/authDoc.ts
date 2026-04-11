@@ -16,7 +16,7 @@
  *             properties:
  *               userWhatsAppNumber:
  *                 type: string
- *                 example: "628123456789"
+ *                 example: "6281234567890"
  *               userPassword:
  *                 type: string
  *                 example: "qwerty"
@@ -47,13 +47,13 @@
  *             properties:
  *               userName:
  *                 type: string
- *                 example: "John Doe"
+ *                 example: "John Doe User"
  *               userPassword:
  *                 type: string
  *                 example: "qwerty"
  *               userWhatsAppNumber:
  *                 type: string
- *                 example: "628123456789"
+ *                 example: "6281234567890"
  *               userGender:
  *                 type: string
  *                 enum: [pria, wanita]

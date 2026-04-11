@@ -3,17 +3,19 @@ import { StatusCodes } from 'http-status-codes'
 import { AddressesModel } from '../models/AddressModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import type { ICreateAddress } from '../schemas/AddressSchema'
+import type { ICreateAddress, IUpdateAddress } from '../schemas/AddressSchema'
 
 export class AddressService {
   static async findUserAddress(userId: number) {
     try {
-      return await AddressesModel.findOne({
+      return await AddressesModel.findAll({
         where: {
           deleted: { [Op.eq]: false },
           addressUserId: { [Op.eq]: userId },
           addressCategory: 'user'
-        }
+        },
+        order: [['addressId', 'DESC']],
+        limit: 5
       })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
@@ -42,6 +44,21 @@ export class AddressService {
 
   static async createUserAddress(userId: number, payload: ICreateAddress) {
     try {
+      const existing = await AddressesModel.count({
+        where: {
+          deleted: { [Op.eq]: false },
+          addressUserId: userId,
+          addressCategory: 'user'
+        }
+      })
+
+      if (existing > 5) {
+        throw new AppError(
+          'You can not create more than 5 addresses',
+          StatusCodes.BAD_REQUEST
+        )
+      }
+
       const createPayload = {
         ...payload,
         addressUserId: userId,
@@ -49,17 +66,7 @@ export class AddressService {
         deleted: false
       }
 
-      const where = {
-        deleted: { [Op.eq]: false },
-        addressUserId: userId,
-        addressCategory: 'user'
-      }
-
-      const [updatedRows] = await AddressesModel.update(createPayload, { where })
-
-      if (updatedRows === 0) {
-        await AddressesModel.create(createPayload)
-      }
+      await AddressesModel.create(createPayload)
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[AddressService] createUserAddress failed: ${String(serviceError)}`)
@@ -94,6 +101,29 @@ export class AddressService {
       logger.error(`[AddressService] createAdminAddress failed: ${String(serviceError)}`)
       throw new AppError(
         'Failed to create admin address',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    }
+  }
+
+  static async updateAddress(userId: number, payload: IUpdateAddress) {
+    try {
+      const [updatedRows] = await AddressesModel.update(payload, {
+        where: {
+          deleted: { [Op.eq]: false },
+          addressUserId: userId,
+          addressId: { [Op.eq]: payload.addressId }
+        }
+      })
+
+      if (updatedRows === 0) {
+        throw new AppError('address not found!', StatusCodes.NOT_FOUND)
+      }
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[AddressService] updateUserAddress failed: ${String(serviceError)}`)
+      throw new AppError(
+        'Failed to update user address',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }
