@@ -166,7 +166,14 @@ export default function ListUploadHistoryView() {
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={2}>
-          <GridToolbarExport />
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<ArrowBack />}
+            onClick={handleBack}
+          >
+            Kembali
+          </Button>
           <Button
             onClick={() => setOpenUploadDialog(true)}
             startIcon={<UploadFile />}
@@ -201,17 +208,6 @@ export default function ListUploadHistoryView() {
           },
         ]}
       />
-
-      <Stack direction="row" sx={{ mb: 2 }}>
-        <Button
-          variant="outlined"
-          size="small"
-          startIcon={<ArrowBack />}
-          onClick={handleBack}
-        >
-          Kembali
-        </Button>
-      </Stack>
 
       <Box sx={{ width: "100%" }}>
         <DataGrid

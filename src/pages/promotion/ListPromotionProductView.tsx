@@ -47,6 +47,11 @@ export default function ListProductPromotionView() {
   >([]);
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
   const [highlightLoading, setHighlightLoading] = useState(false);
+  const [highlightPaginationModel, setHighlightPaginationModel] = useState({
+    page: 0,
+    pageSize: 10,
+  });
+  const [highlightRowCount, setHighlightRowCount] = useState(0);
 
   /** ================== API ================== */
   const getTableData = async ({ search }: { search: string }) => {
@@ -68,26 +73,7 @@ export default function ListProductPromotionView() {
     }
   };
 
-  const getNonHighlightProducts = async () => {
-    try {
-      setHighlightLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/products",
-        page: 0,
-        size: 50,
-        filter: { productIsHighlight: false },
-      });
-
-      if (result) {
-        setProductHighlightRows(result.items);
-      }
-    } finally {
-      setHighlightLoading(false);
-    }
-  };
-
   const handleRemovePromotion = async (productId: number) => {
-    console.log("====product", productId);
     try {
       await handleRemoveRequest({
         path: "/promotions?productId=" + productId,
@@ -131,16 +117,54 @@ export default function ListProductPromotionView() {
     getTableData({ search: "" });
   }, [paginationModel]);
 
+  useEffect(() => {
+    if (!openHighlightModal) return;
+
+    const load = async () => {
+      try {
+        setHighlightLoading(true);
+        const result = await handleGetTableDataRequest({
+          path: "/products",
+          page: highlightPaginationModel.page + 1,
+          size: highlightPaginationModel.pageSize,
+          filter: { productIsHighlight: false },
+        });
+
+        if (result) {
+          setProductHighlightRows(result.items);
+          setHighlightRowCount(result.totalItems ?? result.total_items ?? 0);
+        }
+      } finally {
+        setHighlightLoading(false);
+      }
+    };
+
+    void load();
+  }, [openHighlightModal, highlightPaginationModel]);
+
   /** ================== COLUMNS ================== */
   const columns: GridColDef[] = [
-    { field: "productName", flex: 1, headerName: "NAMA" },
-    { field: "productCode", flex: 1, headerName: "BARCODE" },
+    {
+      field: "productName",
+      flex: 1,
+      headerName: "NAMA",
+      renderHeader: () => <strong>NAMA</strong>,
+      renderCell: (params) => params.row.productName,
+    },
+    {
+      field: "productCode",
+      flex: 1,
+      headerName: "BARCODE",
+      renderHeader: () => <strong>BARCODE</strong>,
+      renderCell: (params) => params.row.productCode,
+    },
     {
       field: "productImage",
       headerName: "GAMBAR",
+      renderHeader: () => <strong>GAMBAR</strong>,
       renderCell: (params) => (
         <img
-          src={getImageUrl(params.row?.productImages?.[0])}
+          src={getImageUrl(params.row?.variant?.productVariantImage)}
           style={{ width: 50, height: 50, borderRadius: 6 }}
         />
       ),
@@ -149,12 +173,29 @@ export default function ListProductPromotionView() {
       field: "productSellPrice",
       flex: 1,
       headerName: "HARGA",
-      valueFormatter: (item) => "Rp" + convertNumberToCurrency(item.value),
+      renderCell: (params) =>
+        "Rp" +
+        convertNumberToCurrency(params.row.variant?.productVariantSellPrice),
     },
-    { field: "productDiscount", flex: 1, headerName: "DISKON (%)" },
+    {
+      field: "productDiscount",
+      flex: 1,
+      headerName: "DISKON (%)",
+      renderCell: (params) => params.row.variant?.productVariantDiscount + "%",
+    },
 
-    { field: "productStock", flex: 1, headerName: "STOK" },
-    { field: "productTotalSale", flex: 1, headerName: "TERJUAL" },
+    {
+      field: "productStock",
+      flex: 1,
+      headerName: "STOK",
+      renderCell: (params) => params.row.variant?.productVariantStock,
+    },
+    {
+      field: "productTotalSale",
+      flex: 1,
+      headerName: "TERJUAL",
+      renderCell: (params) => params.row.productTotalSale || 0,
+    },
     {
       field: "actions",
       type: "actions",
@@ -175,6 +216,7 @@ export default function ListProductPromotionView() {
     {
       field: "select",
       width: 70,
+      renderHeader: () => <strong>PILIH</strong>,
       renderCell: (params) => (
         <input
           type="checkbox"
@@ -191,13 +233,38 @@ export default function ListProductPromotionView() {
         />
       ),
     },
-    { field: "productName", flex: 1, headerName: "Nama Produk" },
-    { field: "productCode", flex: 1, headerName: "CODE" },
+    {
+      field: "productImage",
+      renderHeader: () => <strong>GAMBAR</strong>,
+      renderCell: (params) => (
+        <img
+          src={getImageUrl(params.row?.variant?.productVariantImage)}
+          style={{ width: 50, height: 50, borderRadius: 6 }}
+        />
+      ),
+    },
+    {
+      field: "productName",
+      flex: 1,
+      headerName: "Nama Produk",
+      renderHeader: () => <strong>NAMA</strong>,
+      renderCell: (params) => params.row.productName,
+    },
+    {
+      field: "productCode",
+      flex: 1,
+      headerName: "CODE",
+      renderHeader: () => <strong>CODE</strong>,
+      renderCell: (params) => params.row.productCode,
+    },
     {
       field: "productSellPrice",
       flex: 1,
       headerName: "Harga",
-      valueFormatter: (item) => "Rp" + convertNumberToCurrency(item.value),
+      renderHeader: () => <strong>HARGA</strong>,
+      renderCell: (params) =>
+        "Rp" +
+        convertNumberToCurrency(params.row.variant?.productVariantSellPrice),
     },
   ];
 
@@ -209,8 +276,8 @@ export default function ListProductPromotionView() {
           variant="outlined"
           startIcon={<Add />}
           onClick={() => {
+            setHighlightPaginationModel((prev) => ({ ...prev, page: 0 }));
             setOpenHighlightModal(true);
-            getNonHighlightProducts();
           }}
         >
           Tambah Produk
@@ -261,13 +328,18 @@ export default function ListProductPromotionView() {
       <Dialog open={openHighlightModal} maxWidth="md" fullWidth>
         <DialogTitle>Pilih Produk Highlight</DialogTitle>
         <DialogContent>
-          <Box sx={{ height: 400 }}>
+          <Box sx={{ width: "100%", minHeight: 420 }}>
             <DataGrid
               rows={productHighlightRows}
               getRowId={(row) => row.productId}
               columns={highlightColumns}
               loading={highlightLoading}
-              hideFooter
+              paginationMode="server"
+              rowCount={highlightRowCount}
+              paginationModel={highlightPaginationModel}
+              onPaginationModelChange={setHighlightPaginationModel}
+              pageSizeOptions={[5, 10, 25, 50]}
+              disableRowSelectionOnClick
             />
           </Box>
         </DialogContent>
