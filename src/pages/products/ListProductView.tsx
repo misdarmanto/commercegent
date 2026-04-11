@@ -29,7 +29,7 @@ import { useNavigate } from "react-router-dom";
 import Modal from "../../components/modal";
 import { convertNumberToCurrency } from "../../utilities/convertNumberToCurrency";
 import { getImageUrl } from "../../utilities/getImageUrl";
-import { IProduct } from "../../interfaces/Product";
+import { IListProduct } from "../../interfaces/Product";
 
 export default function ProductListView() {
   const navigation = useNavigate();
@@ -37,7 +37,7 @@ export default function ProductListView() {
   const [tableData, setTableData] = useState<GridRowsProp[]>([]);
   const { handleGetTableDataRequest, handleRemoveRequest, handlePostRequest } =
     useHttp();
-  const [modalDeleteData, setModalDeleteData] = useState<IProduct>();
+  const [modalDeleteData, setModalDeleteData] = useState<IListProduct>();
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
 
   // Upload Excel State
@@ -59,7 +59,7 @@ export default function ProductListView() {
     await getTableData({ search: "" });
   };
 
-  const handleOpenModalDelete = (data: IProduct) => {
+  const handleOpenModalDelete = (data: IListProduct) => {
     setModalDeleteData(data);
     setOpenModalDelete(true);
   };
@@ -73,9 +73,11 @@ export default function ProductListView() {
         size: paginationModel.pageSize ?? 10,
         filter: { search },
       });
+
+      console.log(result);
       if (result) {
         setTableData(result.items);
-        setRowCount(result.total_items);
+        setRowCount(result.totalItems);
       }
     } catch (error: any) {
       console.log(error);
@@ -145,7 +147,7 @@ export default function ProductListView() {
       renderHeader: () => <strong>GAMBAR</strong>,
       renderCell: (params) => (
         <img
-          src={getImageUrl(params.row?.productImages?.[0])}
+          src={getImageUrl(params.row?.variant?.productVariantImage)}
           alt="image"
           style={{
             width: 50,
@@ -159,30 +161,36 @@ export default function ProductListView() {
       filterable: false,
     },
     {
-      field: "productPrice",
+      field: "productVariantPrice",
       flex: 1,
       renderHeader: () => <strong>HARGA</strong>,
-      valueFormatter: (item) => "Rp" + convertNumberToCurrency(item.value),
+      renderCell: (params) =>
+        "Rp" + convertNumberToCurrency(params.row.variant?.productVariantPrice),
     },
     {
-      field: "productDiscount",
+      field: "productVariantDiscount",
       flex: 1,
       headerName: "DISKON (%)",
       renderHeader: () => <strong>DISKON (%)</strong>,
+      renderCell: (params) => params.row.variant?.productVariantDiscount + "%",
     },
     {
       field: "productSellPrice",
       flex: 1,
       renderHeader: () => <strong>HARGA JUAL</strong>,
-      valueFormatter: (item) => "Rp" + convertNumberToCurrency(item.value),
+      renderCell: (params) =>
+        "Rp" +
+        convertNumberToCurrency(params.row.variant?.productVariantSellPrice),
     },
     {
       field: "productStock",
       renderHeader: () => <strong>STOK</strong>,
+      renderCell: (params) => params.row.variant?.productVariantStock,
     },
     {
       field: "productTotalSale",
       renderHeader: () => <strong>TERJUAL</strong>,
+      renderCell: (params) => params.row.productTotalSale || 0,
     },
     {
       field: "actions",

@@ -40,9 +40,8 @@ import { useToken } from "../hooks/token";
 import { ColorModeContext } from "../context/colorMode.context";
 import { IconMenusSidebar } from "../components/icon";
 
-/* ============================================================
-   GLOBAL DESIGN TOKENS (MODE AWARE)
-============================================================ */
+import logo from "../assets/logo.jpg";
+
 const drawerWidth = 200;
 const miniDrawerWidth = 64;
 
@@ -165,7 +164,7 @@ export default function AppLayout() {
   const menuItems = [];
 
   const adminMenus = [
-    { title: "Dashboard", link: "/", iconKey: "dashboard" as const },
+    { title: "Beranda", link: "/", iconKey: "dashboard" as const },
     { title: "Products", link: "/products", iconKey: "products" as const },
     {
       title: "Promo",
@@ -248,6 +247,12 @@ export default function AppLayout() {
                   <MenuIcon />
                 </IconButton>
               )}
+              <img
+                src={logo}
+                width={40}
+                height={40}
+                style={{ borderRadius: 8 }}
+              />
               <Typography
                 sx={{
                   fontWeight: 800,

@@ -70,7 +70,7 @@ const DashboardView = () => {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Dashboard",
+            label: "Beranda",
             link: "/",
             icon: <IconMenus.dashboard fontSize="small" />,
           },

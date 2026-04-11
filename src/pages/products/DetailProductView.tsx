@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useHttp } from "../../hooks/http";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { ArrowBack } from "@mui/icons-material";
 import {
   Box,
@@ -10,24 +10,38 @@ import {
   Grid,
   Stack,
   Typography,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
 } from "@mui/material";
-import "react-responsive-carousel/lib/styles/carousel.min.css"; // requires a loader
+import "react-responsive-carousel/lib/styles/carousel.min.css";
 import { Carousel } from "react-responsive-carousel";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { convertNumberToCurrency } from "../../utilities/convertNumberToCurrency";
 import { getImageUrl } from "../../utilities/getImageUrl";
-import { IProduct } from "../../interfaces/Product";
+import type { IProduct } from "../../interfaces/Product";
+import {
+  getVariantsFromProduct,
+  parseVariantPrice,
+  sortVariantsByLowestPrice,
+} from "../../utilities/productVariants";
+
+function formatRp(value: number | string | undefined | null) {
+  return "Rp" + convertNumberToCurrency(parseVariantPrice(value));
+}
 
 export default function DetailProductView() {
   const { handleGetRequest } = useHttp();
   const navigate = useNavigate();
   const { productId } = useParams();
-  const [productImages, setProductImages] = useState<string[]>([]);
-  const [productDetail, setProductDetail] = useState<IProduct>();
+  const [productDetail, setProductDetail] = useState<IProduct | null>(null);
 
   const handleBack = () => {
-    // Prefer browser history; fallback to products list if none.
     if (window.history.length > 1) {
       navigate(-1);
       return;
@@ -36,21 +50,61 @@ export default function DetailProductView() {
   };
 
   const getDetailProduct = async () => {
-    const result: IProduct = await handleGetRequest({
+    const result = (await handleGetRequest({
       path: "/products/detail/" + productId,
-    });
+    })) as IProduct | undefined;
     if (result) {
-      const images = Array.isArray(result?.productImages)
-        ? result?.productImages
-        : [];
-      setProductImages(images);
       setProductDetail(result);
     }
   };
 
   useEffect(() => {
     getDetailProduct();
-  }, []);
+  }, [productId]);
+
+  const sortedVariants = useMemo(() => {
+    if (!productDetail) return [];
+    return sortVariantsByLowestPrice(getVariantsFromProduct(productDetail));
+  }, [productDetail]);
+
+  const carouselImages = useMemo(() => {
+    const urls = sortedVariants
+      .map((v) => v.productVariantImage)
+      .filter((u): u is string => Boolean(u?.trim()));
+    return [...new Set(urls)];
+  }, [sortedVariants]);
+
+  const infoRows: { label: string; value: ReactNode }[] = productDetail
+    ? [
+        { label: "Nama", value: productDetail.productName },
+        {
+          label: "Deskripsi",
+          value: productDetail.productDescription ?? "—",
+        },
+        { label: "CODE (SKU)", value: productDetail.productCode ?? "—" },
+        { label: "Barcode", value: productDetail.productBarcode ?? "—" },
+        { label: "Satuan", value: productDetail.productUnit ?? "—" },
+        {
+          label: "Status",
+          value: (
+            <Chip
+              size="small"
+              label={productDetail.productIsVisible ? "Visible" : "Hidden"}
+              color={productDetail.productIsVisible ? "success" : "default"}
+              variant="outlined"
+            />
+          ),
+        },
+        {
+          label: "Kategori",
+          value: productDetail.category?.categoryName ?? "—",
+        },
+        {
+          label: "Subkategori (ID)",
+          value: String(productDetail.productSubCategoryId ?? "—"),
+        },
+      ]
+    : [];
 
   return (
     <>
@@ -67,8 +121,8 @@ export default function DetailProductView() {
           },
         ]}
       />
-      <Card sx={{ p: 5 }}>
-        {/* <Stack direction="row" justifyContent="flex-start" sx={{ mb: 2 }}>
+      <Card sx={{ p: { xs: 2, md: 4 } }}>
+        <Stack direction="row" justifyContent="flex-start" sx={{ mb: 3 }}>
           <Button
             variant="outlined"
             startIcon={<ArrowBack />}
@@ -76,172 +130,159 @@ export default function DetailProductView() {
           >
             Kembali
           </Button>
-        </Stack> */}
-        <Box>
-          <Carousel dynamicHeight>
-            {productImages.map((image, index) => (
-              <div key={index}>
-                <img
-                  src={getImageUrl(image)}
-                  style={{
-                    maxHeight: "400px",
-                  }}
-                />
-              </div>
-            ))}
-          </Carousel>
-        </Box>
-        <Grid container spacing={5} p={2}>
-          <table>
-            <thead>
-              <th></th>
-              <th></th>
-              <th></th>
-            </thead>
-            <tbody>
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Nama</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productName}</Typography>
-                </td>
-              </tr>
+        </Stack>
 
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Harga</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>
-                    Rp{convertNumberToCurrency(productDetail?.productPrice)}
-                  </Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Diskon</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productDiscount}%</Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Harga Jual</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>
-                    Rp
-                    {convertNumberToCurrency(
-                      productDetail?.productSellPrice || 0,
-                    )}
-                  </Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Deskripsi</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productDescription}</Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Kategori</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Stack direction={"row"} spacing={1}>
-                    {productDetail?.category && (
-                      <Chip
-                        label={productDetail?.category?.categoryName || "_"}
-                        sx={{ mx: 0.2 }}
+        {!productDetail ? (
+          <Typography color="text.secondary">Memuat data…</Typography>
+        ) : (
+          <>
+            <Box sx={{ mb: 4 }}>
+              {carouselImages.length > 0 ? (
+                <Carousel dynamicHeight showThumbs={false}>
+                  {carouselImages.map((image, index) => (
+                    <div key={image + index}>
+                      <img
+                        src={getImageUrl(image)}
+                        alt={`Varian ${index + 1}`}
+                        style={{
+                          maxHeight: "400px",
+                          width: "100%",
+                          objectFit: "contain",
+                        }}
                       />
-                    )}
+                    </div>
+                  ))}
+                </Carousel>
+              ) : (
+                <Typography color="text.secondary" align="center" py={4}>
+                  Tidak ada gambar varian
+                </Typography>
+              )}
+            </Box>
+
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Informasi produk
+            </Typography>
+            <Grid container spacing={2} sx={{ mb: 4 }}>
+              {infoRows.map((row) => (
+                <Grid item xs={12} key={row.label}>
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    spacing={1}
+                    alignItems={{ sm: "baseline" }}
+                  >
+                    <Typography
+                      component="span"
+                      fontWeight="bold"
+                      sx={{ minWidth: { sm: 160 } }}
+                    >
+                      {row.label}
+                    </Typography>
+                    <Typography component="span" color="text.secondary">
+                      :
+                    </Typography>
+                    <Box>{row.value}</Box>
                   </Stack>
-                </td>
-              </tr>
+                </Grid>
+              ))}
+            </Grid>
 
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Sub Kategori</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Stack direction={"row"} spacing={1}>
-                    {productDetail?.category && (
-                      <Chip
-                        label={productDetail?.category?.categoryName || "_"}
-                        sx={{ mx: 0.2 }}
-                      />
-                    )}
-                  </Stack>
-                </td>
-              </tr>
+            <Typography variant="h6" fontWeight="bold" gutterBottom>
+              Varian produk
+              <Typography
+                component="span"
+                variant="body2"
+                color="text.secondary"
+                fontWeight={400}
+                sx={{ ml: 1 }}
+              >
+                (diurut dari harga terendah)
+              </Typography>
+            </Typography>
 
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Stok</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productStock}</Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Terjual</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productTotalSale}</Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Berat</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productWeight} gram</Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>Barcode</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productBarcode}</Typography>
-                </td>
-              </tr>
-
-              <tr>
-                <td>
-                  <Typography fontWeight={"Bold"}>CODE SKU</Typography>
-                </td>
-                <td>:</td>
-                <td>
-                  <Typography>{productDetail?.productCode}</Typography>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </Grid>
+            <TableContainer component={Paper} variant="outlined">
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>
+                      <strong>Gambar</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Nama</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Warna</strong>
+                    </TableCell>
+                    <TableCell>
+                      <strong>Ukuran</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Harga</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Harga jual</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Diskon %</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Stok</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Berat (g)</strong>
+                    </TableCell>
+                    <TableCell align="right">
+                      <strong>Terjual</strong>
+                    </TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {sortedVariants.map((v) => (
+                    <TableRow key={v.productVariantId ?? v.productVariantName}>
+                      <TableCell>
+                        {v.productVariantImage ? (
+                          <img
+                            src={getImageUrl(v.productVariantImage)}
+                            alt=""
+                            style={{
+                              width: 48,
+                              height: 48,
+                              borderRadius: 6,
+                              objectFit: "cover",
+                            }}
+                          />
+                        ) : (
+                          "—"
+                        )}
+                      </TableCell>
+                      <TableCell>{v.productVariantName}</TableCell>
+                      <TableCell>{v.productVariantColor ?? "—"}</TableCell>
+                      <TableCell>{v.productVariantSize ?? "—"}</TableCell>
+                      <TableCell align="right">
+                        {formatRp(v.productVariantPrice)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {formatRp(v.productVariantSellPrice)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {v.productVariantDiscount ?? "—"}
+                      </TableCell>
+                      <TableCell align="right">
+                        {v.productVariantStock ?? "—"}
+                      </TableCell>
+                      <TableCell align="right">
+                        {v.productVariantWeight ?? "—"}
+                      </TableCell>
+                      <TableCell align="right">
+                        {v.productVariantTotalSale ?? "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          </>
+        )}
       </Card>
     </>
   );
