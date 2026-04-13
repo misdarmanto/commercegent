@@ -6,10 +6,15 @@ export const createCartSchema = z.object({
     .int('cartProductId harus bilangan bulat')
     .positive('cartProductId harus lebih dari 0'),
 
-  cartTotalItem: z.coerce
-    .number({ invalid_type_error: 'cartTotalItem harus berupa angka' })
-    .int('cartTotalItem harus bilangan bulat')
-    .min(1, 'cartTotalItem minimal 1')
+  cartProductVariantId: z.coerce
+    .number({ invalid_type_error: 'cartProductVariantId harus berupa angka' })
+    .int('cartProductVariantId harus bilangan bulat')
+    .positive('cartProductVariantId harus lebih dari 0'),
+
+  cartQuantity: z.coerce
+    .number({ invalid_type_error: 'cartQuantity harus berupa angka' })
+    .int('cartQuantity harus bilangan bulat')
+    .min(1, 'cartQuantity minimal 1')
 })
 
 export const removeCartQuerySchema = z.object({

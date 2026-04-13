@@ -6,6 +6,7 @@ import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { ICreateCart, IFindAllCarts, IRemoveCart } from '../schemas/CartSchema'
+import { ProductVariantModel } from '../models/ProductVariantModel'
 
 export class CartService {
   private static buildFindAllWhere(
@@ -16,10 +17,6 @@ export class CartService {
       deleted: { [Op.eq]: false },
       cartUserId: { [Op.eq]: userId }
     }
-
-    // if (payload.search != null) {
-    //   where.cartId = { [Op.like]: `%${payload.search}%` }
-    // }
 
     return where
   }
@@ -33,6 +30,10 @@ export class CartService {
         include: [
           {
             model: ProductModel
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variant'
           }
         ],
         order: [['cartId', 'desc']],
@@ -56,21 +57,23 @@ export class CartService {
         where: {
           deleted: false,
           cartUserId: userId,
-          cartProductId: payload.cartProductId
+          cartProductId: payload.cartProductId,
+          cartProductVariantId: payload.cartProductVariantId
         }
       })
 
       if (existingCart != null) {
-        existingCart.cartTotalItem += payload.cartTotalItem
+        existingCart.cartQuantity += payload.cartQuantity
         await existingCart.save()
+      } else {
+        await CartsModel.create({
+          cartProductId: payload.cartProductId,
+          cartProductVariantId: payload.cartProductVariantId,
+          cartQuantity: payload.cartQuantity,
+          cartUserId: userId,
+          deleted: false
+        })
       }
-
-      await CartsModel.create({
-        cartProductId: payload.cartProductId,
-        cartTotalItem: payload.cartTotalItem,
-        cartUserId: userId,
-        deleted: false
-      })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[CartService] createCart failed: ${String(serviceError)}`)

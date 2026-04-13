@@ -23,10 +23,14 @@ module.exports = {
         type: DataTypes.INTEGER,
         allowNull: false
       },
-      cart_total_item: {
+      cart_product_variant_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      cart_quantity: {
         type: DataTypes.INTEGER,
         allowNull: false,
-        defaultValue: 0
+        defaultValue: 1
       }
     })
   },

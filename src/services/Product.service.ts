@@ -1,4 +1,10 @@
-import { Op, WhereOptions } from 'sequelize'
+import {
+  Model,
+  Op,
+  UniqueConstraintError,
+  type Transaction,
+  type WhereOptions
+} from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { ProductAttributes, ProductModel } from '../models/ProductModel'
 import { CategoryModel } from '../models/CategoryModel'
@@ -16,9 +22,23 @@ import type {
   IUpdateProduct
 } from '../schemas/ProductSchema'
 import { ProductVariantModel } from '../models/ProductVariantModel'
-import { type Transaction } from 'sequelize'
+import type { ICreateProductVariant } from '../schemas/ProductVariantSchema'
 
 export class ProductService {
+  private static buildDuplicateProductWhere(payload: {
+    productCode: string
+    productBarcode?: string | null
+  }): WhereOptions<ProductAttributes> {
+    const or: Array<{ productCode?: string; productBarcode?: string }> = [
+      { productCode: payload.productCode }
+    ]
+    const bc = payload.productBarcode
+    if (bc != null && String(bc).trim() !== '') {
+      or.push({ productBarcode: String(bc) })
+    }
+    return { [Op.or]: or }
+  }
+
   private static async createProductVariants(
     productId: number,
     variants: ICreateProduct['productVariants'],
@@ -89,14 +109,15 @@ export class ProductService {
         continue
       }
 
+      const newVariant = variant as ICreateProductVariant
       await ProductVariantModel.create(
         {
-          ...variant,
+          ...newVariant,
           deleted: false,
           productVariantProductId: productId,
           productVariantSellPrice: calculateSellPrice({
-            originalPrice: Number(variant.productVariantPrice),
-            discountPercent: Number(variant.productVariantDiscount)
+            originalPrice: Number(newVariant.productVariantPrice),
+            discountPercent: Number(newVariant.productVariantDiscount)
           })
         },
         { transaction }
@@ -131,6 +152,34 @@ export class ProductService {
     return where
   }
 
+  private static variantComparablePrice(variant: Record<string, unknown>): number {
+    const sell = Number(variant.productVariantSellPrice)
+    const base = Number(variant.productVariantPrice)
+    if (!Number.isNaN(sell) && sell >= 0) return sell
+    if (!Number.isNaN(base) && base >= 0) return base
+    return Number.POSITIVE_INFINITY
+  }
+
+  private static mapProductRowToCheapestVariantObject(
+    row: Model
+  ): Record<string, unknown> {
+    const plain = row.get({ plain: true }) as Record<string, unknown> & {
+      variants?: Array<Record<string, unknown>>
+    }
+    const variants = plain.variants ?? []
+    const { variants: _drop, ...rest } = plain
+
+    if (variants.length === 0) {
+      return { ...rest, cheapestVariant: null }
+    }
+
+    const variant = [...variants].sort(
+      (a, b) => this.variantComparablePrice(a) - this.variantComparablePrice(b)
+    )[0]
+
+    return { ...rest, variant }
+  }
+
   static async findAllProducts(payload: IFindAllProducts) {
     try {
       const pager = new Pagination(payload.page, payload.size)
@@ -138,8 +187,46 @@ export class ProductService {
       const result = await ProductModel.findAndCountAll({
         where: this.buildFindAllWhere(payload, { onlyVisible: true }),
         include: [
-          { model: CategoryModel },
-          { model: ProductVariantModel, as: 'variants' }
+          {
+            model: CategoryModel,
+            attributes: [
+              'categoryId',
+              'categoryReference',
+              'categoryName',
+              'categoryIcon',
+              'categoryType'
+            ]
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variants',
+            attributes: [
+              'productVariantId',
+              'productVariantProductId',
+              'productVariantName',
+              'productVariantImage',
+              'productVariantPrice',
+              'productVariantSellPrice',
+              'productVariantDiscount',
+              'productVariantTotalSale',
+              'productVariantStock',
+              'productVariantWeight',
+              'productVariantColor',
+              'productVariantSize'
+            ]
+          }
+        ],
+        attributes: [
+          'productId',
+          'productName',
+          'productDescription',
+          'productCategoryId',
+          'productSubCategoryId',
+          'productCode',
+          'productIsHighlight',
+          'productIsVisible',
+          'productBarcode',
+          'productUnit'
         ],
         order: [['productId', 'desc']],
         ...(payload.pagination === true && {
@@ -148,7 +235,11 @@ export class ProductService {
         })
       })
 
-      return pager.formatData(result)
+      const rows = result.rows.map((row) =>
+        this.mapProductRowToCheapestVariantObject(row)
+      )
+
+      return pager.formatData({ count: result.count, rows })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] findAllProducts failed: ${String(serviceError)}`)
@@ -161,10 +252,48 @@ export class ProductService {
       const pager = new Pagination(payload.page, payload.size)
 
       const result = await ProductModel.findAndCountAll({
-        where: this.buildFindAllWhere(payload, { onlyVisible: false }),
+        where: this.buildFindAllWhere(payload, { onlyVisible: true }),
         include: [
-          { model: CategoryModel },
-          { model: ProductVariantModel, as: 'variants' }
+          {
+            model: CategoryModel,
+            attributes: [
+              'categoryId',
+              'categoryReference',
+              'categoryName',
+              'categoryIcon',
+              'categoryType'
+            ]
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variants',
+            attributes: [
+              'productVariantId',
+              'productVariantProductId',
+              'productVariantName',
+              'productVariantImage',
+              'productVariantPrice',
+              'productVariantSellPrice',
+              'productVariantDiscount',
+              'productVariantTotalSale',
+              'productVariantStock',
+              'productVariantWeight',
+              'productVariantColor',
+              'productVariantSize'
+            ]
+          }
+        ],
+        attributes: [
+          'productId',
+          'productName',
+          'productDescription',
+          'productCategoryId',
+          'productSubCategoryId',
+          'productCode',
+          'productIsHighlight',
+          'productIsVisible',
+          'productBarcode',
+          'productUnit'
         ],
         order: [['productId', 'desc']],
         ...(payload.pagination === true && {
@@ -173,7 +302,11 @@ export class ProductService {
         })
       })
 
-      return pager.formatData(result)
+      const rows = result.rows.map((row) =>
+        this.mapProductRowToCheapestVariantObject(row)
+      )
+
+      return pager.formatData({ count: result.count, rows })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(
@@ -193,9 +326,47 @@ export class ProductService {
           deleted: { [Op.eq]: false },
           productId: { [Op.eq]: payload.productId }
         },
+        attributes: [
+          'productId',
+          'productName',
+          'productDescription',
+          'productCategoryId',
+          'productSubCategoryId',
+          'productCode',
+          'productIsHighlight',
+          'productIsVisible',
+          'productBarcode',
+          'productUnit'
+        ],
         include: [
-          { model: CategoryModel },
-          { model: ProductVariantModel, as: 'variants' }
+          {
+            model: CategoryModel,
+            attributes: [
+              'categoryId',
+              'categoryReference',
+              'categoryName',
+              'categoryIcon',
+              'categoryType'
+            ]
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variants',
+            attributes: [
+              'productVariantId',
+              'productVariantProductId',
+              'productVariantName',
+              'productVariantImage',
+              'productVariantPrice',
+              'productVariantSellPrice',
+              'productVariantDiscount',
+              'productVariantTotalSale',
+              'productVariantStock',
+              'productVariantWeight',
+              'productVariantColor',
+              'productVariantSize'
+            ]
+          }
         ]
       })
 
@@ -244,13 +415,7 @@ export class ProductService {
     try {
       await sequelizeInit.transaction(async (transaction) => {
         const existingProduct = await ProductModel.findOne({
-          where: {
-            deleted: false,
-            [Op.or]: [
-              { productCode: payload.productCode },
-              { productBarcode: payload.productBarcode }
-            ]
-          },
+          where: this.buildDuplicateProductWhere(payload),
           transaction
         })
 
@@ -259,21 +424,31 @@ export class ProductService {
 
           if (
             existingProduct.productCode === payload.productCode &&
-            existingProduct.productBarcode === payload.productBarcode
+            String(existingProduct.productBarcode ?? '') ===
+              String(payload.productBarcode ?? '')
           ) {
             message = 'Product code and barcode already registered'
           } else if (existingProduct.productCode === payload.productCode) {
             message = 'Product code already registered'
-          } else if (existingProduct.productBarcode === payload.productBarcode) {
+          } else if (
+            String(existingProduct.productBarcode ?? '') ===
+            String(payload.productBarcode ?? '')
+          ) {
             message = 'Product barcode already registered'
+          }
+
+          if (existingProduct.deleted === true) {
+            message += ' (includes inactive / soft-deleted products)'
           }
 
           throw new AppError(message, StatusCodes.BAD_REQUEST)
         }
 
+        const { productVariants, ...productFields } = payload
+
         const product = await ProductModel.create(
           {
-            ...payload,
+            ...productFields,
             deleted: false,
             productIsHighlight: false,
             productDescription: payload.productDescription ?? '',
@@ -285,14 +460,18 @@ export class ProductService {
           { transaction }
         )
 
-        await this.createProductVariants(
-          product.productId,
-          payload.productVariants,
-          transaction
-        )
+        await this.createProductVariants(product.productId, productVariants, transaction)
       })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
+      if (serviceError instanceof UniqueConstraintError) {
+        const field = serviceError.errors[0]?.path ?? 'unknown'
+        logger.warn(`[ProductService] createProduct unique constraint: ${String(field)}`)
+        throw new AppError(
+          `Duplicate value violates unique constraint (${String(field)})`,
+          StatusCodes.CONFLICT
+        )
+      }
       logger.error(`[ProductService] createProduct failed: ${String(serviceError)}`)
       throw new AppError('Failed to create product', StatusCodes.INTERNAL_SERVER_ERROR)
     }
@@ -321,42 +500,50 @@ export class ProductService {
             orConditions.push({ productCode: payload.productCode })
           }
 
-          if (payload.productBarcode != null) {
-            orConditions.push({ productBarcode: payload.productBarcode })
+          const bc = payload.productBarcode
+          if (bc != null && String(bc).trim() !== '') {
+            orConditions.push({ productBarcode: String(bc) })
           }
 
-          const duplicateProduct = await ProductModel.findOne({
-            where: {
-              deleted: false,
-              productId: { [Op.ne]: payload.productId },
-              [Op.or]: orConditions
-            },
-            transaction
-          })
+          if (orConditions.length > 0) {
+            const duplicateProduct = await ProductModel.findOne({
+              where: {
+                productId: { [Op.ne]: payload.productId },
+                [Op.or]: orConditions
+              },
+              transaction
+            })
 
-          if (duplicateProduct != null) {
-            let message = 'Product already registered'
+            if (duplicateProduct != null) {
+              let message = 'Product already registered'
 
-            if (
-              payload.productCode != null &&
-              payload.productBarcode != null &&
-              duplicateProduct.productCode === payload.productCode &&
-              duplicateProduct.productBarcode === payload.productBarcode
-            ) {
-              message = 'Product code and barcode already registered'
-            } else if (
-              payload.productCode != null &&
-              duplicateProduct.productCode === payload.productCode
-            ) {
-              message = 'Product code already registered'
-            } else if (
-              payload.productBarcode != null &&
-              duplicateProduct.productBarcode === payload.productBarcode
-            ) {
-              message = 'Product barcode already registered'
+              if (
+                payload.productCode != null &&
+                bc != null &&
+                String(bc).trim() !== '' &&
+                duplicateProduct.productCode === payload.productCode &&
+                String(duplicateProduct.productBarcode ?? '') === String(bc)
+              ) {
+                message = 'Product code and barcode already registered'
+              } else if (
+                payload.productCode != null &&
+                duplicateProduct.productCode === payload.productCode
+              ) {
+                message = 'Product code already registered'
+              } else if (
+                bc != null &&
+                String(bc).trim() !== '' &&
+                String(duplicateProduct.productBarcode ?? '') === String(bc)
+              ) {
+                message = 'Product barcode already registered'
+              }
+
+              if (duplicateProduct.deleted === true) {
+                message += ' (includes inactive / soft-deleted products)'
+              }
+
+              throw new AppError(message, StatusCodes.BAD_REQUEST)
             }
-
-            throw new AppError(message, StatusCodes.BAD_REQUEST)
           }
         }
 

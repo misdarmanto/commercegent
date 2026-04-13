@@ -1,24 +1,21 @@
-/* eslint-disable @typescript-eslint/indent */
 import { DataTypes, type Model, type Optional } from 'sequelize'
 import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 import { ProductModel } from './ProductModel'
 import { sequelizeInit } from '../configs/database'
+import { ProductVariantModel } from './ProductVariantModel'
 
 export interface CartsAttributes extends IBaseModelFields {
   cartId: number
   cartUserId: number
   cartProductId: number
-  cartTotalItem: number
+  cartProductVariantId: number
+  cartQuantity: number
 }
 
-// we're telling the Model that 'id' is optional
-// when creating an instance of the model (such as using Model.create()).
 type CartsCreationAttributes = Optional<
   CartsAttributes,
   'cartId' | 'createdAt' | 'updatedAt'
 >
-
-// We need to declare an interface for our model that is basically what our class would be
 
 interface CartsInstance
   extends Model<CartsAttributes, CartsCreationAttributes>,
@@ -42,10 +39,14 @@ export const CartsModel = sequelizeInit.define<CartsInstance>(
       type: DataTypes.INTEGER,
       allowNull: false
     },
-    cartTotalItem: {
+    cartProductVariantId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    cartQuantity: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: 0
+      defaultValue: 1
     }
   },
   {
@@ -62,4 +63,10 @@ export const CartsModel = sequelizeInit.define<CartsInstance>(
 CartsModel.hasOne(ProductModel, {
   sourceKey: 'cartProductId',
   foreignKey: 'productId'
+})
+
+CartsModel.hasOne(ProductVariantModel, {
+  sourceKey: 'cartProductVariantId',
+  foreignKey: 'productVariantId',
+  as: 'variant'
 })
