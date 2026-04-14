@@ -24,7 +24,7 @@ interface OrdersInstance
     FileUploadAttributes {}
 
 export const FileUploadModel = sequelizeInit.define<OrdersInstance>(
-  'FileUpload',
+  'FileUploadModel',
   {
     ...BaseModelFields,
     fileId: {

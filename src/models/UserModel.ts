@@ -29,7 +29,7 @@ interface UserInstance
     UserAttributes {}
 
 export const UserModel = sequelizeInit.define<UserInstance>(
-  'users',
+  'UserModel',
   {
     ...BaseModelFields,
     userId: {

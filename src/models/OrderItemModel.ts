@@ -30,7 +30,7 @@ interface OrderItemsInstance
     OrderItemsAttributes {}
 
 export const OrderItemsModel = sequelizeInit.define<OrderItemsInstance>(
-  'order_items',
+  'OrderItemModel',
   {
     ...BaseModelFields,
 

@@ -32,7 +32,7 @@ interface ProductVariantInstance
     ProductVariantAttributes {}
 
 export const ProductVariantModel = sequelizeInit.define<ProductVariantInstance>(
-  'ProductVariant',
+  'ProductVariantModel',
   {
     ...BaseModelFields,
     productVariantId: {

@@ -25,7 +25,7 @@ interface CategoryInstance
     CategoryAttributes {}
 
 export const CategoryModel = sequelizeInit.define<CategoryInstance>(
-  'category',
+  'CategoryModel',
   {
     ...BaseModelFields,
     categoryId: {

@@ -37,6 +37,18 @@ export const findAllCartSchema = z.object({
     .transform((v) => v === 'true')
 })
 
+export const updateCartSchema = z.object({
+  cartId: z.coerce
+    .number({ invalid_type_error: 'cartId harus berupa angka' })
+    .int('cartId harus bilangan bulat')
+    .positive('cartId harus lebih dari 0'),
+  cartQuantity: z.coerce
+    .number({ invalid_type_error: 'cartQuantity harus berupa angka' })
+    .int('cartQuantity harus bilangan bulat')
+    .min(1, 'cartQuantity minimal 1')
+})
+
 export type ICreateCart = z.infer<typeof createCartSchema>
 export type IRemoveCart = z.infer<typeof removeCartQuerySchema>
 export type IFindAllCarts = z.infer<typeof findAllCartSchema>
+export type IUpdateCart = z.infer<typeof updateCartSchema>

@@ -32,7 +32,7 @@ interface ProductInstance
     ProductAttributes {}
 
 export const ProductModel = sequelizeInit.define<ProductInstance>(
-  'products',
+  'ProductModel',
   {
     ...BaseModelFields,
     productId: {

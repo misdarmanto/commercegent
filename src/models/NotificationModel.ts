@@ -23,7 +23,7 @@ interface NotificationInstance
     NotificationAttributes {}
 
 export const NotificationModel = sequelizeInit.define<NotificationInstance>(
-  'notifications',
+  'NotificationModel',
   {
     ...BaseModelFields,
     notificationId: {

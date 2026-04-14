@@ -21,7 +21,7 @@ interface SettingInstance
     SettingAttributes {}
 
 export const SettingModel = sequelizeInit.define<SettingInstance>(
-  'settings',
+  'SettingModel',
   {
     ...BaseModelFields,
     settingId: {

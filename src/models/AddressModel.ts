@@ -33,7 +33,7 @@ interface AddressesInstance
     AddressesAttributes {}
 
 export const AddressesModel = sequelizeInit.define<AddressesInstance>(
-  'addresses',
+  'AddressModel',
   {
     ...BaseModelFields,
     addressId: {

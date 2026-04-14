@@ -28,6 +28,20 @@
  *           type: integer
  *           minimum: 1
  *           example: 2
+ *     CartUpdateRequest:
+ *       type: object
+ *       required:
+ *         - cartId
+ *         - cartQuantity
+ *       properties:
+ *         cartId:
+ *           type: integer
+ *           minimum: 1
+ *           example: 33
+ *         cartQuantity:
+ *           type: integer
+ *           minimum: 1
+ *           example: 2
  *     CartRemoveQuery:
  *       type: object
  *       required:
@@ -179,6 +193,49 @@
  *         description: Forbidden (hanya role user)
  *       404:
  *         description: Cart tidak ditemukan
+ *       500:
+ *         description: Server error
+ */
+/**
+ * @swagger
+ * /api/v1/carts:
+ *   patch:
+ *     summary: Update quantity item cart user login
+ *     tags: [CARTS]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CartUpdateRequest'
+ *     responses:
+ *       200:
+ *         description: Cart berhasil diupdate
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (hanya role user)
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/v1/carts/total:
+ *   get:
+ *     summary: Ambil total cart user login
+ *     tags: [CARTS]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Total cart berhasil diambil
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */

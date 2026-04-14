@@ -42,7 +42,7 @@ interface OrdersInstance
     OrdersAttributes {}
 
 export const OrdersModel = sequelizeInit.define<OrdersInstance>(
-  'orders',
+  'OrderModel',
   {
     ...BaseModelFields,
     orderId: {

@@ -33,7 +33,7 @@ interface TransactionsInstance
     TransactionsAttributes {}
 
 export const TransactionsModel = sequelizeInit.define<TransactionsInstance>(
-  'transactions',
+  'TransactionModel',
   {
     ...BaseModelFields,
     transactionId: {

@@ -22,7 +22,7 @@ interface CartsInstance
     CartsAttributes {}
 
 export const CartsModel = sequelizeInit.define<CartsInstance>(
-  'carts',
+  'CartModel',
   {
     ...BaseModelFields,
     cartId: {
@@ -62,7 +62,8 @@ export const CartsModel = sequelizeInit.define<CartsInstance>(
 
 CartsModel.hasOne(ProductModel, {
   sourceKey: 'cartProductId',
-  foreignKey: 'productId'
+  foreignKey: 'productId',
+  as: 'product'
 })
 
 CartsModel.hasOne(ProductVariantModel, {
