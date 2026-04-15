@@ -4,7 +4,8 @@ import { AddressController } from '../controllers/addresses'
 import {
   createAddressSchema,
   removeAddressQuerySchema,
-  updateAddressSchema
+  updateAddressSchema,
+  updateAddressTypeSchema
 } from '../schemas/AddressSchema'
 
 const AddressRoute = Router()
@@ -17,6 +18,12 @@ AddressRoute.post(
   '/users',
   MiddleWares.validate({ body: createAddressSchema }),
   AddressController.createUserAddress
+)
+
+AddressRoute.patch(
+  '/to-main',
+  MiddleWares.validate({ body: updateAddressTypeSchema }),
+  AddressController.updateAddressToMain
 )
 
 AddressRoute.get(
@@ -39,8 +46,8 @@ AddressRoute.patch(
 )
 
 AddressRoute.delete(
-  '/',
-  MiddleWares.validate({ query: removeAddressQuerySchema }),
+  '/:addressId',
+  MiddleWares.validate({ params: removeAddressQuerySchema }),
   AddressController.removeAddress
 )
 

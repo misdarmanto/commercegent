@@ -3,27 +3,26 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
-import { type IRemoveAddress } from '../../schemas/AddressSchema'
-import { AppError } from '../../utilities/appError'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
+import { AppError } from '../../utilities/appError'
+import { type IUpdateAddressType } from '../../schemas/AddressSchema'
 
-export const removeAddress = async (
+export const updateAddressToMain = async (
   req: IAuthenticatedRequest,
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.params as unknown as IRemoveAddress
+    const payload = req.body as unknown as IUpdateAddressType
     const userId = req.jwtPayload?.userId
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    await AddressService.removeAddress(userId, payload)
-
+    await AddressService.updateAddressTypeToMain(userId, payload)
     return res
-      .status(StatusCodes.OK)
-      .json(ResponseData.success({ message: 'Address removed successfully' }))
+      .status(StatusCodes.CREATED)
+      .json(ResponseData.success({ message: 'Address updated to main successfully' }))
   } catch (serverError) {
     return handleError(res, serverError)
   }

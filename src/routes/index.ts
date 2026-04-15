@@ -32,6 +32,7 @@ routers.use('/api/v1/public', RoutesRegistry.PublicRouter)
 routers.use('/api/v1/otp', RoutesRegistry.OtpRoute)
 routers.use('/api/v1/auth', RoutesRegistry.AuthRoute)
 routers.use('/api/v1/upload-products', RoutesRegistry.UploadProductRoute)
+routers.use('/api/v1/banners', RoutesRegistry.BannerRoute)
 
 routers.use(
   '/api/v1/docs',
@@ -42,7 +43,7 @@ routers.use(
 )
 
 routers.use((req, res) => {
-  const message = `Route not found!`
+  const message = `Route ${req.originalUrl} not found!`
   logger.warn(message)
   const response = ResponseData.error({ message })
   return res.status(StatusCodes.NOT_FOUND).json(response)

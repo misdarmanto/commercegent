@@ -63,6 +63,11 @@ module.exports = {
       address_longitude: {
         type: DataTypes.STRING,
         allowNull: false
+      },
+      address_type: {
+        type: DataTypes.ENUM('main', 'secondary'),
+        allowNull: false,
+        defaultValue: 'secondary'
       }
     })
   },

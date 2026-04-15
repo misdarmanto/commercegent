@@ -17,6 +17,7 @@ export interface AddressesAttributes extends IBaseModelFields {
   addressDesa: string
   addressLatitude: string
   addressLongitude: string
+  addressType: 'main' | 'secondary'
 }
 
 // we're telling the Model that 'id' is optional
@@ -90,6 +91,11 @@ export const AddressesModel = sequelizeInit.define<AddressesInstance>(
     addressLongitude: {
       type: DataTypes.STRING,
       allowNull: false
+    },
+    addressType: {
+      type: DataTypes.ENUM('main', 'secondary'),
+      allowNull: false,
+      defaultValue: 'secondary'
     }
   },
   {

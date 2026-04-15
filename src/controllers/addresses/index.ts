@@ -4,6 +4,7 @@ import { findAdminAddress } from './findAdminAddress'
 import { findUserAddress } from './findUserAddress'
 import { removeAddress } from './removeAddress'
 import { updateAdminAddress } from './updateAdminAddress'
+import { updateAddressToMain } from './updateAddressToMain'
 
 export const AddressController = {
   createUserAddress,
@@ -11,5 +12,6 @@ export const AddressController = {
   removeAddress,
   findUserAddress,
   findAdminAddress,
-  updateAdminAddress
+  updateAdminAddress,
+  updateAddressToMain
 }

@@ -20,6 +20,7 @@ import OtpRoute from './Otp.route'
 import AuthRoute from './Auth.route'
 import UploadProductRoute from './UploadProduct.route'
 import AppLogRoute from './AppLog.route'
+import BannerRoute from './Banner.route'
 
 const RoutesRegistry = {
   AddressRoute,
@@ -43,7 +44,8 @@ const RoutesRegistry = {
   RegionRoute,
   OtpRoute,
   AuthRoute,
-  UploadProductRoute
+  UploadProductRoute,
+  BannerRoute
 }
 
 export default RoutesRegistry

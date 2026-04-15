@@ -158,6 +158,14 @@
  *         addressLatitude:
  *           type: string
  *           example: "42343"
+ *     UpdateAddressType:
+ *       type: object
+ *       required:
+ *         - addressId
+ *       properties:
+ *         addressId:
+ *           type: number
+ *           example: 1
  */
 
 /**
@@ -367,6 +375,38 @@
  *                   example: Address deleted successfully
  *       404:
  *         description: Address not found
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/v1/addresses/to-main:
+ *   patch:
+ *     summary: Update an address to main
+ *     tags: [ADDRESSES]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateAddressType'
+ *     responses:
+ *       200:
+ *         description: Address updated to main successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Address updated to main successfully
+ *       400:
+ *         description: Invalid input data
  *       500:
  *         description: Server error
  */

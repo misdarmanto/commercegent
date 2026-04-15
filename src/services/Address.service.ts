@@ -1,9 +1,15 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { AddressesModel } from '../models/AddressModel'
+import { AddressesAttributes, AddressesModel } from '../models/AddressModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import type { ICreateAddress, IUpdateAddress } from '../schemas/AddressSchema'
+import { sequelizeInit } from '../configs/database'
+import type {
+  ICreateAddress,
+  IRemoveAddress,
+  IUpdateAddress,
+  IUpdateAddressType
+} from '../schemas/AddressSchema'
 
 export class AddressService {
   static async findUserAddress(userId: number) {
@@ -64,6 +70,12 @@ export class AddressService {
         addressUserId: userId,
         addressCategory: 'user' as const,
         deleted: false
+      } as AddressesAttributes
+
+      if (existing === 0) {
+        createPayload.addressType = 'main'
+      } else {
+        createPayload.addressType = 'secondary'
       }
 
       await AddressesModel.create(createPayload)
@@ -83,7 +95,8 @@ export class AddressService {
         ...payload,
         addressUserId: userId,
         addressCategory: 'admin' as const,
-        deleted: false
+        deleted: false,
+        addressType: 'secondary' as const
       }
 
       const where = {
@@ -129,14 +142,68 @@ export class AddressService {
     }
   }
 
-  static async removeAddress(addressId: number) {
+  static async updateAddressTypeToMain(userId: number, payload: IUpdateAddressType) {
+    try {
+      await sequelizeInit.transaction(async (transaction) => {
+        const targetAddress = await AddressesModel.findOne({
+          where: {
+            deleted: { [Op.eq]: false },
+            addressUserId: userId,
+            addressCategory: 'user',
+            addressId: { [Op.eq]: payload.addressId }
+          },
+          transaction
+        })
+
+        if (targetAddress == null) {
+          throw new AppError('address not found!', StatusCodes.NOT_FOUND)
+        }
+
+        await AddressesModel.update(
+          { addressType: 'secondary' },
+          {
+            where: {
+              deleted: { [Op.eq]: false },
+              addressUserId: userId,
+              addressCategory: 'user',
+              addressType: { [Op.eq]: 'main' }
+            },
+            transaction
+          }
+        )
+
+        await AddressesModel.update(
+          { addressType: 'main' },
+          {
+            where: {
+              deleted: { [Op.eq]: false },
+              addressUserId: userId,
+              addressCategory: 'user',
+              addressId: { [Op.eq]: payload.addressId }
+            },
+            transaction
+          }
+        )
+      })
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[AddressService] updateUserAddress failed: ${String(serviceError)}`)
+      throw new AppError(
+        'Failed to update user address',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    }
+  }
+
+  static async removeAddress(userId: number, payload: IRemoveAddress) {
     try {
       const [updatedRows] = await AddressesModel.update(
         { deleted: true },
         {
           where: {
             deleted: { [Op.eq]: false },
-            addressId: { [Op.eq]: addressId }
+            addressId: { [Op.eq]: payload.addressId },
+            addressUserId: { [Op.eq]: userId }
           }
         }
       )
