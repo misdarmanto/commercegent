@@ -1,8 +1,11 @@
 import crypto from 'crypto'
 import { StatusCodes } from 'http-status-codes'
-import { sequelize } from '../models'
-import { OrdersModel, type OrdersAttributes } from '../models/orders'
-import { TransactionsModel, type TransactionsAttributes } from '../models/transactions'
+import { sequelizeInit } from '../configs/database'
+import { OrdersModel, type OrdersAttributes } from '../models/OrderModel'
+import {
+  TransactionsModel,
+  type TransactionsAttributes
+} from '../models/TransactionModel'
 import { appConfigs } from '../configs/appConfig'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -28,7 +31,7 @@ export class WebhookService {
       throw new AppError('Invalid signature', StatusCodes.UNAUTHORIZED)
     }
 
-    const dbTransaction = await sequelize.transaction()
+    const dbTransaction = await sequelizeInit.transaction()
 
     try {
       const order = await OrdersModel.findOne({
@@ -131,7 +134,7 @@ export class WebhookService {
     try {
       const order = await OrdersModel.findOne({
         where: {
-          deleted: 0,
+          deleted: false,
           orderWaybillId: payload.courier_waybill_id
         }
       })

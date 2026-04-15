@@ -1,6 +1,6 @@
 import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel, type UserAttributes } from '../models/user'
+import { UserModel, type UserAttributes } from '../models/UserModel'
 import { Pagination } from '../utilities/pagination'
 import { hashPassword } from '../utilities/scurePassword'
 import { AppError } from '../utilities/appError'
@@ -18,7 +18,7 @@ export class AdminService {
     payload: IFindAllAdmins
   ): WhereOptions<UserAttributes> {
     const where: WhereOptions<UserAttributes> = {
-      deleted: { [Op.eq]: 0 },
+      deleted: { [Op.eq]: false },
       userRole: { [Op.not]: 'user' },
       userId: { [Op.not]: userId }
     }
@@ -56,7 +56,7 @@ export class AdminService {
     try {
       const result = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userRole: { [Op.not]: 'user' },
           userId: { [Op.eq]: payload.adminId }
         },
@@ -86,7 +86,7 @@ export class AdminService {
     try {
       const existing = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userWhatsAppNumber: { [Op.eq]: payload.adminWhatsAppNumber }
         }
       })
@@ -108,7 +108,7 @@ export class AdminService {
         userCoin: 0,
         userFcmId: '',
         userPartnerCode: '',
-        deleted: 0
+        deleted: false
       } satisfies Partial<UserAttributes>
 
       await UserModel.create(createPayload as unknown as UserAttributes)
@@ -128,7 +128,7 @@ export class AdminService {
       if (payload.adminName != null && payload.adminName.length > 0) {
         const duplicateName = await UserModel.findOne({
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             userId: { [Op.not]: userId },
             userName: { [Op.eq]: payload.adminName }
           }
@@ -156,7 +156,7 @@ export class AdminService {
 
       const [updatedRows] = await UserModel.update(newData, {
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userId: { [Op.eq]: userId }
         }
       })

@@ -13,13 +13,13 @@ AuthRoute.post(
 )
 
 AuthRoute.post(
-  '/login',
+  '/user/login',
   MiddleWares.validate({ body: loginUserSchema }),
   AuthController.loginUser
 )
 
 AuthRoute.post(
-  '/register',
+  '/user/register',
   MiddleWares.validate({ body: userRegisterSchema }),
   AuthController.registerUser
 )

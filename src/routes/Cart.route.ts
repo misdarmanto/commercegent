@@ -4,7 +4,8 @@ import { CartController } from '../controllers/cart'
 import {
   findAllCartSchema,
   createCartSchema,
-  removeCartQuerySchema
+  removeCartQuerySchema,
+  updateCartSchema
 } from '../schemas/CartSchema'
 
 const CartRoute = Router()
@@ -18,10 +19,18 @@ CartRoute.get(
   CartController.findAllCart
 )
 
+CartRoute.get('/total', CartController.findTotalCart)
+
 CartRoute.post(
   '/',
   MiddleWares.validate({ body: createCartSchema }),
   CartController.createCart
+)
+
+CartRoute.patch(
+  '/',
+  MiddleWares.validate({ body: updateCartSchema }),
+  CartController.updateCart
 )
 
 CartRoute.delete(

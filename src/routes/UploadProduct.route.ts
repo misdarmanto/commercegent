@@ -7,7 +7,7 @@ import { uploadHistoriesQuerySchema } from '../schemas/ProductSchema'
 const UploadProductRoute = Router()
 
 UploadProductRoute.post(
-  '/upload-excel',
+  '/',
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
   handleProductExcelUpload,
@@ -15,7 +15,7 @@ UploadProductRoute.post(
 )
 
 UploadProductRoute.get(
-  '/upload-histories',
+  '/histories',
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
   MiddleWares.validate({ query: uploadHistoriesQuerySchema }),

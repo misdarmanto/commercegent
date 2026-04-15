@@ -1,8 +1,8 @@
 /**
  * @swagger
  * tags:
- *   name: PUBLIC PRODUCTS
- *   description: Public product management APIs
+ *   name: PUBLIC
+ *   description: Public APIs
  */
 
 /**
@@ -111,7 +111,7 @@
  *         name: page
  *         schema:
  *           type: integer
- *           default: 0
+ *           default: 1
  *         description: Page number (pagination)
  *
  *       - in: query

@@ -22,7 +22,7 @@ export interface AppLogInstance
     IAppLogAttributes {}
 
 export const AppLogModel = sequelizeInit.define<AppLogInstance>(
-  'AppLogs',
+  'AppLogModel',
   {
     ...BaseModelFields,
     appLogId: {

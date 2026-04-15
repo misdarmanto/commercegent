@@ -11,8 +11,11 @@ import logger from '../utilities/logger'
 const routers = Router()
 
 routers.use('/api/v1/', RoutesRegistry.HealthRoute)
+routers.use('/api/v1/app-logs', RoutesRegistry.AppLogRoute)
 routers.use('/api/v1/addresses', RoutesRegistry.AddressRoute)
 routers.use('/api/v1/admins', RoutesRegistry.AdminRoute)
+routers.use('/api/v1/regions', RoutesRegistry.RegionRoute)
+routers.use('/api/v1/users', RoutesRegistry.UserRoute)
 routers.use('/api/v1/carts', RoutesRegistry.CartRoute)
 routers.use('/api/v1/categories', RoutesRegistry.CategoryRoute)
 routers.use('/api/v1/my-profiles', RoutesRegistry.MyProfileRoute)
@@ -22,15 +25,14 @@ routers.use('/api/v1/products', RoutesRegistry.ProductRoute)
 routers.use('/api/v1/settings', RoutesRegistry.SettingRoute)
 routers.use('/api/v1/statistic', RoutesRegistry.StatisticRoute)
 routers.use('/api/v1/transactions', RoutesRegistry.TransactionRoute)
-routers.use('/api/v1/users', RoutesRegistry.UserRoute)
 routers.use('/api/v1/shipping', RoutesRegistry.ShippingRoute)
 routers.use('/api/v1/webhooks', RoutesRegistry.WebhookRouter)
 routers.use('/api/v1/promotions', RoutesRegistry.PromotionRoute)
 routers.use('/api/v1/public', RoutesRegistry.PublicRouter)
-routers.use('/api/v1/regions', RoutesRegistry.RegionRoute)
 routers.use('/api/v1/otp', RoutesRegistry.OtpRoute)
 routers.use('/api/v1/auth', RoutesRegistry.AuthRoute)
 routers.use('/api/v1/upload-products', RoutesRegistry.UploadProductRoute)
+routers.use('/api/v1/banners', RoutesRegistry.BannerRoute)
 
 routers.use(
   '/api/v1/docs',
@@ -41,7 +43,7 @@ routers.use(
 )
 
 routers.use((req, res) => {
-  const message = `Route not found!`
+  const message = `Route ${req.originalUrl} not found!`
   logger.warn(message)
   const response = ResponseData.error({ message })
   return res.status(StatusCodes.NOT_FOUND).json(response)

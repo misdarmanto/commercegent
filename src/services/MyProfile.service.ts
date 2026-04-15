@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel, type UserAttributes } from '../models/user'
+import { UserModel, type UserAttributes } from '../models/UserModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { hashPassword } from '../utilities/scurePassword'
@@ -11,7 +11,7 @@ export class MyProfileService {
     try {
       const result = await UserModel.findOne({
         where: {
-          deleted: 0,
+          deleted: false,
           userId
         },
         attributes: [
@@ -60,7 +60,7 @@ export class MyProfileService {
 
       const [updatedRows] = await UserModel.update(newData, {
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userId: { [Op.eq]: userId }
         }
       })

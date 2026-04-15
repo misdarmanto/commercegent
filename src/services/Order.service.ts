@@ -1,12 +1,11 @@
 import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { sequelize } from '../models'
-import { OrdersModel, type OrdersAttributes } from '../models/orders'
-import { OrderItemsModel, type OrderItemsAttributes } from '../models/orderItems'
-import { ProductModel } from '../models/products'
-import { AddressesModel } from '../models/address'
-import { CartsModel } from '../models/carts'
-import { UserModel } from '../models/user'
+import { OrdersModel, type OrdersAttributes } from '../models/OrderModel'
+import { OrderItemsModel, type OrderItemsAttributes } from '../models/OrderItemModel'
+import { ProductModel } from '../models/ProductModel'
+import { AddressesModel } from '../models/AddressModel'
+import { CartsModel } from '../models/CartModel'
+import { UserModel } from '../models/UserModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -17,6 +16,7 @@ import type {
   IUpdateOrder
 } from '../schemas/OrderSchema'
 import { MidtransAPIService } from './external/Midtrans.service'
+import { sequelizeInit } from '../configs/database'
 
 type OrderLineItem = ICreateOrder['items'][number]
 
@@ -27,7 +27,7 @@ export class OrderService {
     payload: IFindAllOrder
   ): WhereOptions<OrdersAttributes> {
     const where: WhereOptions<OrdersAttributes> = {
-      deleted: { [Op.eq]: 0 }
+      deleted: { [Op.eq]: false }
     }
 
     if (payload.search != null) {
@@ -53,7 +53,7 @@ export class OrderService {
           {
             model: UserModel,
             where: {
-              deleted: { [Op.eq]: 0 },
+              deleted: { [Op.eq]: false },
               ...(Boolean(payload.search) && {
                 [Op.or]: [{ userName: { [Op.like]: `%${payload.search}%` } }]
               })
@@ -93,7 +93,7 @@ export class OrderService {
     try {
       const result = await OrdersModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           orderId: { [Op.eq]: payload.orderId },
           ...(userRole === 'user' && {
             orderUserId: { [Op.eq]: userId }
@@ -115,7 +115,7 @@ export class OrderService {
           {
             model: UserModel,
             where: {
-              deleted: { [Op.eq]: 0 }
+              deleted: { [Op.eq]: false }
             },
             attributes: ['userName', 'userWhatsAppNumber', 'userCoin']
           }
@@ -138,12 +138,12 @@ export class OrderService {
     const { items, orderShippingFee, orderCourierCompany, orderCourierType } = payload
     const productIds = items.map((i: OrderLineItem) => i.productId)
 
-    const transaction = await sequelize.transaction()
+    const transaction = await sequelizeInit.transaction()
 
     try {
       const address = await AddressesModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           addressUserId: userId,
           addressCategory: 'user'
         },
@@ -156,7 +156,7 @@ export class OrderService {
 
       const products = await ProductModel.findAll({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           productId: { [Op.in]: productIds }
         },
         transaction: transaction,
@@ -236,13 +236,15 @@ export class OrderService {
       for (const item of orderItemsPayload) {
         await ProductModel.update(
           {
-            productStock: sequelize.literal(`product_stock - ${item.quantity}`),
-            productTotalSale: sequelize.literal(`product_total_sale + ${item.quantity}`)
+            productStock: sequelizeInit.literal(`product_stock - ${item.quantity}`),
+            productTotalSale: sequelizeInit.literal(
+              `product_total_sale + ${item.quantity}`
+            )
           },
           {
             where: {
               productId: item.productId,
-              deleted: { [Op.eq]: 0 }
+              deleted: { [Op.eq]: false }
             },
             transaction: transaction
           }
@@ -291,7 +293,7 @@ export class OrderService {
 
       await CartsModel.destroy({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           cartUserId: userId,
           cartProductId: { [Op.in]: productIds }
         },

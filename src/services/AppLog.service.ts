@@ -11,7 +11,7 @@ export class AppLogService {
     payload: IFindAllAppLogs
   ): WhereOptions<IAppLogAttributes> {
     const where: WhereOptions<IAppLogAttributes> = {
-      deleted: { [Op.eq]: 0 }
+      deleted: { [Op.eq]: false }
     }
 
     if (payload.level != null) {

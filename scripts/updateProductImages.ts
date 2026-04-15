@@ -6,7 +6,7 @@ const normalizeString = (value: string): string => {
 }
 
 import XLSX from 'xlsx'
-import { ProductModel } from '../src/models/products'
+import { ProductModel } from '../src/models/ProductModel'
 import logger from '../src/logs'
 import path from 'path'
 import { sequelize } from '../src/models'

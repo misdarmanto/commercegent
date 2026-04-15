@@ -1,8 +1,8 @@
-import { Op, WhereOptions } from 'sequelize'
+import { Model, Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { sequelize } from '../models'
-import { ProductAttributes, ProductModel } from '../models/products'
-import { CategoryModel } from '../models/categories'
+import { sequelizeInit } from '../configs/database'
+import { ProductAttributes, ProductModel } from '../models/ProductModel'
+import { CategoryModel } from '../models/CategoryModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -11,6 +11,7 @@ import type {
   IRemovePromotion,
   IUpdatePromotion
 } from '../schemas/PromotionSchema'
+import { ProductVariantModel } from '../models/ProductVariantModel'
 
 export class PromotionService {
   private static buildFindAllWhere(
@@ -36,21 +37,94 @@ export class PromotionService {
     return where
   }
 
+  private static variantComparablePrice(variant: Record<string, unknown>): number {
+    const sell = Number(variant.productVariantSellPrice)
+    const base = Number(variant.productVariantPrice)
+    if (!Number.isNaN(sell) && sell >= 0) return sell
+    if (!Number.isNaN(base) && base >= 0) return base
+    return Number.POSITIVE_INFINITY
+  }
+
+  private static mapProductRowToCheapestVariantObject(
+    row: Model
+  ): Record<string, unknown> {
+    const plain = row.get({ plain: true }) as Record<string, unknown> & {
+      variants?: Array<Record<string, unknown>>
+    }
+    const variants = plain.variants ?? []
+    const { variants: _drop, ...rest } = plain
+
+    if (variants.length === 0) {
+      return { ...rest, cheapestVariant: null }
+    }
+
+    const variant = [...variants].sort(
+      (a, b) => this.variantComparablePrice(a) - this.variantComparablePrice(b)
+    )[0]
+
+    return { ...rest, variant }
+  }
+
   static async findAllPromotions(payload: IFindAllPromotion) {
     try {
       const pager = new Pagination(payload.page, payload.size)
 
       const result = await ProductModel.findAndCountAll({
         where: this.buildFindAllWhere(payload),
-        include: [{ model: CategoryModel }],
         order: [['productId', 'desc']],
+        include: [
+          {
+            model: CategoryModel,
+            attributes: [
+              'categoryId',
+              'categoryReference',
+              'categoryName',
+              'categoryIcon',
+              'categoryType'
+            ]
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variants',
+            attributes: [
+              'productVariantId',
+              'productVariantProductId',
+              'productVariantName',
+              'productVariantImage',
+              'productVariantPrice',
+              'productVariantSellPrice',
+              'productVariantDiscount',
+              'productVariantTotalSale',
+              'productVariantStock',
+              'productVariantWeight',
+              'productVariantColor',
+              'productVariantSize'
+            ]
+          }
+        ],
+        attributes: [
+          'productId',
+          'productName',
+          'productDescription',
+          'productCategoryId',
+          'productSubCategoryId',
+          'productCode',
+          'productIsHighlight',
+          'productIsVisible',
+          'productBarcode',
+          'productUnit'
+        ],
         ...(payload.pagination === true && {
           limit: pager.limit,
           offset: pager.offset
         })
       })
 
-      return pager.formatData(result)
+      const rows = result.rows.map((row) =>
+        this.mapProductRowToCheapestVariantObject(row)
+      )
+
+      return pager.formatData({ count: result.count, rows })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[PromotionService] findAllPromotions failed: ${String(serviceError)}`)
@@ -62,7 +136,7 @@ export class PromotionService {
   }
 
   static async updateHighlights(payload: IUpdatePromotion) {
-    const transaction = await sequelize.transaction()
+    const transaction = await sequelizeInit.transaction()
 
     try {
       for (const item of payload.products) {

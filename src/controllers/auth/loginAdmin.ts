@@ -8,11 +8,13 @@ import { ILoginAdmin } from '../../schemas/AuthSchema'
 export const loginAdmin = async (req: Request, res: Response): Promise<Response> => {
   try {
     const payload = req.body as unknown as ILoginAdmin
-    await AuthService.loginAdmin(payload)
+    const result = await AuthService.loginAdmin(payload)
 
     return res
       .status(StatusCodes.OK)
-      .json(ResponseData.success({ message: 'Admin logged in successfully' }))
+      .json(
+        ResponseData.success({ data: result, message: 'Admin logged in successfully' })
+      )
   } catch (serverError) {
     return handleError(res, serverError)
   }

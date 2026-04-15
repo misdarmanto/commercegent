@@ -1,14 +1,25 @@
-import { type Request, type Response } from 'express'
+import { type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
 import { type IRemoveAddress } from '../../schemas/AddressSchema'
+import { AppError } from '../../utilities/appError'
+import { type IAuthenticatedRequest } from '../../interfaces/shared'
 
-export const removeAddress = async (req: Request, res: Response): Promise<Response> => {
+export const removeAddress = async (
+  req: IAuthenticatedRequest,
+  res: Response
+): Promise<Response> => {
   try {
-    const payload = req.query as unknown as IRemoveAddress
-    await AddressService.removeAddress(payload.addressId)
+    const payload = req.params as unknown as IRemoveAddress
+    const userId = req.jwtPayload?.userId
+
+    if (userId == null) {
+      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
+    }
+
+    await AddressService.removeAddress(userId, payload)
 
     return res
       .status(StatusCodes.OK)

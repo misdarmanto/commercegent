@@ -1,31 +1,53 @@
 import { Router } from 'express'
 import { MiddleWares } from '../middlewares'
 import { AddressController } from '../controllers/addresses'
-import { createAddressSchema, removeAddressQuerySchema } from '../schemas/AddressSchema'
+import {
+  createAddressSchema,
+  removeAddressQuerySchema,
+  updateAddressSchema,
+  updateAddressTypeSchema
+} from '../schemas/AddressSchema'
 
 const AddressRoute = Router()
 
 AddressRoute.use(MiddleWares.authorization)
 
-AddressRoute.get('/', AddressController.findUserAddress)
+AddressRoute.get('/users', AddressController.findUserAddress)
 
 AddressRoute.post(
-  '/',
+  '/users',
   MiddleWares.validate({ body: createAddressSchema }),
   AddressController.createUserAddress
 )
 
-AddressRoute.get('/admins', AddressController.findAdminAddress)
+AddressRoute.patch(
+  '/to-main',
+  MiddleWares.validate({ body: updateAddressTypeSchema }),
+  AddressController.updateAddressToMain
+)
+
+AddressRoute.get(
+  '/admins',
+  MiddleWares.allowAppRoles('admin', 'superAdmin'),
+  AddressController.findAdminAddress
+)
 
 AddressRoute.post(
   '/admins',
+  MiddleWares.allowAppRoles('admin', 'superAdmin'),
   MiddleWares.validate({ body: createAddressSchema }),
   AddressController.createAdminAddress
 )
 
-AddressRoute.delete(
+AddressRoute.patch(
   '/',
-  MiddleWares.validate({ query: removeAddressQuerySchema }),
+  MiddleWares.validate({ body: updateAddressSchema }),
+  AddressController.updateAdminAddress
+)
+
+AddressRoute.delete(
+  '/:addressId',
+  MiddleWares.validate({ params: removeAddressQuerySchema }),
   AddressController.removeAddress
 )
 

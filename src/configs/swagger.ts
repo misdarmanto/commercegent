@@ -4,9 +4,9 @@ const options: swaggerJSDoc.Options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Your API',
+      title: 'Welcome to Fresh APi Documentation',
       version: '1.0.0',
-      description: 'API LEORA DOCUMENTATION'
+      description: 'API Fresh Documentation'
     },
     components: {
       securitySchemes: {

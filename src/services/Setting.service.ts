@@ -1,7 +1,7 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel } from '../models/user'
-import { SettingAttributes, SettingModel } from '../models/settings'
+import { UserModel } from '../models/UserModel'
+import { SettingAttributes, SettingModel } from '../models/SettingModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type {
@@ -28,7 +28,7 @@ export class SettingService {
       const { settingType } = payload
 
       const whereCondition: Record<string, unknown> = {
-        deleted: { [Op.eq]: 0 }
+        deleted: { [Op.eq]: false }
       }
 
       let attributes: string[] | undefined
@@ -111,7 +111,7 @@ export class SettingService {
 
     const row = await UserModel.findOne({
       where: {
-        deleted: { [Op.eq]: 0 },
+        deleted: { [Op.eq]: false },
         userId,
         userRole: { [Op.eq]: 'superAdmin' }
       }
@@ -132,7 +132,7 @@ export class SettingService {
       if (uniqueTypes.includes(payload.settingType)) {
         existingSetting = await SettingModel.findOne({
           where: {
-            deleted: { [Op.eq]: 0 },
+            deleted: { [Op.eq]: false },
             settingType: { [Op.eq]: payload.settingType }
           }
         })
@@ -178,7 +178,7 @@ export class SettingService {
     try {
       const existingSetting = await SettingModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           settingId: { [Op.eq]: payload.settingId }
         }
       })
@@ -198,7 +198,7 @@ export class SettingService {
 
       await SettingModel.update(newData, {
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           settingId: { [Op.eq]: payload.settingId }
         }
       })
@@ -215,7 +215,7 @@ export class SettingService {
     try {
       const row = await SettingModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           settingId: { [Op.eq]: payload.settingId }
         }
       })
@@ -225,7 +225,7 @@ export class SettingService {
       }
 
       await SettingModel.update(
-        { deleted: 1 },
+        { deleted: true },
         {
           where: {
             settingId: { [Op.eq]: payload.settingId }

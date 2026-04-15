@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { UserModel, type UserAttributes } from '../models/user'
+import { UserModel, type UserAttributes } from '../models/UserModel'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { hashPassword } from '../utilities/scurePassword'
@@ -14,7 +14,7 @@ export class AuthService {
     try {
       const user = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber },
           userRole: 'user'
         }
@@ -42,7 +42,7 @@ export class AuthService {
       return { token }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[UserService] login failed: ${String(serviceError)}`)
+      logger.error(`[AuthService] userLogin failed: ${String(serviceError)}`)
       throw new AppError('Failed to login', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
@@ -52,7 +52,7 @@ export class AuthService {
       const existing = await UserModel.findOne({
         raw: true,
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           [Op.or]: [{ userWhatsAppNumber: { [Op.eq]: payload.userWhatsAppNumber } }]
         }
       })
@@ -70,14 +70,14 @@ export class AuthService {
         userPassword: hashPassword(payload.userPassword),
         userGender: payload.userGender,
         userRole: 'user',
-        deleted: 0,
+        deleted: false,
         userPartnerCode: `${generateUniqueId()}-${payload.userWhatsAppNumber}`
       } as unknown as UserAttributes
 
       await UserModel.create(createPayload)
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[UserService] register failed: ${String(serviceError)}`)
+      logger.error(`[AuthService] userSignup failed: ${String(serviceError)}`)
       throw new AppError('Failed to register', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }
@@ -87,7 +87,7 @@ export class AuthService {
       const user = await UserModel.findOne({
         raw: true,
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userWhatsAppNumber: { [Op.eq]: payload.adminWhatsAppNumber },
           [Op.or]: [
             { userRole: { [Op.eq]: 'admin' } },
@@ -118,7 +118,7 @@ export class AuthService {
       return { token }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[AdminService] loginAdmin failed: ${String(serviceError)}`)
+      logger.error(`[AuthService] adminLogin failed: ${String(serviceError)}`)
       throw new AppError('Failed to login admin', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }

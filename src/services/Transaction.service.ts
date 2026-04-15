@@ -1,8 +1,8 @@
 import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
-import { TransactionsAttributes, TransactionsModel } from '../models/transactions'
-import { UserAttributes, UserModel } from '../models/user'
-import { OrdersModel } from '../models/orders'
+import { TransactionsAttributes, TransactionsModel } from '../models/TransactionModel'
+import { UserAttributes, UserModel } from '../models/UserModel'
+import { OrdersModel } from '../models/OrderModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
@@ -20,7 +20,7 @@ export class TransactionService {
     userRole: string
   ): WhereOptions<TransactionsAttributes> {
     const where: WhereOptions<TransactionsAttributes> = {
-      deleted: { [Op.eq]: 0 }
+      deleted: { [Op.eq]: false }
     }
 
     if (userRole === 'user') {
@@ -34,7 +34,7 @@ export class TransactionService {
     try {
       const user = await UserModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           userId
         }
       })
@@ -78,7 +78,7 @@ export class TransactionService {
     try {
       const result = await TransactionsModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           transactionId: { [Op.eq]: payload.transactionId }
         },
         include: [
@@ -112,7 +112,7 @@ export class TransactionService {
       const createPayload = {
         ...payload,
         transactionUserId: String(userId),
-        deleted: 0
+        deleted: false
       } as TransactionsAttributes
 
       await TransactionsModel.create(createPayload as TransactionsAttributes)
@@ -132,7 +132,7 @@ export class TransactionService {
     try {
       const existing = await TransactionsModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           transactionId: { [Op.eq]: payload.transactionId }
         }
       })
@@ -170,7 +170,7 @@ export class TransactionService {
     try {
       const row = await TransactionsModel.findOne({
         where: {
-          deleted: { [Op.eq]: 0 },
+          deleted: { [Op.eq]: false },
           transactionId: { [Op.eq]: payload.transactionId }
         }
       })
@@ -179,7 +179,7 @@ export class TransactionService {
         throw new AppError('Transaction not found!', StatusCodes.NOT_FOUND)
       }
 
-      row.deleted = 1
+      row.deleted = true
       await row.save()
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
