@@ -11,17 +11,18 @@
  *   schemas:
  *     CreateBanner:
  *       type: object
- *       required:
- *         - bannerImage
  *       properties:
  *         bannerImage:
  *           type: string
- *           example: "Electronics"
+ *           nullable: true
+ *           example: "https://cdn.example.com/banners/banner-hero-1.jpg"
  *         bannerOrder:
- *           type: string
- *         bannerOrder:
- *           type: string
- *           example: "https://example.com/icons/electronics.png"
+ *           type: number
+ *           nullable: true
+ *           example: 1
+ *       example:
+ *         bannerImage: "https://cdn.example.com/banners/banner-hero-1.jpg"
+ *         bannerOrder: 1
  *     Banner:
  *       type: object
  *       required:
@@ -138,6 +139,9 @@
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/CreateBanner'
+ *           example:
+ *             bannerImage: "https://cdn.example.com/banners/banner-hero-1.jpg"
+ *             bannerOrder: 1
  *     responses:
  *       201:
  *         description: Banner created successfully

@@ -1,4 +1,4 @@
-import { Op } from 'sequelize'
+import { Op, WhereOptions } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { AddressesAttributes, AddressesModel } from '../models/AddressModel'
 import { AppError } from '../utilities/appError'
@@ -6,20 +6,38 @@ import logger from '../utilities/logger'
 import { sequelizeInit } from '../configs/database'
 import type {
   ICreateAddress,
+  IFindAllAddresses,
   IRemoveAddress,
   IUpdateAddress,
   IUpdateAddressType
 } from '../schemas/AddressSchema'
 
 export class AddressService {
-  static async findUserAddress(userId: number) {
+  static buildFindAllWhere(userId: number, payload: IFindAllAddresses) {
+    const where: WhereOptions<AddressesAttributes> = {
+      deleted: { [Op.eq]: false },
+      addressUserId: { [Op.eq]: userId }
+    }
+
+    if (payload.addressCategory != null) {
+      where.addressCategory = payload.addressCategory
+    }
+
+    if (payload.addressType != null) {
+      where.addressType = payload.addressType
+    }
+
+    if (payload.search != null) {
+      where.addressUserName = { [Op.like]: `%${payload.search}%` }
+    }
+
+    return where
+  }
+
+  static async findUserAddress(userId: number, payload: IFindAllAddresses) {
     try {
       return await AddressesModel.findAll({
-        where: {
-          deleted: { [Op.eq]: false },
-          addressUserId: { [Op.eq]: userId },
-          addressCategory: 'user'
-        },
+        where: this.buildFindAllWhere(userId, payload),
         order: [['addressId', 'DESC']],
         limit: 5
       })

@@ -25,7 +25,8 @@ export class BannerService {
 
       const results = await BannerModel.findAndCountAll({
         where: this.buildFindAllWhere(payload),
-        order: [['bannerId', 'desc']],
+        attributes: ['bannerId', 'bannerImage', 'bannerOrder'],
+        order: [['bannerOrder', 'asc']],
         ...(payload.pagination === true && {
           limit: pager.limit,
           offset: pager.offset

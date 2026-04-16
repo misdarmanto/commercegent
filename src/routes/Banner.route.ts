@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { MiddleWares } from '../middlewares'
-import { CategoryController } from '../controllers/categories'
 import {
   createBannerSchema,
   findAllBannersSchema,
@@ -19,6 +18,7 @@ BanerRoute.get(
 BanerRoute.post(
   '/',
   MiddleWares.authorization,
+  MiddleWares.allowAppRoles('admin', 'superAdmin'),
   MiddleWares.validate({ body: createBannerSchema }),
   BannerController.createBanner
 )
@@ -26,6 +26,7 @@ BanerRoute.post(
 BanerRoute.delete(
   '/',
   MiddleWares.authorization,
+  MiddleWares.allowAppRoles('admin', 'superAdmin'),
   MiddleWares.validate({ query: removeBannerSchema }),
   BannerController.removeBanner
 )

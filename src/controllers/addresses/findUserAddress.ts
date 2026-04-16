@@ -5,6 +5,7 @@ import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
 import { AppError } from '../../utilities/appError'
+import { IFindAllAddresses } from '../../schemas/AddressSchema'
 
 export const findUserAddress = async (
   req: IAuthenticatedRequest,
@@ -12,12 +13,13 @@ export const findUserAddress = async (
 ): Promise<Response> => {
   try {
     const userId = req.jwtPayload?.userId
+    const payload = req.query as unknown as IFindAllAddresses
 
     if (userId == null) {
       throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
     }
 
-    const result = await AddressService.findUserAddress(userId)
+    const result = await AddressService.findUserAddress(userId, payload)
 
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (serverError) {

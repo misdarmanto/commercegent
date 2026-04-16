@@ -46,133 +46,96 @@
  *           example: "Coblong"
  *         addressDesa:
  *           type: string
- *           example: "Desa"
+ *           example: "Dago"
  *         addressLongitude:
  *           type: string
- *           example: "34324"
+ *           example: "107.617096"
  *         addressLatitude:
  *           type: string
- *           example: "42343"
- *     Address:
- *       type: object
- *       required:
- *         - addressId
- *         - addressUserId
- *         - addressUserName
- *         - addressKontak
- *         - addressDetail
- *         - addressPostalCode
- *         - addressProvinsi
- *         - addressKabupaten
- *         - addressKecamatan
- *         - addressDesa
- *         - addressCategory
- *         - addressLongitude
- *         - addressLatitude
- *       properties:
- *         addressId:
- *           type: string
- *           example: "addr_001"
- *         addressUserId:
- *           type: string
- *           example: "usr_12345"
- *         addressUserName:
- *           type: string
- *           example: "John Doe"
- *         addressKontak:
- *           type: string
- *           example: "+628123456789"
- *         addressDetail:
- *           type: string
- *           example: "Jl. Melati No. 45, Blok C"
- *         addressPostalCode:
- *           type: string
- *           example: "40234"
- *         addressProvinsi:
- *           type: string
- *           example: "Jawa Barat"
- *         addressKabupaten:
- *           type: string
- *           example: "Bandung"
- *         addressKecamatan:
- *           type: string
- *           example: "Coblong"
- *         addressDesa:
- *           type: string
- *           example: "42343"
- *         addressCategory:
- *           type: string
- *           enum: [user, admin]
- *           example: "user"
- *         addressLongitude:
- *           type: string
- *           example: "34324"
- *         addressLatitude:
- *           type: string
- *           example: "42343"
+ *           example: "-6.917464"
  *     UpdateAddress:
  *       type: object
  *       required:
  *         - addressId
- *         - addressUserName
- *         - addressKontak
- *         - addressDetail
- *         - addressPostalCode
- *         - addressProvinsi
- *         - addressKabupaten
- *         - addressKecamatan
- *         - addressDesa
- *         - addressLongitude
- *         - addressLatitude
  *       properties:
  *         addressId:
- *           type: string
- *           example: "addr_001"
+ *           type: integer
+ *           minimum: 1
  *         addressUserName:
  *           type: string
- *           example: "John Doe"
  *         addressKontak:
  *           type: string
- *           example: "+628123456789"
  *         addressDetail:
  *           type: string
- *           example: "Jl. Melati No. 45, Blok C"
  *         addressPostalCode:
  *           type: string
- *           example: "40234"
  *         addressProvinsi:
  *           type: string
- *           example: "Jawa Barat"
  *         addressKabupaten:
  *           type: string
- *           example: "Bandung"
  *         addressKecamatan:
  *           type: string
- *           example: "Coblong"
  *         addressDesa:
  *           type: string
- *           example: "Desa"
  *         addressLongitude:
  *           type: string
- *           example: "34324"
  *         addressLatitude:
  *           type: string
- *           example: "42343"
  *     UpdateAddressType:
  *       type: object
  *       required:
  *         - addressId
+ *         - addressType
  *       properties:
  *         addressId:
- *           type: number
- *           example: 1
+ *           type: integer
+ *           minimum: 1
+ *         addressType:
+ *           type: string
+ *           enum: [main, secondary]
+ *           example: main
+ *     Address:
+ *       type: object
+ *       properties:
+ *         addressId:
+ *           type: integer
+ *         addressUserId:
+ *           type: integer
+ *         addressUserName:
+ *           type: string
+ *         addressKontak:
+ *           type: string
+ *         addressDetail:
+ *           type: string
+ *         addressPostalCode:
+ *           type: string
+ *         addressProvinsi:
+ *           type: string
+ *         addressKabupaten:
+ *           type: string
+ *         addressKecamatan:
+ *           type: string
+ *         addressDesa:
+ *           type: string
+ *         addressCategory:
+ *           type: string
+ *           enum: [user, admin]
+ *         addressType:
+ *           type: string
+ *           enum: [main, secondary]
+ *         addressLongitude:
+ *           type: string
+ *         addressLatitude:
+ *           type: string
+ *         deleted:
+ *           type: boolean
  */
 
 /**
  * @swagger
  * /api/v1/addresses/users:
  *   get:
- *     summary: Get all addresses
+ *     summary: Get all user addresses
  *     tags: [ADDRESSES]
  *     security:
  *       - bearerAuth: []
@@ -193,16 +156,28 @@
  *         name: search
  *         schema:
  *           type: string
- *         description: Search by username or address detail
+ *         description: Optional search keyword
  *       - in: query
  *         name: pagination
  *         schema:
  *           type: string
  *           enum: [true, false]
  *         description: Enable pagination
+ *       - in: query
+ *         name: addressCategory
+ *         schema:
+ *           type: string
+ *           enum: [user, admin]
+ *         description: Optional category filter
+ *       - in: query
+ *         name: addressType
+ *         schema:
+ *           type: string
+ *           enum: [main, secondary]
+ *         description: Optional type filter
  *     responses:
  *       200:
- *         description: List of addresses
+ *         description: User addresses retrieved successfully
  *         content:
  *           application/json:
  *             schema:
@@ -212,9 +187,20 @@
  *                   type: boolean
  *                   example: true
  *                 data:
- *                   type: array
- *                   items:
- *                     $ref: '#/components/schemas/Address'
+ *                   type: object
+ *                   properties:
+ *                     totalItems:
+ *                       type: integer
+ *                     items:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Address'
+ *                     totalPages:
+ *                       type: integer
+ *                     currentPage:
+ *                       type: integer
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
@@ -225,6 +211,44 @@
  *   get:
  *     summary: Get admin address
  *     tags: [ADDRESSES]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: size
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Page size
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Optional search keyword
+ *       - in: query
+ *         name: pagination
+ *         schema:
+ *           type: string
+ *           enum: [true, false]
+ *         description: Enable pagination
+ *       - in: query
+ *         name: addressCategory
+ *         schema:
+ *           type: string
+ *           enum: [user, admin]
+ *         description: Optional category filter
+ *       - in: query
+ *         name: addressType
+ *         schema:
+ *           type: string
+ *           enum: [main, secondary]
+ *         description: Optional type filter
  *     responses:
  *       200:
  *         description: Address retrieved successfully
@@ -238,6 +262,10 @@
  *                   example: true
  *                 data:
  *                   $ref: '#/components/schemas/Address'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (requires admin/superAdmin)
  *       404:
  *         description: Address not found
  *       500:
@@ -248,8 +276,10 @@
  * @swagger
  * /api/v1/addresses/users:
  *   post:
- *     summary: Create a new address
+ *     summary: Create user address
  *     tags: [ADDRESSES]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -274,6 +304,8 @@
  *                   $ref: '#/components/schemas/Address'
  *       400:
  *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
@@ -282,8 +314,10 @@
  * @swagger
  * /api/v1/addresses/admins:
  *   post:
- *     summary: Create a new address
+ *     summary: Create or update admin address
  *     tags: [ADDRESSES]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -308,6 +342,10 @@
  *                   $ref: '#/components/schemas/Address'
  *       400:
  *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Forbidden (requires admin/superAdmin)
  *       500:
  *         description: Server error
  */
@@ -318,6 +356,8 @@
  *   patch:
  *     summary: Update an address
  *     tags: [ADDRESSES]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -342,6 +382,8 @@
  *                   $ref: '#/components/schemas/Address'
  *       400:
  *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
@@ -352,12 +394,14 @@
  *   delete:
  *     summary: Delete an address by id
  *     tags: [ADDRESSES]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - name: addressId
  *         in: path
  *         required: true
  *         schema:
- *           type: string
+ *           type: integer
  *         description: The id of the address to delete
  *     responses:
  *       200:
@@ -375,6 +419,8 @@
  *                   example: Address deleted successfully
  *       404:
  *         description: Address not found
+ *       401:
+ *         description: Unauthorized
  *       500:
  *         description: Server error
  */
@@ -383,8 +429,10 @@
  * @swagger
  * /api/v1/addresses/to-main:
  *   patch:
- *     summary: Update an address to main
+ *     summary: Set one user address as main
  *     tags: [ADDRESSES]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -407,6 +455,10 @@
  *                   example: Address updated to main successfully
  *       400:
  *         description: Invalid input data
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Address not found
  *       500:
  *         description: Server error
  */

@@ -1,5 +1,20 @@
 import { z } from 'zod'
 
+export const findAllAddressesSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  size: z.coerce.number().int().min(1).max(100).default(20),
+  addressCategory: z.enum(['user', 'admin']).optional(),
+  addressType: z.enum(['main', 'secondary']).optional(),
+  pagination: z
+    .string()
+    .optional()
+    .transform((v) => v === 'true'),
+  search: z
+    .union([z.string(), z.literal('')])
+    .optional()
+    .transform((v) => (v === '' ? undefined : v))
+})
+
 export const createAddressSchema = z.object({
   addressUserName: z
     .string({ required_error: 'Nama penerima wajib diisi' })
@@ -72,6 +87,7 @@ export const removeAddressQuerySchema = z.object({
   addressId: z.coerce.number().int().positive()
 })
 
+export type IFindAllAddresses = z.infer<typeof findAllAddressesSchema>
 export type ICreateAddress = z.infer<typeof createAddressSchema>
 export type IRemoveAddress = z.infer<typeof removeAddressQuerySchema>
 export type IUpdateAddress = z.infer<typeof updateAddressSchema>
