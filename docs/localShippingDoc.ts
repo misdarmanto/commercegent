@@ -124,7 +124,7 @@
  *                     items:
  *                       type: array
  *                       items:
- *                         $ref: '#/components/schemas/localShipping'
+ *                         $ref: '#/components/schemas/LocalShipping'
  *                     totalPages:
  *                       type: integer
  *                     currentPage:
@@ -141,7 +141,7 @@
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CreatelocalShipping'
+ *             $ref: '#/components/schemas/CreateLocalShipping'
  *     responses:
  *       201:
  *         description: localShipping created successfully
@@ -203,7 +203,7 @@
  *                 success:
  *                   type: boolean
  *                 data:
- *                   $ref: '#/components/schemas/localShipping'
+ *                   $ref: '#/components/schemas/LocalShipping'
  *       404:
  *         description: localShipping not found
  *       500:

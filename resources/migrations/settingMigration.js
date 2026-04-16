@@ -15,23 +15,7 @@ module.exports = {
         primaryKey: true,
         allowNull: false
       },
-      setting_type: {
-        type: DataTypes.ENUM('general', 'wa_blas'),
-        allowNull: false
-      },
-      banner: {
-        type: DataTypes.JSON,
-        allowNull: true
-      },
       whatsapp_number: {
-        type: DataTypes.STRING,
-        allowNull: true
-      },
-      wa_blas_token: {
-        type: DataTypes.STRING,
-        allowNull: true
-      },
-      wa_blas_server: {
         type: DataTypes.STRING,
         allowNull: true
       }

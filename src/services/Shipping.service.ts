@@ -8,32 +8,31 @@ import logger from '../utilities/logger'
 import { StatusCodes } from 'http-status-codes'
 import { AppError } from '../utilities/appError'
 import { IConfirmDraftOrder } from '../schemas/OrderSchema'
-import { ITrackShipment } from '../schemas/ShippingSchema'
-
-interface CreateDraftParams {
-  userId: number
-  orderId: number
-}
-
-interface GetRatesItem {
-  productId: number
-  quantity: number
-}
+import {
+  ICreateShippingDraft,
+  IGetShippingRates,
+  ITrackShipment
+} from '../schemas/ShippingSchema'
+import { ProductVariantModel } from '../models/ProductVariantModel'
+import { LocalShippingModel } from '../models/LocalShippingModel'
 
 export class ShippingService {
-  static async getShippingRates(userId: number, payload: GetRatesItem[]) {
+  static async getShippingRates(userId: number, payload: IGetShippingRates) {
     try {
-      const productIds = payload.map((item) => item.productId)
+      const productVariantIds = payload.map((item) => item.productVariantId)
 
-      const products = await ProductModel.findAll({
+      const productVariants = await ProductVariantModel.findAll({
         where: {
-          productId: productIds,
+          productVariantId: productVariantIds,
           deleted: false
         }
       })
 
-      if (products.length !== payload.length) {
-        throw new AppError('One or more products not found', StatusCodes.NOT_FOUND)
+      if (productVariants.length !== payload.length) {
+        throw new AppError(
+          'One or more products variant not found',
+          StatusCodes.NOT_FOUND
+        )
       }
 
       const originAddress = await AddressesModel.findOne({
@@ -51,6 +50,7 @@ export class ShippingService {
         where: {
           addressUserId: userId,
           addressCategory: 'user',
+          addressType: 'main',
           deleted: false
         }
       })
@@ -59,27 +59,48 @@ export class ShippingService {
         throw new AppError('Destination address not found', StatusCodes.NOT_FOUND)
       }
 
-      const biteshipItems = payload.map((payloadItem) => {
-        const product = products.find((p) => p.productId === payloadItem.productId)!
-
-        return {
-          name: product.productName,
-          value: Number(product.productPrice),
-          weight: Number(product.productWeight),
-          quantity: Number(payloadItem.quantity)
+      const localShippings = await LocalShippingModel.findAll({
+        where: {
+          localShippingProvinceId: destinationAddress.addressProvinsi
         }
       })
 
-      const biteshipResponse = await BiteShipAPIService.post('/rates/couriers', {
-        origin_latitude: Number(originAddress.addressLatitude),
-        origin_longitude: Number(originAddress.addressLongitude),
-        destination_latitude: Number(destinationAddress.addressLatitude),
-        destination_longitude: Number(destinationAddress.addressLongitude),
-        couriers: 'gojek,grab,paxel,jne,sicepat',
-        items: biteshipItems
-      })
+      if (localShippings.length === 0) {
+        throw new AppError('Local shipping not found', StatusCodes.NOT_FOUND)
+      }
 
-      return biteshipResponse.data
+      const isLocalShipping = localShippings.find(
+        (localShipping) =>
+          localShipping.localShippingProvinceName === destinationAddress.addressProvinsi
+      )
+
+      if (isLocalShipping !== null) {
+        // calculate shipping price
+      } else {
+        const biteshipItems = payload.map((payloadItem) => {
+          const productVariant = productVariants.find(
+            (p: any) => p.productVariantId === payloadItem.productVariantId
+          )!
+
+          return {
+            name: productVariant.productVariantName,
+            value: Number(productVariant.productVariantPrice),
+            weight: Number(productVariant.productVariantWeight),
+            quantity: Number(payloadItem.quantity)
+          }
+        })
+
+        const biteshipResponse = await BiteShipAPIService.post('/rates/couriers', {
+          origin_latitude: Number(originAddress.addressLatitude),
+          origin_longitude: Number(originAddress.addressLongitude),
+          destination_latitude: Number(destinationAddress.addressLatitude),
+          destination_longitude: Number(destinationAddress.addressLongitude),
+          couriers: 'gojek,grab,paxel,jne,sicepat',
+          items: biteshipItems
+        })
+
+        return biteshipResponse.data
+      }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ShippingService] getShippingRates failed: ${String(serviceError)}`)
@@ -90,7 +111,7 @@ export class ShippingService {
     }
   }
 
-  static async createDraftFromOrder(payload: CreateDraftParams) {
+  static async createDraftFromOrder(payload: ICreateShippingDraft) {
     try {
       const { userId, orderId } = payload
 
@@ -154,7 +175,7 @@ export class ShippingService {
 
         shipper_contact_name: origin.addressUserName,
         shipper_contact_phone: origin.addressKontak,
-        shipper_organization: 'LEORA ECOMMERCE',
+        shipper_organization: 'FRESH',
 
         origin_contact_name: origin.addressUserName,
         origin_contact_phone: origin.addressKontak,

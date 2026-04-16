@@ -3,10 +3,10 @@ import { z } from 'zod'
 export const getShippingRatesBodySchema = z
   .array(
     z.object({
-      productId: z.coerce
-        .number({ invalid_type_error: 'productId harus berupa angka' })
-        .int('productId harus bilangan bulat')
-        .positive('productId harus lebih dari 0'),
+      productVariantId: z.coerce
+        .number({ invalid_type_error: 'productVariantId harus berupa angka' })
+        .int('productVariantId harus bilangan bulat')
+        .positive('productVariantId harus lebih dari 0'),
       quantity: z.coerce
         .number({ invalid_type_error: 'quantity harus berupa angka' })
         .int('quantity harus bilangan bulat')
@@ -16,6 +16,10 @@ export const getShippingRatesBodySchema = z
   .min(1, 'Minimal satu item')
 
 export const createShippingDraftBodySchema = z.object({
+  userId: z.coerce
+    .number({ invalid_type_error: 'userId harus berupa angka' })
+    .int('userId harus bilangan bulat')
+    .positive('userId harus lebih dari 0'),
   orderId: z.coerce
     .number({ invalid_type_error: 'orderId harus berupa angka' })
     .int('orderId harus bilangan bulat')

@@ -4,11 +4,7 @@ import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields
 
 export interface SettingAttributes extends IBaseModelFields {
   settingId: number
-  settingType: 'general' | 'wa_blas'
-  banner?: string | null
   whatsappNumber?: string | null
-  waBlasToken?: string | null
-  waBlasServer?: string | null
 }
 
 type SettingCreationAttributes = Optional<
@@ -30,23 +26,7 @@ export const SettingModel = sequelizeInit.define<SettingInstance>(
       primaryKey: true,
       allowNull: false
     },
-    settingType: {
-      type: DataTypes.ENUM('general', 'wa_blas'),
-      allowNull: false
-    },
-    banner: {
-      type: DataTypes.JSON,
-      allowNull: true
-    },
     whatsappNumber: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    waBlasToken: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    waBlasServer: {
       type: DataTypes.STRING,
       allowNull: true
     }
