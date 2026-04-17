@@ -36,22 +36,26 @@ export const createAddressSchema = z.object({
     .string({ required_error: 'Kode pos wajib diisi' })
     .regex(/^[0-9]+$/, 'Kode pos hanya boleh berisi angka'),
 
-  addressProvinsi: z
+  addressProvinsiId: z.string().min(1).max(120),
+  addressProvinsiName: z
     .string({ required_error: 'Provinsi wajib diisi' })
     .min(3, 'Provinsi minimal 3 karakter')
     .max(100, 'Provinsi maksimal 100 karakter'),
 
-  addressKabupaten: z
+  addressKabupatenId: z.string().min(1).max(120),
+  addressKabupatenName: z
     .string({ required_error: 'Kabupaten wajib diisi' })
     .min(3, 'Kabupaten minimal 3 karakter')
     .max(100, 'Kabupaten maksimal 100 karakter'),
 
-  addressKecamatan: z
+  addressKecamatanId: z.string().min(1).max(120),
+  addressKecamatanName: z
     .string({ required_error: 'Kecamatan wajib diisi' })
     .min(3, 'Kecamatan minimal 3 karakter')
     .max(100, 'Kecamatan maksimal 100 karakter'),
 
-  addressDesa: z
+  addressDesaId: z.string().min(1).max(120),
+  addressDesaName: z
     .string({ required_error: 'Desa wajib diisi' })
     .min(3, 'Desa minimal 3 karakter')
     .max(100, 'Desa maksimal 100 karakter'),
@@ -71,10 +75,14 @@ export const updateAddressSchema = z.object({
   addressKontak: z.string().optional(),
   addressDetail: z.string().optional(),
   addressPostalCode: z.string().optional(),
-  addressProvinsi: z.string().optional(),
-  addressKabupaten: z.string().optional(),
-  addressKecamatan: z.string().optional(),
-  addressDesa: z.string().optional(),
+  addressProvinsiId: z.string().optional(),
+  addressProvinsiName: z.string().optional(),
+  addressKabupatenId: z.string().optional(),
+  addressKabupatenName: z.string().optional(),
+  addressKecamatanId: z.string().optional(),
+  addressKecamatanName: z.string().optional(),
+  addressDesaId: z.string().optional(),
+  addressDesaName: z.string().optional(),
   addressLongitude: z.string().optional(),
   addressLatitude: z.string().optional()
 })

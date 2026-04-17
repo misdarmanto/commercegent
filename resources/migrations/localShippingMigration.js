@@ -29,6 +29,10 @@ module.exports = {
       local_shipping_price_per_kg: {
         type: DataTypes.INTEGER,
         allowNull: false
+      },
+      local_shipping_duration: {
+        type: DataTypes.STRING(255),
+        allowNull: false
       }
     })
   },

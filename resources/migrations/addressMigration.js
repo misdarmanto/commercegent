@@ -35,19 +35,35 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: false
       },
-      address_provinsi: {
+      address_provinsi_id: {
         type: DataTypes.STRING,
         allowNull: false
       },
-      address_kabupaten: {
+      address_provinsi_name: {
         type: DataTypes.STRING,
         allowNull: false
       },
-      address_kecamatan: {
+      address_kabupaten_id: {
         type: DataTypes.STRING,
         allowNull: false
       },
-      address_desa: {
+      address_kabupaten_name: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      address_kecamatan_id: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      address_kecamatan_name: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      address_desa_id: {
+        type: DataTypes.STRING,
+        allowNull: false
+      },
+      address_desa_name: {
         type: DataTypes.STRING,
         allowNull: false
       },

@@ -61,21 +61,34 @@ export class ShippingService {
 
       const localShippings = await LocalShippingModel.findAll({
         where: {
-          localShippingProvinceId: destinationAddress.addressProvinsi
+          localShippingProvinceId: destinationAddress.addressProvinsiId
         }
       })
 
-      if (localShippings.length === 0) {
-        throw new AppError('Local shipping not found', StatusCodes.NOT_FOUND)
-      }
-
       const isLocalShipping = localShippings.find(
         (localShipping) =>
-          localShipping.localShippingProvinceName === destinationAddress.addressProvinsi
+          localShipping.localShippingProvinceId === destinationAddress.addressProvinsiId
       )
 
-      if (isLocalShipping !== null) {
-        // calculate shipping price
+      if (isLocalShipping) {
+        const totalWeight = productVariants.reduce(
+          (acc, item) => acc + (item.productVariantWeight ?? 0),
+          0
+        )
+        const shippingPrice = isLocalShipping?.localShippingPricePerKg ?? 1 * totalWeight
+
+        return [
+          {
+            courier_name: String(isLocalShipping?.localShippingCompanyName ?? ''),
+            courier_service_name: String(
+              isLocalShipping?.localShippingProvinceName ?? ''
+            ),
+            courier_code: 'local',
+            courier_service_code: 'local',
+            duration: '1 day',
+            price: shippingPrice
+          }
+        ]
       } else {
         const biteshipItems = payload.map((payloadItem) => {
           const productVariant = productVariants.find(
@@ -90,16 +103,22 @@ export class ShippingService {
           }
         })
 
-        const biteshipResponse = await BiteShipAPIService.post('/rates/couriers', {
-          origin_latitude: Number(originAddress.addressLatitude),
-          origin_longitude: Number(originAddress.addressLongitude),
-          destination_latitude: Number(destinationAddress.addressLatitude),
-          destination_longitude: Number(destinationAddress.addressLongitude),
-          couriers: 'gojek,grab,paxel,jne,sicepat',
-          items: biteshipItems
-        })
+        try {
+          const biteshipResponse = await BiteShipAPIService.post('/rates/couriers', {
+            origin_latitude: Number(originAddress.addressLatitude),
+            origin_longitude: Number(originAddress.addressLongitude),
+            destination_latitude: Number(destinationAddress.addressLatitude),
+            destination_longitude: Number(destinationAddress.addressLongitude),
+            couriers: 'gojek,grab,paxel,jne,sicepat',
+            items: biteshipItems
+          })
 
-        return biteshipResponse.data
+          return biteshipResponse?.data?.pricing ?? []
+        } catch (serviceError) {
+          logger.error(
+            `[ShippingService] getShippingRates failed: ${String(serviceError)}`
+          )
+        }
       }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError

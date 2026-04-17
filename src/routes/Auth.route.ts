@@ -7,19 +7,19 @@ import { userRegisterSchema } from '../schemas/UserSchema'
 const AuthRoute = Router()
 
 AuthRoute.post(
-  '/admin/login',
+  '/admins/login',
   MiddleWares.validate({ body: loginAdminSchema }),
   AuthController.loginAdmin
 )
 
 AuthRoute.post(
-  '/user/login',
+  '/users/login',
   MiddleWares.validate({ body: loginUserSchema }),
   AuthController.loginUser
 )
 
 AuthRoute.post(
-  '/user/register',
+  '/users/register',
   MiddleWares.validate({ body: userRegisterSchema }),
   AuthController.registerUser
 )

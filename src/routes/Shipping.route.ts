@@ -11,6 +11,7 @@ import {
 const ShippingRoute = Router()
 
 ShippingRoute.use(MiddleWares.authorization)
+
 ShippingRoute.post(
   '/rates',
   MiddleWares.validate({ body: getShippingRatesBodySchema }),

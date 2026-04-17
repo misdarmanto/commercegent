@@ -24,6 +24,9 @@
  *         localShippingPricePerKg:
  *           type: integer
  *           example: 15000
+ *         localShippingDuration:
+ *           type: string
+ *           example: "1 day"
  *         deleted:
  *           type: boolean
  *           example: false
@@ -34,6 +37,7 @@
  *         - localShippingProvinceName
  *         - localShippingProvinceId
  *         - localShippingPricePerKg
+ *         - localShippingDuration
  *       properties:
  *         localShippingCompanyName:
  *           type: string
@@ -52,6 +56,9 @@
  *           type: integer
  *           minimum: 0
  *           example: 12000
+ *         localShippingDuration:
+ *           type: string
+ *           example: "1 day"
  *     UpdatelocalShipping:
  *       type: object
  *       required:
@@ -73,6 +80,9 @@
  *           type: integer
  *           minimum: 0
  *           example: 15000
+ *         localShippingDuration:
+ *           type: string
+ *           example: "1 day"
  */
 
 /**

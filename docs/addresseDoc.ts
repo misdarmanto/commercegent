@@ -16,10 +16,14 @@
  *         - addressKontak
  *         - addressDetail
  *         - addressPostalCode
- *         - addressProvinsi
- *         - addressKabupaten
- *         - addressKecamatan
- *         - addressDesa
+ *         - addressProvinsiId
+ *         - addressProvinsiName
+ *         - addressKabupatenId
+ *         - addressKabupatenName
+ *         - addressKecamatanId
+ *         - addressKecamatanName
+ *         - addressDesaId
+ *         - addressDesaName
  *         - addressLongitude
  *         - addressLatitude
  *       properties:
@@ -35,16 +39,28 @@
  *         addressPostalCode:
  *           type: string
  *           example: "40234"
- *         addressProvinsi:
+ *         addressProvinsiId:
+ *           type: string
+ *           example: "32"
+ *         addressProvinsiName:
  *           type: string
  *           example: "Jawa Barat"
- *         addressKabupaten:
+ *         addressKabupatenId:
  *           type: string
- *           example: "Bandung"
- *         addressKecamatan:
+ *           example: "3273"
+ *         addressKabupatenName:
+ *           type: string
+ *           example: "Kota Bandung"
+ *         addressKecamatanId:
+ *           type: string
+ *           example: "3273010"
+ *         addressKecamatanName:
  *           type: string
  *           example: "Coblong"
- *         addressDesa:
+ *         addressDesaId:
+ *           type: string
+ *           example: "3273010001"
+ *         addressDesaName:
  *           type: string
  *           example: "Dago"
  *         addressLongitude:
@@ -69,13 +85,21 @@
  *           type: string
  *         addressPostalCode:
  *           type: string
- *         addressProvinsi:
+ *         addressProvinsiId:
  *           type: string
- *         addressKabupaten:
+ *         addressProvinsiName:
  *           type: string
- *         addressKecamatan:
+ *         addressKabupatenId:
  *           type: string
- *         addressDesa:
+ *         addressKabupatenName:
+ *           type: string
+ *         addressKecamatanId:
+ *           type: string
+ *         addressKecamatanName:
+ *           type: string
+ *         addressDesaId:
+ *           type: string
+ *         addressDesaName:
  *           type: string
  *         addressLongitude:
  *           type: string
@@ -85,15 +109,10 @@
  *       type: object
  *       required:
  *         - addressId
- *         - addressType
  *       properties:
  *         addressId:
  *           type: integer
  *           minimum: 1
- *         addressType:
- *           type: string
- *           enum: [main, secondary]
- *           example: main
  *     Address:
  *       type: object
  *       properties:
@@ -109,13 +128,21 @@
  *           type: string
  *         addressPostalCode:
  *           type: string
- *         addressProvinsi:
+ *         addressProvinsiId:
  *           type: string
- *         addressKabupaten:
+ *         addressProvinsiName:
  *           type: string
- *         addressKecamatan:
+ *         addressKabupatenId:
  *           type: string
- *         addressDesa:
+ *         addressKabupatenName:
+ *           type: string
+ *         addressKecamatanId:
+ *           type: string
+ *         addressKecamatanName:
+ *           type: string
+ *         addressDesaId:
+ *           type: string
+ *         addressDesaName:
  *           type: string
  *         addressCategory:
  *           type: string
@@ -441,7 +468,7 @@
  *             $ref: '#/components/schemas/UpdateAddressType'
  *     responses:
  *       200:
- *         description: Address updated to main successfully
+ *         description: Address set to main successfully
  *         content:
  *           application/json:
  *             schema:
@@ -452,7 +479,7 @@
  *                   example: true
  *                 message:
  *                   type: string
- *                   example: Address updated to main successfully
+ *                   example: Address set to main successfully
  *       400:
  *         description: Invalid input data
  *       401:

@@ -77,11 +77,23 @@ export class LocalShippingService {
 
   static async create(payload: ICreateLocalShipping) {
     try {
+      const existingLocalShipping = await LocalShippingModel.findOne({
+        where: {
+          localShippingProvinceId: { [Op.eq]: payload.localShippingProvinceId },
+          deleted: { [Op.eq]: false }
+        }
+      })
+
+      if (existingLocalShipping != null) {
+        throw new AppError('Local shipping already exists', StatusCodes.BAD_REQUEST)
+      }
+
       await LocalShippingModel.create({
-        localShippingCompanyName: payload.localShippingCompanyName,
-        localShippingProvinceName: payload.localShippingProvinceName,
-        localShippingProvinceId: payload.localShippingProvinceId,
-        localShippingPricePerKg: payload.localShippingPricePerKg,
+        localShippingCompanyName: payload.localShippingCompanyName ?? '',
+        localShippingProvinceName: payload.localShippingProvinceName ?? '',
+        localShippingProvinceId: payload.localShippingProvinceId ?? '',
+        localShippingPricePerKg: payload.localShippingPricePerKg ?? 0,
+        localShippingDuration: payload.localShippingDuration ?? '',
         deleted: false
       })
     } catch (serviceError) {

@@ -17,7 +17,8 @@ export const createLocalShippingSchema = z.object({
   localShippingCompanyName: z.string().min(2).max(120),
   localShippingProvinceName: z.string().min(2).max(120),
   localShippingProvinceId: z.string().min(1).max(120),
-  localShippingPricePerKg: z.coerce.number().int().min(0)
+  localShippingPricePerKg: z.coerce.number().int().min(0),
+  localShippingDuration: z.string().min(1).max(120)
 })
 
 export const updateLocalShippingSchema = z
@@ -26,7 +27,8 @@ export const updateLocalShippingSchema = z
     localShippingCompanyName: z.string().min(2).max(120).optional(),
     localShippingProvinceName: z.string().min(2).max(120).optional(),
     localShippingProvinceId: z.string().min(1).max(120).optional(),
-    localShippingPricePerKg: z.coerce.number().int().min(0).optional()
+    localShippingPricePerKg: z.coerce.number().int().min(0).optional(),
+    localShippingDuration: z.string().min(1).max(120).optional()
   })
   .strict()
 
