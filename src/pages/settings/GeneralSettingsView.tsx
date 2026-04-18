@@ -5,18 +5,13 @@ import {
   Card,
   Grid,
   Snackbar,
-  Stack,
   TextField,
-  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { ISettingModel } from "../../models/settingMode";
 import { useHttp } from "../../hooks/http";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { getImageUrl } from "../../utilities/getImageUrl";
-import ButtonDeleteFile from "../../components/buttons/ButtonDeleteFile";
-import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
+import { ISetting, ISettingCreateRequest } from "../../interfaces/Setting";
 
 export default function GeneralSettingsView() {
   const { handleGetRequest, handlePostRequest } = useHttp();
@@ -24,26 +19,17 @@ export default function GeneralSettingsView() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const [bannerImages, setBannerImages] = useState<string[]>([]);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const handleDeleteImage = (oldImage: string) => {
-    const newImages = bannerImages.filter((image) => image !== oldImage);
-    setBannerImages(newImages);
-  };
-
   const getDetailSettings = async () => {
     try {
-      const result: ISettingModel = await handleGetRequest({
-        path: "/settings?settingType=general",
+      const result: ISetting = await handleGetRequest({
+        path: "/settings",
       });
 
-      if (result && Array.isArray(result)) {
-        const images = result[0].banner || [];
-        const whatsapp = result[0].whatsappNumber || "";
-
-        setBannerImages(images);
+      if (result) {
+        const whatsapp = result.whatsappNumber || "";
         setWhatsappNumber(whatsapp);
       }
     } catch (error) {
@@ -55,10 +41,8 @@ export default function GeneralSettingsView() {
 
   const handleSubmit = async () => {
     try {
-      const payload: ISettingModel = {
-        settingType: "general",
-        whatsappNumber: whatsappNumber,
-        banner: bannerImages || [],
+      const payload: ISettingCreateRequest = {
+        whatsappNumber: whatsappNumber ?? "",
       };
       await handlePostRequest({
         path: "/settings",
@@ -108,46 +92,11 @@ export default function GeneralSettingsView() {
             />
           </Grid>
         </Grid>
-        <Box sx={{ my: 3 }}>
-          <Typography color={"gray"}>
-            Banner: 1080×540 px (rasio 2:1), maks 2mb
-          </Typography>
-
-          <Stack direction={"row"} flexWrap="wrap" spacing={2}>
-            {Array.isArray(bannerImages) &&
-              bannerImages.map((image, index) => (
-                <Stack key={index} spacing={1}>
-                  <img
-                    src={getImageUrl(image)}
-                    style={{
-                      marginTop: 10,
-                      width: 200,
-                      height: 200,
-                    }}
-                  />
-                  <ButtonDeleteFile
-                    filename={image}
-                    onDelete={() => handleDeleteImage(image)}
-                  />
-                </Stack>
-              ))}
-            <Stack alignItems="center" justifyContent={"center"} mt={2}>
-              <ButtonUploadWithOption
-                onUpload={(image) => setBannerImages([...bannerImages, image])}
-              />
-            </Stack>
-          </Stack>
-        </Box>
-        <Stack
-          direction={"row"}
-          spacing={2}
-          justifyContent={"flex-end"}
-          sx={{ marginTop: 5 }}
-        >
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 5 }}>
           <Button variant="outlined" onClick={handleSubmit}>
             Simpan
           </Button>
-        </Stack>
+        </Box>
       </Card>
 
       <Snackbar

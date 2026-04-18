@@ -191,7 +191,7 @@ export default function ListSubCategoryView() {
           getRowId={(row) => row.categoryId}
           columns={columns}
           editMode="row"
-          sx={{ backgroundColor: "white", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
           initialState={{
             pagination: { paginationModel: { pageSize: 10, page: 1 } },
           }}

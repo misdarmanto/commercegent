@@ -33,11 +33,9 @@ export default function LoginView() {
   const onSubmit = async (formData: ILoginAdmin) => {
     try {
       const result = await handlePostRequest({
-        path: "/auth/admin/login",
+        path: "/auth/admins/login",
         body: formData,
       });
-
-      console.log("result", result);
 
       if (result !== null) {
         setToken(result.data.token);

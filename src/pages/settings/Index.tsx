@@ -3,12 +3,11 @@ import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import Typography from "@mui/material/Typography";
 import Box from "@mui/material/Box";
-import BreadCrumberStyle from "../../components/breadcrumb/Index";
-import { IconMenus } from "../../components/icon";
 import { useSearchParams } from "react-router-dom";
-import WaBlasSettingsView from "./WaBlasSettingsView";
 import AddressSettingsView from "./AddressSettingsView";
+import BannerSettingsView from "./BannerSettingsView";
 import GeneralSettingsView from "./GeneralSettingsView";
+import ShipmentSettingsView from "./ShipmentSettingsView";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -43,7 +42,7 @@ function a11yProps(index: number) {
   };
 }
 
-const tabValues = ["general", "address", "wablas", "paymentMethod"];
+const tabValues = ["general", "address", "banner", "shipment"];
 
 export default function SettingsView() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -66,21 +65,13 @@ export default function SettingsView() {
 
   return (
     <>
-      <BreadCrumberStyle
-        navigation={[
-          {
-            label: "Settings",
-            link: "/settings",
-            icon: <IconMenus.settings fontSize="small" />,
-          },
-        ]}
-      />
       <Box sx={{ width: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={value} onChange={handleChange}>
             <Tab label="General" {...a11yProps(0)} />
             <Tab label="Address" {...a11yProps(1)} />
-            <Tab label="Wablas" {...a11yProps(2)} />
+            <Tab label="Banner" {...a11yProps(2)} />
+            <Tab label="Shipment" {...a11yProps(3)} />
           </Tabs>
         </Box>
         <CustomTabPanel value={value} index={0}>
@@ -90,7 +81,10 @@ export default function SettingsView() {
           <AddressSettingsView />
         </CustomTabPanel>
         <CustomTabPanel value={value} index={2}>
-          <WaBlasSettingsView />
+          <BannerSettingsView />
+        </CustomTabPanel>
+        <CustomTabPanel value={value} index={3}>
+          <ShipmentSettingsView />
         </CustomTabPanel>
       </Box>
     </>

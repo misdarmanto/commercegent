@@ -173,6 +173,7 @@ export default function ListProductPromotionView() {
       field: "productSellPrice",
       flex: 1,
       headerName: "HARGA",
+      renderHeader: () => <strong>HARGA</strong>,
       renderCell: (params) =>
         "Rp" +
         convertNumberToCurrency(params.row.variant?.productVariantSellPrice),
@@ -181,6 +182,7 @@ export default function ListProductPromotionView() {
       field: "productDiscount",
       flex: 1,
       headerName: "DISKON (%)",
+      renderHeader: () => <strong>DISKON (%)</strong>,
       renderCell: (params) => params.row.variant?.productVariantDiscount + "%",
     },
 
@@ -188,12 +190,14 @@ export default function ListProductPromotionView() {
       field: "productStock",
       flex: 1,
       headerName: "STOK",
+      renderHeader: () => <strong>STOK</strong>,
       renderCell: (params) => params.row.variant?.productVariantStock,
     },
     {
       field: "productTotalSale",
       flex: 1,
       headerName: "TERJUAL",
+      renderHeader: () => <strong>TERJUAL</strong>,
       renderCell: (params) => params.row.productTotalSale || 0,
     },
     {
@@ -313,7 +317,7 @@ export default function ListProductPromotionView() {
           rows={tableData}
           getRowId={(row) => row.productId}
           columns={columns}
-          sx={{ backgroundColor: "white", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
           autoHeight
           loading={loading}
           rowCount={rowCount}

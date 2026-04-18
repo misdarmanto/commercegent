@@ -215,7 +215,7 @@ export default function ListUploadHistoryView() {
           getRowId={(row) => row.fileId}
           columns={columns}
           autoHeight
-          sx={{ backgroundColor: "white", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[10, 25, 50]}

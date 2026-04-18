@@ -350,7 +350,11 @@ export default function ListUploadView() {
               getRowId={(row) => (row as any).id}
               columns={columns}
               loading={loading}
-              sx={{ backgroundColor: "white", borderRadius: 2, p: 2 }}
+              sx={{
+                backgroundColor: "background.default",
+                borderRadius: 2,
+                p: 2,
+              }}
               autoHeight
               pageSizeOptions={[10, 25, 50]}
               paginationModel={paginationModel}
