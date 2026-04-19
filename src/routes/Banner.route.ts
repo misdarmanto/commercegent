@@ -24,10 +24,10 @@ BanerRoute.post(
 )
 
 BanerRoute.delete(
-  '/',
+  '/:bannerId',
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
-  MiddleWares.validate({ query: removeBannerSchema }),
+  MiddleWares.validate({ params: removeBannerSchema }),
   BannerController.removeBanner
 )
 

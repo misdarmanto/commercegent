@@ -1,10 +1,7 @@
 import { z } from 'zod'
 
 export const findSettingQuerySchema = z.object({
-  settingId: z.coerce
-    .number({ invalid_type_error: 'settingId harus berupa angka' })
-    .int('settingId harus bilangan bulat')
-    .positive('settingId harus lebih dari 0')
+  settingId: z.coerce.number().optional().nullable()
 })
 
 export const createSettingBodySchema = z.object({

@@ -16,7 +16,9 @@ export const createProduct = async (
 
     return res
       .status(StatusCodes.CREATED)
-      .json(ResponseData.success({ data: result, message: 'Product created successfully' }))
+      .json(
+        ResponseData.success({ data: result, message: 'Product created successfully' })
+      )
   } catch (serverError) {
     return handleError(res, serverError)
   }

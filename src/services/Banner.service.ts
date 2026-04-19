@@ -59,18 +59,7 @@ export class BannerService {
 
   static async removeBanner(payload: IRemoveBanner) {
     try {
-      const row = await BannerModel.findOne({
-        where: {
-          deleted: { [Op.eq]: false },
-          bannerId: { [Op.eq]: payload.bannerId }
-        }
-      })
-
-      if (row == null) {
-        throw new AppError('banner not found!', StatusCodes.NOT_FOUND)
-      }
-
-      await BannerModel.update(
+      const [updatedRows] = await BannerModel.update(
         { deleted: true },
         {
           where: {
@@ -78,6 +67,10 @@ export class BannerService {
           }
         }
       )
+
+      if (updatedRows === 0) {
+        throw new AppError('banner not found!', StatusCodes.NOT_FOUND)
+      }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[SettingService] removeSetting failed: ${String(serviceError)}`)

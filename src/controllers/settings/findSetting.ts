@@ -9,7 +9,7 @@ export const findSetting = async (req: Request, res: Response): Promise<Response
   try {
     const payload = req.query as unknown as IFindSetting
 
-    const result = await SettingService.findSettings(payload)
+    const result = await SettingService.findSetting(payload)
     return res.status(StatusCodes.OK).json(ResponseData.success({ data: result }))
   } catch (serverError) {
     return handleError(res, serverError)

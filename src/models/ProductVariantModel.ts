@@ -14,8 +14,6 @@ export interface ProductVariantAttributes extends IBaseModelFields {
   productVariantTotalSale?: number
   productVariantStock?: number
   productVariantWeight?: number
-  productVariantColor?: string
-  productVariantSize?: string
 }
 
 // we're telling the Model that 'id' is optional
@@ -86,14 +84,6 @@ export const ProductVariantModel = sequelizeInit.define<ProductVariantInstance>(
       type: DataTypes.INTEGER,
       allowNull: true,
       defaultValue: 0
-    },
-    productVariantColor: {
-      type: DataTypes.STRING,
-      allowNull: true
-    },
-    productVariantSize: {
-      type: DataTypes.STRING,
-      allowNull: true
     }
   },
   {

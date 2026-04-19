@@ -16,7 +16,9 @@ export const updateProduct = async (
     const result = await ProductService.updateProduct(payload)
     return res
       .status(StatusCodes.OK)
-      .json(ResponseData.success({ data: result, message: 'Product updated successfully' }))
+      .json(
+        ResponseData.success({ data: result, message: 'Product updated successfully' })
+      )
   } catch (serverError) {
     return handleError(res, serverError)
   }

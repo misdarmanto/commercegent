@@ -52,7 +52,7 @@ ProductRoute.patch(
   '/',
   MiddleWares.authorization,
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
-  MiddleWares.validate({ body: updateProductSchema }),
+  // MiddleWares.validate({ body: updateProductSchema }),
   ProductController.updateProduct
 )
 

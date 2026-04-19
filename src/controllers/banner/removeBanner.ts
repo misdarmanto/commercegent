@@ -11,7 +11,7 @@ export const removeBanner = async (
   res: Response
 ): Promise<Response> => {
   try {
-    const payload = req.body as unknown as IRemoveBanner
+    const payload = req.params as unknown as IRemoveBanner
     await BannerService.removeBanner(payload)
 
     return res

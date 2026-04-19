@@ -34,11 +34,11 @@ export const createProductSchema = z.object({
 
 export const updateProductSchema = z
   .object({
-    productId: z.number().int().positive(),
+    productId: z.coerce.number().int().positive(),
     productName: z.string().trim().min(3).max(255).optional(),
     productDescription: z.string().optional(),
-    productCategoryId: z.number().optional(),
-    productSubCategoryId: z.number().optional(),
+    productCategoryId: z.coerce.number().optional(),
+    productSubCategoryId: z.coerce.number().optional(),
     productCode: z.string().trim().optional(),
     productBarcode: z.string().optional(),
     productUnit: z.string().optional(),

@@ -20,7 +20,7 @@ module.exports = {
         allowNull: false
       },
       product_description: {
-        type: DataTypes.STRING,
+        type: DataTypes.TEXT,
         allowNull: false
       },
       product_category_id: {

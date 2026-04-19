@@ -46,7 +46,7 @@ export const ProductModel = sequelizeInit.define<ProductInstance>(
       allowNull: false
     },
     productDescription: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
       allowNull: false
     },
     productCategoryId: {

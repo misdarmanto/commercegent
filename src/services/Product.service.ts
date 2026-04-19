@@ -210,9 +210,7 @@ export class ProductService {
               'productVariantDiscount',
               'productVariantTotalSale',
               'productVariantStock',
-              'productVariantWeight',
-              'productVariantColor',
-              'productVariantSize'
+              'productVariantWeight'
             ]
           }
         ],
@@ -277,9 +275,7 @@ export class ProductService {
               'productVariantDiscount',
               'productVariantTotalSale',
               'productVariantStock',
-              'productVariantWeight',
-              'productVariantColor',
-              'productVariantSize'
+              'productVariantWeight'
             ]
           }
         ],
@@ -362,9 +358,7 @@ export class ProductService {
               'productVariantDiscount',
               'productVariantTotalSale',
               'productVariantStock',
-              'productVariantWeight',
-              'productVariantColor',
-              'productVariantSize'
+              'productVariantWeight'
             ]
           }
         ]
