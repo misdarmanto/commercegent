@@ -601,6 +601,16 @@ export class ProductService {
       if (updatedRows === 0) {
         throw new AppError('Product not found', StatusCodes.NOT_FOUND)
       }
+
+      await ProductVariantModel.update(
+        { deleted: true },
+        {
+          where: {
+            deleted: { [Op.eq]: false },
+            productVariantProductId: { [Op.eq]: payload.productId }
+          }
+        }
+      )
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] removeProduct failed: ${String(serviceError)}`)
