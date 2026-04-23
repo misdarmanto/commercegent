@@ -40,9 +40,8 @@ import { useToken } from "../hooks/token";
 import { ColorModeContext } from "../context/colorMode.context";
 import { IconMenusSidebar } from "../components/icon";
 
-/* ============================================================
-   GLOBAL DESIGN TOKENS (MODE AWARE)
-============================================================ */
+import logo from "../assets/logo.jpg";
+
 const drawerWidth = 200;
 const miniDrawerWidth = 64;
 
@@ -165,19 +164,19 @@ export default function AppLayout() {
   const menuItems = [];
 
   const adminMenus = [
-    { title: "Dashboard", link: "/", iconKey: "dashboard" as const },
-    { title: "Products", link: "/products", iconKey: "products" as const },
+    { title: "Beranda", link: "/", iconKey: "dashboard" as const },
+    { title: "Produk", link: "/products", iconKey: "products" as const },
     {
       title: "Promo",
       link: "/promotions",
       iconKey: "promotion" as const,
     },
-    { title: "Category", link: "/categories", iconKey: "category" as const },
-    { title: "Uploads", link: "/uploads", iconKey: "upload" as const },
-    { title: "Customers", link: "/customers", iconKey: "customers" as const },
-    { title: "Orders", link: "/orders", iconKey: "orders" as const },
+    { title: "Kategori", link: "/categories", iconKey: "category" as const },
+    { title: "Galeri", link: "/uploads", iconKey: "upload" as const },
+    { title: "Pelanggan", link: "/customers", iconKey: "customers" as const },
+    { title: "Pesanan", link: "/orders", iconKey: "orders" as const },
     {
-      title: "Transactions",
+      title: "Transaksi",
       link: "/transactions",
       iconKey: "transaction" as const,
     },
@@ -186,11 +185,11 @@ export default function AppLayout() {
   const superAdminMenus = [
     ...adminMenus,
     {
-      title: "Admins",
+      title: "Admin",
       link: "/admins",
       iconKey: "admin" as const,
     },
-    { title: "Settings", link: "/settings", iconKey: "settings" as const },
+    { title: "Pengaturan", link: "/settings", iconKey: "settings" as const },
   ];
 
   const { getDecodeJwtToken } = useToken();
@@ -211,7 +210,7 @@ export default function AppLayout() {
   }
 
   menuItems.push({
-    title: "Profile",
+    title: "Profil",
     link: "/my-profile",
     iconKey: "profile" as const,
   });
@@ -248,6 +247,12 @@ export default function AppLayout() {
                   <MenuIcon />
                 </IconButton>
               )}
+              <img
+                src={logo}
+                width={40}
+                height={40}
+                style={{ borderRadius: 8 }}
+              />
               <Typography
                 sx={{
                   fontWeight: 800,

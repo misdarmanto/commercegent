@@ -70,7 +70,7 @@ const DashboardView = () => {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Dashboard",
+            label: "Beranda",
             link: "/",
             icon: <IconMenus.dashboard fontSize="small" />,
           },
@@ -148,7 +148,7 @@ const DashboardView = () => {
               options={{
                 chart: { height: 350, type: "area", toolbar: { show: false } },
                 dataLabels: { enabled: false },
-                colors: ["#EA68B4"],
+                colors: [theme.palette.primary.main],
                 stroke: { curve: "smooth", width: 2 },
                 fill: {
                   type: "gradient",

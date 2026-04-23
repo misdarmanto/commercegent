@@ -3,20 +3,20 @@ import {
   Box,
   Button,
   Card,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Grid,
   Snackbar,
-  Stack,
   TextField,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import { ISettingModel } from "../../models/settingMode";
 import { useHttp } from "../../hooks/http";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { getImageUrl } from "../../utilities/getImageUrl";
-import ButtonDeleteFile from "../../components/buttons/ButtonDeleteFile";
-import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
+import { ISetting, ISettingCreateRequest } from "../../interfaces/Setting";
 
 export default function GeneralSettingsView() {
   const { handleGetRequest, handlePostRequest } = useHttp();
@@ -24,26 +24,23 @@ export default function GeneralSettingsView() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const [bannerImages, setBannerImages] = useState<string[]>([]);
   const [whatsappNumber, setWhatsappNumber] = useState("");
   const [loading, setLoading] = useState(true);
-
-  const handleDeleteImage = (oldImage: string) => {
-    const newImages = bannerImages.filter((image) => image !== oldImage);
-    setBannerImages(newImages);
-  };
+  const [openModal, setOpenModal] = useState(false);
+  const [draftWhatsappNumber, setDraftWhatsappNumber] = useState("");
+  const [otpCode, setOtpCode] = useState("");
+  const [otpRequested, setOtpRequested] = useState(false);
+  const [requestingOtp, setRequestingOtp] = useState(false);
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
 
   const getDetailSettings = async () => {
     try {
-      const result: ISettingModel = await handleGetRequest({
-        path: "/settings?settingType=general",
+      const result: ISetting = await handleGetRequest({
+        path: "/settings",
       });
 
-      if (result && Array.isArray(result)) {
-        const images = result[0].banner || [];
-        const whatsapp = result[0].whatsappNumber || "";
-
-        setBannerImages(images);
+      if (result) {
+        const whatsapp = result.whatsappNumber || "";
         setWhatsappNumber(whatsapp);
       }
     } catch (error) {
@@ -53,17 +50,16 @@ export default function GeneralSettingsView() {
     }
   };
 
-  const handleSubmit = async () => {
+  const saveWhatsappNumber = async (number: string) => {
     try {
-      const payload: ISettingModel = {
-        settingType: "general",
-        whatsappNumber: whatsappNumber,
-        banner: bannerImages || [],
+      const payload: ISettingCreateRequest = {
+        whatsappNumber: number,
       };
       await handlePostRequest({
         path: "/settings",
         body: payload,
       });
+      setWhatsappNumber(number);
       await getDetailSettings();
       setSnackbarMessage("Berhasil disimpan!");
       setOpenSnackbar(true);
@@ -71,6 +67,71 @@ export default function GeneralSettingsView() {
       console.log(error);
       setSnackbarMessage("Terjadi kesalahan saat menyimpan data.");
       setOpenSnackbar(true);
+    }
+  };
+
+  const openVerificationModal = () => {
+    setDraftWhatsappNumber(whatsappNumber);
+    setOtpCode("");
+    setOtpRequested(false);
+    setOpenModal(true);
+  };
+
+  const handleRequestOtp = async () => {
+    const sanitizedWhatsapp = draftWhatsappNumber.trim();
+    if (!sanitizedWhatsapp) {
+      setSnackbarMessage("Nomor WhatsApp wajib diisi.");
+      setOpenSnackbar(true);
+      return;
+    }
+    try {
+      setRequestingOtp(true);
+      await handlePostRequest({
+        path: "/otp/request",
+        body: {
+          whatsappNumber: sanitizedWhatsapp,
+          otpType: "register",
+        },
+      });
+      setOtpRequested(true);
+      setSnackbarMessage("Kode OTP berhasil dikirim.");
+      setOpenSnackbar(true);
+    } catch (error) {
+      console.log(error);
+      setSnackbarMessage("Gagal mengirim OTP.");
+      setOpenSnackbar(true);
+    } finally {
+      setRequestingOtp(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const sanitizedWhatsapp = draftWhatsappNumber.trim();
+    const sanitizedOtp = otpCode.trim();
+    if (!sanitizedWhatsapp || !sanitizedOtp) {
+      setSnackbarMessage("Nomor WhatsApp dan kode OTP wajib diisi.");
+      setOpenSnackbar(true);
+      return;
+    }
+    try {
+      setVerifyingOtp(true);
+      await handlePostRequest({
+        path: "/otp/verify",
+        body: {
+          whatsappNumber: sanitizedWhatsapp,
+          otpCode: sanitizedOtp,
+        },
+      });
+      await saveWhatsappNumber(sanitizedWhatsapp);
+      setOpenModal(false);
+      setOtpRequested(false);
+      setOtpCode("");
+    } catch (error) {
+      console.log(error);
+      setSnackbarMessage("OTP tidak valid atau verifikasi gagal.");
+      setOpenSnackbar(true);
+    } finally {
+      setVerifyingOtp(false);
     }
   };
 
@@ -97,58 +158,97 @@ export default function GeneralSettingsView() {
       />
       <Card sx={{ p: 3 }}>
         <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Nomor WA"
-              id="outlined-start-adornment"
-              value={whatsappNumber}
-              onChange={(e) => setWhatsappNumber(e.target.value ?? "")}
-              type="text"
-              fullWidth
-            />
+          <Grid item xs={12}>
+            {!whatsappNumber ? (
+              <Button variant="outlined" onClick={openVerificationModal}>
+                Add WhatsApp Number
+              </Button>
+            ) : (
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 2,
+                  flexWrap: "wrap",
+                }}
+              >
+                <Typography variant="body1">
+                  Nomor WhatsApp: <strong>{whatsappNumber}</strong>
+                </Typography>
+                <Button variant="outlined" onClick={openVerificationModal}>
+                  Edit
+                </Button>
+              </Box>
+            )}
           </Grid>
         </Grid>
-        <Box sx={{ my: 3 }}>
-          <Typography color={"gray"}>
-            Banner: 1080×540 px (rasio 2:1), maks 2mb
-          </Typography>
-
-          <Stack direction={"row"} flexWrap="wrap" spacing={2}>
-            {Array.isArray(bannerImages) &&
-              bannerImages.map((image, index) => (
-                <Stack key={index} spacing={1}>
-                  <img
-                    src={getImageUrl(image)}
-                    style={{
-                      marginTop: 10,
-                      width: 200,
-                      height: 200,
-                    }}
-                  />
-                  <ButtonDeleteFile
-                    filename={image}
-                    onDelete={() => handleDeleteImage(image)}
-                  />
-                </Stack>
-              ))}
-            <Stack alignItems="center" justifyContent={"center"} mt={2}>
-              <ButtonUploadWithOption
-                onUpload={(image) => setBannerImages([...bannerImages, image])}
-              />
-            </Stack>
-          </Stack>
-        </Box>
-        <Stack
-          direction={"row"}
-          spacing={2}
-          justifyContent={"flex-end"}
-          sx={{ marginTop: 5 }}
-        >
-          <Button variant="outlined" onClick={handleSubmit}>
-            Simpan
-          </Button>
-        </Stack>
       </Card>
+
+      <Dialog
+        open={openModal}
+        onClose={() =>
+          !requestingOtp &&
+          !verifyingOtp &&
+          (() => {
+            setOpenModal(false);
+            setOtpRequested(false);
+            setOtpCode("");
+          })()
+        }
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Verifikasi Nomor WhatsApp</DialogTitle>
+        <DialogContent>
+          <Box sx={{ mt: 1, display: "grid", gap: 2 }}>
+            <TextField
+              label="Nomor WhatsApp"
+              value={draftWhatsappNumber}
+              onChange={(e) => setDraftWhatsappNumber(e.target.value ?? "")}
+              fullWidth
+              disabled={otpRequested}
+            />
+            {otpRequested && (
+              <TextField
+                label="Kode OTP"
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value ?? "")}
+                fullWidth
+              />
+            )}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setOpenModal(false);
+              setOtpRequested(false);
+              setOtpCode("");
+            }}
+            disabled={requestingOtp || verifyingOtp}
+          >
+            Batal
+          </Button>
+          {!otpRequested ? (
+            <Button
+              variant="contained"
+              onClick={handleRequestOtp}
+              disabled={requestingOtp}
+            >
+              {requestingOtp ? "Mengirim..." : "Kirim OTP"}
+            </Button>
+          ) : (
+            <Button
+              variant="contained"
+              onClick={handleVerifyOtp}
+              disabled={verifyingOtp}
+            >
+              {verifyingOtp ? "Memverifikasi..." : "Verifikasi OTP"}
+            </Button>
+          )}
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={openSnackbar}

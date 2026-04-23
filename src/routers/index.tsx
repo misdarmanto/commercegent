@@ -16,16 +16,16 @@ import ProductFormView from "../pages/products/ProductFormView";
 import ProductListView from "../pages/products/ListProductView";
 import DetailProductView from "../pages/products/DetailProductView";
 import ListSubCategoryView from "../pages/categories/subCategory/ListCategoryView";
-import SubCategoryFormView from "../pages/categories/subCategory/CategoryFormView";
+import SubCategoryFormView from "../pages/categories/subCategory/SubCategoryFormView";
 import ListUploadView from "../pages/uploads/ListUploadView";
 import ListUploadHistoryView from "../pages/products/upload/ListUploadHistoryView";
 import FormAdminView from "../pages/admins/FormAdminView";
 import ListAdminView from "../pages/admins/ListAdminView";
 import SettingsView from "../pages/settings/Index";
 import ListProductPromotionView from "../pages/promotion/ListPromotionProductView";
-import ListTransactionView from "../pages/transactions/listTransactionView";
 import ListOrderView from "../pages/orders/ListOrderView";
 import DetailOrderView from "../pages/orders/DetailOrderView";
+import ListTransactionView from "../pages/transactions/ListTransactionView";
 
 const getProtectedRouters = (role: string) => {
   const mainRouters: { path: string; element: JSX.Element }[] = [];
@@ -56,13 +56,10 @@ const getProtectedRouters = (role: string) => {
         path: "/products/uploads/histories",
         element: <ListUploadHistoryView />,
       },
-      // promotion
-
       {
         path: "/promotions",
         element: <ListProductPromotionView />,
       },
-      // category
       {
         path: "/categories",
         element: <ListCategoryView />,
@@ -75,14 +72,10 @@ const getProtectedRouters = (role: string) => {
         path: "/categories/edit/:categoryId",
         element: <CategoryFormView />,
       },
-
-      // uploads
       {
         path: "/uploads",
         element: <ListUploadView />,
       },
-
-      //subcategory
       {
         path: "/categories/subcategories/:categoryReference",
         element: <ListSubCategoryView />,
@@ -95,7 +88,6 @@ const getProtectedRouters = (role: string) => {
         path: "/categories/subcategories/:categoryId/edit/:categoryReference",
         element: <SubCategoryFormView />,
       },
-      //customers
       {
         path: "/customers",
         element: <ListCustomersView />,
@@ -112,8 +104,6 @@ const getProtectedRouters = (role: string) => {
         path: "/orders/detail/:orderId",
         element: <DetailOrderView />,
       },
-
-      //transaction router
       {
         path: "/transactions",
         element: <ListTransactionView />,
@@ -139,7 +129,6 @@ const getProtectedRouters = (role: string) => {
       path: "/admins/edit/:id",
       element: <FormAdminView />,
     },
-    //settings routers
     {
       path: "/settings",
       element: <SettingsView />,

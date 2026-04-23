@@ -2,12 +2,13 @@ import {
   Box,
   Button,
   Card,
+  FormHelperText,
   Grid,
-  Stack,
-  TextField,
+  MenuItem,
   Snackbar,
   Alert,
-  MenuItem,
+  Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
@@ -16,8 +17,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useHttp } from "../../hooks/http";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { IAddressesModel } from "../../models/addressModel";
 import { AddressFormType, AddressSchema } from "../../validations/addresSchema";
+import { IAddress } from "../../interfaces/Address";
 
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -71,6 +72,15 @@ function DraggableMarker({
   );
 }
 
+const findNameById = (
+  list: { id: string; name: string }[] | undefined,
+  id: string,
+) => {
+  if (!list?.length) return "";
+  const item = list.find((i) => String(i.id) === String(id));
+  return item?.name ?? "";
+};
+
 export default function AddressSettingsView() {
   const { handleGetRequest, handlePostRequest } = useHttp();
 
@@ -78,29 +88,26 @@ export default function AddressSettingsView() {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
-  /* ======================
-     REGION STATE
-  ====================== */
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [regencies, setRegencies] = useState<any[]>([]);
-  const [districts, setDistricts] = useState<any[]>([]);
-  const [villages, setVillages] = useState<any[]>([]);
+  const [provinces, setProvinces] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [regencies, setRegencies] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [districts, setDistricts] = useState<{ id: string; name: string }[]>(
+    [],
+  );
+  const [villages, setVillages] = useState<{ id: string; name: string }[]>([]);
 
   const [provinceId, setProvinceId] = useState("");
   const [regencyId, setRegencyId] = useState("");
   const [districtId, setDistrictId] = useState("");
+  const [villageId, setVillageId] = useState("");
 
-  /* ======================
-     MAP STATE
-  ====================== */
   const [position, setPosition] = useState<[number, number]>([
-    -6.2,
-    106.816666, // default Jakarta
+    -6.2, 106.816666,
   ]);
 
-  /* ======================
-     FORM
-  ====================== */
   const {
     register,
     handleSubmit,
@@ -111,188 +118,245 @@ export default function AddressSettingsView() {
     defaultValues: {
       addressUserName: "",
       addressKontak: "",
-      addressPostalCode: "",
-      addressProvinsi: "",
-      addressKabupaten: "",
-      addressKecamatan: "",
-      addressDesa: "",
       addressDetail: "",
+      addressPostalCode: "",
+      addressProvinsiId: "",
+      addressProvinsiName: "",
+      addressKabupatenId: "",
+      addressKabupatenName: "",
+      addressKecamatanId: "",
+      addressKecamatanName: "",
+      addressDesaId: "",
+      addressDesaName: "",
       addressLatitude: "",
       addressLongitude: "",
     },
   });
 
-  const getIdByName = (list: any[], name?: string) => {
+  const getIdByName = (list: { id: string; name: string }[], name?: string) => {
+    if (!name) return "";
     const item = list.find((i) => i.name === name);
-    return item ? item.id : "";
+    return item ? String(item.id) : "";
   };
 
-  const preloadAddress = async () => {
+  const loadInitialData = async () => {
+    setLoading(true);
     try {
-      const detail: IAddressesModel = await handleGetRequest({
-        path: "/addresses",
-      });
-
-      if (!detail) return;
-
-      Object.entries(detail).forEach(([key, value]) => {
-        setValue(key as keyof AddressFormType, value as string);
-      });
-
-      if (detail.addressLatitude && detail.addressLongitude) {
-        setPosition([
-          Number(detail.addressLatitude),
-          Number(detail.addressLongitude),
-        ]);
+      const provRes = await handleGetRequest({ path: "/regions/provinces" });
+      if (provRes) {
+        setProvinces(provRes);
       }
 
-      const pId = getIdByName(provinces, detail.addressProvinsi);
-      if (!pId) return;
-
-      setProvinceId(pId);
-
-      const reg = await handleGetRequest({
-        path: `/addresses/regencies/${pId}`,
-      });
-      setRegencies(reg);
-
-      const rId = getIdByName(reg, detail.addressKabupaten);
-      if (!rId) return;
-
-      setRegencyId(rId);
-
-      const dist = await handleGetRequest({
-        path: `/addresses/districts/${rId}`,
-      });
-      setDistricts(dist);
-
-      const dId = getIdByName(dist, detail.addressKecamatan);
-      if (!dId) return;
-
-      setDistrictId(dId);
-
-      const vill = await handleGetRequest({
-        path: `/addresses/villages/${dId}`,
-      });
-      setVillages(vill);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false); // 🔥 INI YANG KEMARIN HILANG
-    }
-  };
-
-  /* ======================
-     FETCH DATA
-  ====================== */
-  const fetchProvinces = async () => {
-    const res = await handleGetRequest({
-      path: "/addresses/provinces",
-    });
-    if (res) setProvinces(res);
-  };
-
-  const getDetailSettings = async () => {
-    try {
-      const result: IAddressesModel = await handleGetRequest({
+      const d: IAddress | undefined = await handleGetRequest({
         path: "/addresses/admins",
       });
+      if (!d) {
+        return;
+      }
 
-      if (result) {
-        Object.entries(result).forEach(([key, value]) => {
-          setValue(key as keyof AddressFormType, value as string);
-        });
+      setValue("addressUserName", d.addressUserName ?? "");
+      setValue("addressKontak", d.addressKontak ?? "");
+      setValue("addressDetail", d.addressDetail ?? "");
+      setValue("addressPostalCode", d.addressPostalCode ?? "");
+      setValue(
+        "addressLatitude",
+        d.addressLatitude != null ? String(d.addressLatitude) : "",
+      );
+      setValue(
+        "addressLongitude",
+        d.addressLongitude != null ? String(d.addressLongitude) : "",
+      );
 
-        if (result.addressLatitude && result.addressLongitude) {
-          setPosition([
-            Number(result.addressLatitude),
-            Number(result.addressLongitude),
-          ]);
+      if (d.addressLatitude && d.addressLongitude) {
+        setPosition([Number(d.addressLatitude), Number(d.addressLongitude)]);
+      }
+
+      const provList = provRes ?? [];
+
+      let pId = "";
+      if (d.addressProvinsiId) {
+        pId = String(d.addressProvinsiId);
+        setValue("addressProvinsiId", pId);
+        setValue(
+          "addressProvinsiName",
+          d.addressProvinsiName ?? findNameById(provList, pId) ?? "",
+        );
+      } else if (d.addressProvinsi) {
+        pId = getIdByName(provList, d.addressProvinsi);
+        if (pId) {
+          setValue("addressProvinsiId", pId);
+          setValue("addressProvinsiName", d.addressProvinsi);
         }
       }
-    } catch (error) {
-      console.log(error);
+      setProvinceId(pId);
+      if (!pId) return;
+
+      const reg = await handleGetRequest({
+        path: `/regions/regencies/${pId}`,
+      });
+      if (reg) setRegencies(reg);
+
+      let rId = "";
+      if (d.addressKabupatenId) {
+        rId = String(d.addressKabupatenId);
+        setValue("addressKabupatenId", rId);
+        setValue(
+          "addressKabupatenName",
+          d.addressKabupatenName ?? findNameById(reg, rId) ?? "",
+        );
+      } else if (d.addressKabupaten) {
+        rId = getIdByName(reg || [], d.addressKabupaten);
+        if (rId) {
+          setValue("addressKabupatenId", rId);
+          setValue("addressKabupatenName", d.addressKabupaten);
+        }
+      }
+      setRegencyId(rId);
+      if (!rId) return;
+
+      const dist = await handleGetRequest({
+        path: `/regions/districts/${rId}`,
+      });
+      if (dist) setDistricts(dist);
+
+      let distId = "";
+      if (d.addressKecamatanId) {
+        distId = String(d.addressKecamatanId);
+        setValue("addressKecamatanId", distId);
+        setValue(
+          "addressKecamatanName",
+          d.addressKecamatanName ?? findNameById(dist, distId) ?? "",
+        );
+      } else if (d.addressKecamatan) {
+        distId = getIdByName(dist || [], d.addressKecamatan);
+        if (distId) {
+          setValue("addressKecamatanId", distId);
+          setValue("addressKecamatanName", d.addressKecamatan);
+        }
+      }
+      setDistrictId(distId);
+      if (!distId) return;
+
+      const vill = await handleGetRequest({
+        path: `/regions/villages/${distId}`,
+      });
+      if (vill) setVillages(vill);
+
+      let vId = "";
+      if (d.addressDesaId) {
+        vId = String(d.addressDesaId);
+        setValue("addressDesaId", vId);
+        setValue(
+          "addressDesaName",
+          d.addressDesaName ?? findNameById(vill, vId) ?? "",
+        );
+      } else if (d.addressDesa) {
+        vId = getIdByName(vill || [], d.addressDesa);
+        if (vId) {
+          setValue("addressDesaId", vId);
+          setValue("addressDesaName", d.addressDesa);
+        }
+      }
+      setVillageId(vId);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  /* ======================
-     CASCADING HANDLER
-  ====================== */
   const handleProvinceChange = async (id: string) => {
     setProvinceId(id);
     setRegencyId("");
     setDistrictId("");
+    setVillageId("");
     setRegencies([]);
     setDistricts([]);
     setVillages([]);
 
-    const selected = provinces.find((p) => p.id === id);
-    setValue("addressProvinsi", selected?.name || "");
-    setValue("addressKabupaten", "");
-    setValue("addressKecamatan", "");
-    setValue("addressDesa", "");
+    const selected = provinces.find((p) => String(p.id) === String(id));
+    setValue("addressProvinsiId", id);
+    setValue("addressProvinsiName", selected?.name || "");
+    setValue("addressKabupatenId", "");
+    setValue("addressKabupatenName", "");
+    setValue("addressKecamatanId", "");
+    setValue("addressKecamatanName", "");
+    setValue("addressDesaId", "");
+    setValue("addressDesaName", "");
 
-    const res = await handleGetRequest({
-      path: `/addresses/regencies/${id}`,
-    });
+    const res = await handleGetRequest({ path: `/regions/regencies/${id}` });
     if (res) setRegencies(res);
   };
 
   const handleRegencyChange = async (id: string) => {
     setRegencyId(id);
     setDistrictId("");
+    setVillageId("");
     setDistricts([]);
     setVillages([]);
 
-    const selected = regencies.find((r) => r.id === id);
-    setValue("addressKabupaten", selected?.name || "");
-    setValue("addressKecamatan", "");
-    setValue("addressDesa", "");
+    const selected = regencies.find((r) => String(r.id) === String(id));
+    setValue("addressKabupatenId", id);
+    setValue("addressKabupatenName", selected?.name || "");
+    setValue("addressKecamatanId", "");
+    setValue("addressKecamatanName", "");
+    setValue("addressDesaId", "");
+    setValue("addressDesaName", "");
 
-    const res = await handleGetRequest({
-      path: `/addresses/districts/${id}`,
-    });
+    const res = await handleGetRequest({ path: `/regions/districts/${id}` });
     if (res) setDistricts(res);
   };
 
   const handleDistrictChange = async (id: string) => {
     setDistrictId(id);
+    setVillageId("");
     setVillages([]);
 
-    const selected = districts.find((d) => d.id === id);
-    setValue("addressKecamatan", selected?.name || "");
-    setValue("addressDesa", "");
+    const selected = districts.find((d) => String(d.id) === String(id));
+    setValue("addressKecamatanId", id);
+    setValue("addressKecamatanName", selected?.name || "");
+    setValue("addressDesaId", "");
+    setValue("addressDesaName", "");
 
-    const res = await handleGetRequest({
-      path: `/addresses/villages/${id}`,
-    });
+    const res = await handleGetRequest({ path: `/regions/villages/${id}` });
     if (res) setVillages(res);
   };
 
   const handleVillageChange = (id: string) => {
-    const selected = villages.find((v) => v.id === id);
-    setValue("addressDesa", selected?.name || "");
+    setVillageId(id);
+    const selected = villages.find((v) => String(v.id) === String(id));
+    setValue("addressDesaId", id);
+    setValue("addressDesaName", selected?.name || "");
   };
 
-  /* ======================
-     MAP HANDLER
-  ====================== */
   const handleMapChange = (lat: number, lng: number) => {
     setPosition([lat, lng]);
     setValue("addressLatitude", String(lat));
     setValue("addressLongitude", String(lng));
   };
 
-  /* ======================
-     SUBMIT
-  ====================== */
   const onSubmit = async (data: AddressFormType) => {
     try {
+      const body = {
+        addressUserName: data.addressUserName,
+        addressKontak: data.addressKontak,
+        addressDetail: data.addressDetail,
+        addressPostalCode: data.addressPostalCode,
+        addressProvinsiId: data.addressProvinsiId,
+        addressProvinsiName: data.addressProvinsiName,
+        addressKabupatenId: data.addressKabupatenId,
+        addressKabupatenName: data.addressKabupatenName,
+        addressKecamatanId: data.addressKecamatanId,
+        addressKecamatanName: data.addressKecamatanName,
+        addressDesaId: data.addressDesaId,
+        addressDesaName: data.addressDesaName,
+        addressLatitude: data.addressLatitude,
+        addressLongitude: data.addressLongitude,
+      };
+
       await handlePostRequest({
         path: "/addresses/admins",
-        body: data,
+        body,
       });
       setSnackbarMessage("Alamat berhasil disimpan!");
       setOpenSnackbar(true);
@@ -302,13 +366,8 @@ export default function AddressSettingsView() {
     }
   };
 
-  /* ======================
-     EFFECT
-  ====================== */
   useEffect(() => {
-    preloadAddress();
-    fetchProvinces();
-    getDetailSettings();
+    loadInitialData();
   }, []);
 
   if (loading) return "loading...";
@@ -329,7 +388,6 @@ export default function AddressSettingsView() {
       <Card sx={{ p: 3 }}>
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={2}>
-            {/* BASIC INFO */}
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Nama"
@@ -360,7 +418,6 @@ export default function AddressSettingsView() {
               />
             </Grid>
 
-            {/* PROVINSI */}
             <Grid item xs={12} sm={6}>
               <TextField
                 select
@@ -368,6 +425,7 @@ export default function AddressSettingsView() {
                 fullWidth
                 value={provinceId}
                 onChange={(e) => handleProvinceChange(e.target.value)}
+                error={!!errors.addressProvinsiId}
               >
                 {provinces.map((p) => (
                   <MenuItem key={p.id} value={p.id}>
@@ -375,9 +433,13 @@ export default function AddressSettingsView() {
                   </MenuItem>
                 ))}
               </TextField>
+              {errors.addressProvinsiId && (
+                <FormHelperText error>
+                  {errors.addressProvinsiId.message}
+                </FormHelperText>
+              )}
             </Grid>
 
-            {/* KABUPATEN */}
             <Grid item xs={12} sm={6}>
               <TextField
                 select
@@ -386,6 +448,7 @@ export default function AddressSettingsView() {
                 disabled={!provinceId}
                 value={regencyId}
                 onChange={(e) => handleRegencyChange(e.target.value)}
+                error={!!errors.addressKabupatenId}
               >
                 {regencies.map((r) => (
                   <MenuItem key={r.id} value={r.id}>
@@ -393,9 +456,13 @@ export default function AddressSettingsView() {
                   </MenuItem>
                 ))}
               </TextField>
+              {errors.addressKabupatenId && (
+                <FormHelperText error>
+                  {errors.addressKabupatenId.message}
+                </FormHelperText>
+              )}
             </Grid>
 
-            {/* KECAMATAN */}
             <Grid item xs={12} sm={6}>
               <TextField
                 select
@@ -404,6 +471,7 @@ export default function AddressSettingsView() {
                 disabled={!regencyId}
                 value={districtId}
                 onChange={(e) => handleDistrictChange(e.target.value)}
+                error={!!errors.addressKecamatanId}
               >
                 {districts.map((d) => (
                   <MenuItem key={d.id} value={d.id}>
@@ -411,16 +479,22 @@ export default function AddressSettingsView() {
                   </MenuItem>
                 ))}
               </TextField>
+              {errors.addressKecamatanId && (
+                <FormHelperText error>
+                  {errors.addressKecamatanId.message}
+                </FormHelperText>
+              )}
             </Grid>
 
-            {/* DESA */}
             <Grid item xs={12} sm={6}>
               <TextField
                 select
                 label="Desa / Kelurahan"
                 fullWidth
                 disabled={!districtId}
+                value={villageId}
                 onChange={(e) => handleVillageChange(e.target.value)}
+                error={!!errors.addressDesaId}
               >
                 {villages.map((v) => (
                   <MenuItem key={v.id} value={v.id}>
@@ -428,9 +502,13 @@ export default function AddressSettingsView() {
                   </MenuItem>
                 ))}
               </TextField>
+              {errors.addressDesaId && (
+                <FormHelperText error>
+                  {errors.addressDesaId.message}
+                </FormHelperText>
+              )}
             </Grid>
 
-            {/* DETAIL */}
             <Grid item xs={12}>
               <TextField
                 label="Detail Alamat"
@@ -438,10 +516,11 @@ export default function AddressSettingsView() {
                 multiline
                 rows={3}
                 {...register("addressDetail")}
+                error={!!errors.addressDetail}
+                helperText={errors.addressDetail?.message}
               />
             </Grid>
 
-            {/* MAP */}
             <Grid item xs={12}>
               <Typography fontWeight="bold" mb={1}>
                 Pilih Lokasi (Klik / Geser Marker)
@@ -463,12 +542,13 @@ export default function AddressSettingsView() {
               </MapContainer>
             </Grid>
 
-            {/* COORDINATE */}
             <Grid item xs={12} sm={6}>
               <TextField
                 label="Latitude"
                 fullWidth
                 {...register("addressLatitude")}
+                error={!!errors.addressLatitude}
+                helperText={errors.addressLatitude?.message}
               />
             </Grid>
 
@@ -477,6 +557,8 @@ export default function AddressSettingsView() {
                 label="Longitude"
                 fullWidth
                 {...register("addressLongitude")}
+                error={!!errors.addressLongitude}
+                helperText={errors.addressLongitude?.message}
               />
             </Grid>
           </Grid>
@@ -494,7 +576,11 @@ export default function AddressSettingsView() {
         onClose={() => setOpenSnackbar(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert severity="success">{snackbarMessage}</Alert>
+        <Alert
+          severity={snackbarMessage.includes("kesalahan") ? "error" : "success"}
+        >
+          {snackbarMessage}
+        </Alert>
       </Snackbar>
     </Box>
   );

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Button,
   Card,
@@ -12,9 +12,12 @@ import {
   InputLabel,
   FormControl,
   FormHelperText,
+  Divider,
+  IconButton,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
+import { ArrowBack, Add as AddIcon, DeleteOutline } from "@mui/icons-material";
+import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useHttp } from "../../hooks/http";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -23,16 +26,31 @@ import { getImageUrl } from "../../utilities/getImageUrl";
 import ButtonDeleteFile from "../../components/buttons/ButtonDeleteFile";
 import {
   ProductFormValues,
-  productSchema,
+  productFormCreateSchema,
+  productFormUpdateSchema,
 } from "../../validations/productSchema";
 import {
   IProduct,
   IProductCreate,
   IProductUpdate,
 } from "../../interfaces/Product";
+import {
+  getVariantsFromProduct,
+  parseVariantPrice,
+} from "../../utilities/productVariants";
 import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
 import { Checkbox, FormControlLabel } from "@mui/material";
 import { ICategory } from "../../interfaces/Category";
+
+const emptyVariant = (): ProductFormValues["productVariants"][number] => ({
+  productVariantId: undefined,
+  productVariantName: "",
+  productVariantImage: "",
+  productVariantPrice: 0,
+  productVariantStock: 0,
+  productVariantDiscount: 0,
+  productVariantWeight: 0,
+});
 
 export default function ProductFormView() {
   const { productId } = useParams();
@@ -42,32 +60,52 @@ export default function ProductFormView() {
 
   const [listCategory, setListCategory] = useState<ICategory[]>([]);
   const [listSubCategory, setListSubCategory] = useState<ICategory[]>([]);
-  const [productImages, setProductImages] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const isEdit = Boolean(productId);
+
+  const resolver = useMemo(
+    () =>
+      zodResolver(
+        isEdit ? productFormUpdateSchema : productFormCreateSchema,
+      ) as any,
+    [isEdit],
+  );
 
   const {
     control,
     handleSubmit,
-    setValue,
     watch,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema) as any,
+    resolver,
     defaultValues: {
       productName: "",
-      productPrice: undefined,
-      productDiscount: undefined,
-      productStock: undefined,
-      productWeight: undefined,
       productDescription: "",
+      productCategoryId: 0,
+      productSubCategoryId: 0,
       productCode: "",
-      productImages: [],
       productBarcode: "",
-      productUnit: "",
+      productUnit: "pcs",
       productIsVisible: true,
+      productVariants: [emptyVariant()],
     },
   });
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "productVariants",
+  });
+
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/products");
+  };
 
   const getCategories = async () => {
     try {
@@ -83,12 +121,39 @@ export default function ProductFormView() {
   const getSubCategories = async (categoryReference: number) => {
     try {
       const res = await handleGetRequest({
-        path: `/categories?categoryType=child&&categoryReference=${categoryReference}`,
+        path: `/categories?categoryType=child&categoryReference=${categoryReference}`,
       });
       setListSubCategory(res?.items || []);
     } catch (err) {
       console.error("fetch subcategories error", err);
     }
+  };
+
+  const mapApiToFormVariants = (
+    res: IProduct,
+  ): ProductFormValues["productVariants"] => {
+    const list = getVariantsFromProduct(res);
+    if (list.length > 0) {
+      return list.map((v) => ({
+        productVariantId: v.productVariantId,
+        productVariantName: v.productVariantName,
+        productVariantImage: v.productVariantImage ?? "",
+        productVariantPrice: parseVariantPrice(v.productVariantPrice),
+        productVariantStock: Number(v.productVariantStock ?? 0),
+        productVariantDiscount: Number(v.productVariantDiscount ?? 0),
+        productVariantWeight: Number(v.productVariantWeight ?? 0),
+      }));
+    }
+    return [
+      {
+        productVariantName: "Default",
+        productVariantImage: res.productImages?.[0] ?? "",
+        productVariantPrice: res.productPrice ?? 0,
+        productVariantStock: res.productStock ?? 0,
+        productVariantDiscount: res.productDiscount ?? 0,
+        productVariantWeight: res.productWeight ?? 0,
+      },
+    ];
   };
 
   const getDetailProducts = async () => {
@@ -99,31 +164,22 @@ export default function ProductFormView() {
       });
 
       if (res) {
-        const images = Array.isArray(res.productImages)
-          ? res.productImages
-          : [];
-        setProductImages(images);
-
         if (res.productCategoryId) {
-          await getSubCategories(res.productCategoryId);
+          await getSubCategories(Number(res.productCategoryId));
         }
 
         reset({
           productName: res.productName,
-          productDescription: res.productDescription,
-          productPrice: res.productPrice,
-          productStock: res.productStock,
-          productWeight: res.productWeight,
-          productDiscount: res.productDiscount,
-          productCategoryId: Number(res.productCategoryId),
+          productDescription: res.productDescription ?? "",
+          productCategoryId: Number(res.productCategoryId ?? 0),
           productSubCategoryId: res.productSubCategoryId
             ? Number(res.productSubCategoryId)
             : 0,
-          productCode: res.productCode!,
-          productImages: images,
-          productBarcode: res.productBarcode,
-          productUnit: res.productUnit,
-          productIsVisible: res.productIsVisible,
+          productCode: res.productCode ?? "",
+          productBarcode: res.productBarcode ?? "",
+          productUnit: res.productUnit ?? "pcs",
+          productIsVisible: res.productIsVisible ?? true,
+          productVariants: mapApiToFormVariants(res),
         });
       }
     } catch (err) {
@@ -142,11 +198,6 @@ export default function ProductFormView() {
     getDetailProducts();
   }, [productId, reset]);
 
-  useEffect(() => {
-    setValue("productImages", productImages);
-  }, [productImages, setValue]);
-
-  // 🔹 Watch category selection and load subcategories dynamically
   const selectedCategoryId = watch("productCategoryId");
   useEffect(() => {
     if (!selectedCategoryId || selectedCategoryId === 0) {
@@ -158,10 +209,6 @@ export default function ProductFormView() {
     getSubCategories(Number(selectedCategoryId));
   }, [selectedCategoryId, setValue]);
 
-  const handleDeleteImage = (oldImage: string) => {
-    setProductImages((prev) => prev.filter((i) => i !== oldImage));
-  };
-
   const onSubmit = async (data: ProductFormValues) => {
     setLoading(true);
     try {
@@ -170,34 +217,56 @@ export default function ProductFormView() {
           productId: Number(productId),
           productName: data.productName,
           productDescription: data.productDescription || "",
-          productImages: productImages,
-          productPrice: data.productPrice,
           productCategoryId: data.productCategoryId,
           productSubCategoryId: data.productSubCategoryId,
-          productStock: data.productStock,
-          productDiscount: data.productDiscount,
-          productWeight: data.productWeight,
+          productCode: data.productCode,
           productBarcode: data.productBarcode,
           productUnit: data.productUnit,
-          productIsVisible: data.productIsVisible,
+          productIsVisible: data.productIsVisible ?? true,
+          productVariants: data.productVariants.map((v) => {
+            const row: IProductUpdate["productVariants"][number] = {
+              productVariantName: v.productVariantName,
+              productVariantPrice: v.productVariantPrice,
+              productVariantStock: v.productVariantStock,
+              productVariantDiscount: v.productVariantDiscount,
+            };
+            if (v.productVariantId != null) {
+              row.productVariantId = v.productVariantId;
+            }
+            if (v.productVariantImage?.trim()) {
+              row.productVariantImage = v.productVariantImage.trim();
+            }
+            if (
+              v.productVariantWeight != null &&
+              !Number.isNaN(v.productVariantWeight)
+            ) {
+              row.productVariantWeight = v.productVariantWeight;
+            }
+            return row;
+          }),
         };
+
         await handleUpdateRequest({ path: "/products", body: payload });
       } else {
         const payload: IProductCreate = {
           productName: data.productName,
           productDescription: data.productDescription,
-          productImages: productImages,
-          productPrice: data.productPrice,
           productCategoryId: data.productCategoryId,
           productSubCategoryId: data.productSubCategoryId,
-          productStock: data.productStock,
-          productWeight: data.productWeight,
-          productDiscount: data.productDiscount,
           productCode: data.productCode,
           productBarcode: data.productBarcode,
           productUnit: data.productUnit,
-          productIsVisible: data.productIsVisible,
+          productIsVisible: data.productIsVisible ?? true,
+          productVariants: data.productVariants.map((v) => ({
+            productVariantName: v.productVariantName,
+            productVariantImage: v.productVariantImage!.trim(),
+            productVariantPrice: v.productVariantPrice,
+            productVariantStock: v.productVariantStock,
+            productVariantDiscount: v.productVariantDiscount,
+            productVariantWeight: v.productVariantWeight!,
+          })),
         };
+
         await handlePostRequest({ path: "/products", body: payload });
       }
 
@@ -228,13 +297,25 @@ export default function ProductFormView() {
       />
 
       <Card sx={{ mt: 5, p: { xs: 3, md: 5 } }}>
+        <Stack direction="row" justifyContent="flex-start" mb={2} spacing={2}>
+          <Button
+            variant="text"
+            startIcon={<ArrowBack />}
+            size="small"
+            onClick={handleBack}
+          >
+            Kembali
+          </Button>
+        </Stack>
         <Typography variant="h4" mb={5} color="primary" fontWeight="bold">
           {productId ? "Edit Product" : "Tambah Product"}
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
-          {/* === BASIC INFO === */}
-          <Grid container spacing={2} mb={5}>
+          <Typography fontWeight="bold" mb={2}>
+            Informasi produk
+          </Typography>
+          <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={6}>
               <Controller
                 name="productName"
@@ -246,114 +327,6 @@ export default function ProductFormView() {
                     fullWidth
                     error={!!errors.productName}
                     helperText={errors.productName?.message}
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="productPrice"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Harga (angka)"
-                    fullWidth
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                      )
-                    }
-                    error={!!errors.productPrice}
-                    helperText={errors.productPrice?.message}
-                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-                    onWheel={(e) => e.currentTarget.blur()}
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="productDiscount"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Diskon (%)"
-                    fullWidth
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                      )
-                    }
-                    error={!!errors.productDiscount}
-                    helperText={errors.productDiscount?.message}
-                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-                    onWheel={(e) => e.currentTarget.blur()}
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="productWeight"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Berat (gram)"
-                    fullWidth
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                      )
-                    }
-                    error={!!errors.productWeight}
-                    helperText={errors.productWeight?.message}
-                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-                    onWheel={(e) => e.currentTarget.blur()}
-                  />
-                )}
-              />
-            </Grid>
-
-            <Grid item xs={12} sm={6}>
-              <Controller
-                name="productStock"
-                control={control}
-                render={({ field }) => (
-                  <TextField
-                    {...field}
-                    label="Stok"
-                    fullWidth
-                    type="number"
-                    value={field.value ?? ""}
-                    onChange={(e) =>
-                      field.onChange(
-                        e.target.value === ""
-                          ? undefined
-                          : Number(e.target.value),
-                      )
-                    }
-                    error={!!errors.productStock}
-                    helperText={errors.productStock?.message}
-                    inputProps={{ inputMode: "numeric", pattern: "[0-9]*" }}
-                    onWheel={(e) => e.currentTarget.blur()}
                   />
                 )}
               />
@@ -398,8 +371,10 @@ export default function ProductFormView() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Satuan Produk (pcs, kg, box)"
+                    label="Satuan (pcs, kg, box)"
                     fullWidth
+                    error={!!errors.productUnit}
+                    helperText={errors.productUnit?.message}
                   />
                 )}
               />
@@ -424,43 +399,7 @@ export default function ProductFormView() {
             </Grid>
           </Grid>
 
-          {/* === IMAGE UPLOAD === */}
-          <Box mb={4}>
-            <Typography color="text.secondary">
-              Foto Produk (600×600 px & maks 2MB)
-            </Typography>
-            <Stack direction="row" flexWrap="wrap" spacing={2} mt={2}>
-              {productImages &&
-                Array.isArray(productImages) &&
-                productImages.map((image, idx) => (
-                  <Stack key={image + idx} spacing={1} alignItems="center">
-                    <img
-                      src={getImageUrl(image)}
-                      alt={`product-${idx}`}
-                      style={{
-                        width: 200,
-                        height: 200,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                      }}
-                    />
-                    <ButtonDeleteFile
-                      filename={image}
-                      onDelete={() => handleDeleteImage(image)}
-                    />
-                  </Stack>
-                ))}
-              <Stack alignItems="center" justifyContent={"center"} mt={2}>
-                <ButtonUploadWithOption
-                  onUpload={(img) => setProductImages((p) => [...p, img])}
-                />
-                <FormHelperText>Max 6 images recommended.</FormHelperText>
-              </Stack>
-            </Stack>
-          </Box>
-
-          {/* === CATEGORY & SUBCATEGORY === */}
-          <Grid container spacing={2}>
+          <Grid container spacing={2} mb={4}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth error={!!errors.productCategoryId}>
                 <InputLabel id="category-select-label">Kategori</InputLabel>
@@ -476,7 +415,10 @@ export default function ProductFormView() {
                     >
                       <MenuItem value={0}>Pilih kategori</MenuItem>
                       {listCategory.map((c) => (
-                        <MenuItem key={c.categoryId} value={c.categoryId}>
+                        <MenuItem
+                          key={c.categoryId}
+                          value={Number(c.categoryId)}
+                        >
                           {c.categoryName}
                         </MenuItem>
                       ))}
@@ -484,7 +426,7 @@ export default function ProductFormView() {
                   )}
                 />
                 <FormHelperText>
-                  {errors.productCategoryId?.message}
+                  {errors.productCategoryId?.message as string}
                 </FormHelperText>
               </FormControl>
             </Grid>
@@ -506,9 +448,11 @@ export default function ProductFormView() {
                         label="Subkategori"
                       >
                         <MenuItem value={0}>Pilih subkategori</MenuItem>
-
                         {listSubCategory.map((sub) => (
-                          <MenuItem key={sub.categoryId} value={sub.categoryId}>
+                          <MenuItem
+                            key={sub.categoryId}
+                            value={Number(sub.categoryId)}
+                          >
                             {sub.categoryName}
                           </MenuItem>
                         ))}
@@ -516,15 +460,14 @@ export default function ProductFormView() {
                     )}
                   />
                   <FormHelperText>
-                    {errors.productSubCategoryId?.message}
+                    {errors.productSubCategoryId?.message as string}
                   </FormHelperText>
                 </FormControl>
               </Grid>
             )}
           </Grid>
 
-          {/* === DESCRIPTION === */}
-          <Box sx={{ my: 4 }}>
+          <Box sx={{ mb: 4 }}>
             <Typography fontWeight="bold" mb={2}>
               Deskripsi
             </Typography>
@@ -544,6 +487,264 @@ export default function ProductFormView() {
               )}
             />
           </Box>
+
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            mb={2}
+          >
+            <Typography fontWeight="bold">Varian produk</Typography>
+            <Button
+              type="button"
+              variant="outlined"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={() => append(emptyVariant())}
+            >
+              Tambah varian
+            </Button>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Harga, stok, diskon, dan gambar diatur per varian (warna / ukuran).
+          </Typography>
+
+          {fields.map((field, index) => (
+            <Box key={field.id} sx={{ mb: 3 }}>
+              <Stack
+                direction="row"
+                alignItems="center"
+                justifyContent="space-between"
+                mb={1}
+              >
+                <Typography fontWeight={600}>
+                  Varian {index + 1}
+                  {isEdit &&
+                    watch(`productVariants.${index}.productVariantId`) !=
+                      null && (
+                      <Typography
+                        component="span"
+                        variant="caption"
+                        color="text.secondary"
+                        sx={{ ml: 1 }}
+                      >
+                        (ID:{" "}
+                        {watch(`productVariants.${index}.productVariantId`)})
+                      </Typography>
+                    )}
+                </Typography>
+                {fields.length > 1 && (
+                  <IconButton
+                    type="button"
+                    size="small"
+                    color="error"
+                    onClick={() => remove(index)}
+                    aria-label="Hapus varian"
+                  >
+                    <DeleteOutline />
+                  </IconButton>
+                )}
+              </Stack>
+              <Divider sx={{ mb: 2 }} />
+
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <Controller
+                    name={`productVariants.${index}.productVariantName`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <TextField
+                        {...f}
+                        label="Nama varian"
+                        placeholder="Contoh: Hitam - M"
+                        fullWidth
+                        error={
+                          !!errors.productVariants?.[index]?.productVariantName
+                        }
+                        helperText={
+                          errors.productVariants?.[index]?.productVariantName
+                            ?.message
+                        }
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Controller
+                    name={`productVariants.${index}.productVariantPrice`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <TextField
+                        {...f}
+                        label="Harga"
+                        fullWidth
+                        type="number"
+                        value={f.value ?? ""}
+                        onChange={(e) =>
+                          f.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                          )
+                        }
+                        error={
+                          !!errors.productVariants?.[index]?.productVariantPrice
+                        }
+                        helperText={
+                          errors.productVariants?.[index]?.productVariantPrice
+                            ?.message
+                        }
+                        inputProps={{ inputMode: "numeric" }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Controller
+                    name={`productVariants.${index}.productVariantStock`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <TextField
+                        {...f}
+                        label="Stok"
+                        fullWidth
+                        type="number"
+                        value={f.value ?? ""}
+                        onChange={(e) =>
+                          f.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                          )
+                        }
+                        error={
+                          !!errors.productVariants?.[index]?.productVariantStock
+                        }
+                        helperText={
+                          errors.productVariants?.[index]?.productVariantStock
+                            ?.message
+                        }
+                        inputProps={{ inputMode: "numeric" }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Controller
+                    name={`productVariants.${index}.productVariantDiscount`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <TextField
+                        {...f}
+                        label="Diskon (%)"
+                        fullWidth
+                        type="number"
+                        value={f.value ?? ""}
+                        onChange={(e) =>
+                          f.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                          )
+                        }
+                        error={
+                          !!errors.productVariants?.[index]
+                            ?.productVariantDiscount
+                        }
+                        helperText={
+                          errors.productVariants?.[index]
+                            ?.productVariantDiscount?.message
+                        }
+                        inputProps={{ inputMode: "numeric" }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                      />
+                    )}
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <Controller
+                    name={`productVariants.${index}.productVariantWeight`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <TextField
+                        {...f}
+                        label="Berat (gram)"
+                        fullWidth
+                        type="number"
+                        value={f.value ?? ""}
+                        onChange={(e) =>
+                          f.onChange(
+                            e.target.value === ""
+                              ? undefined
+                              : Number(e.target.value),
+                          )
+                        }
+                        error={
+                          !!errors.productVariants?.[index]
+                            ?.productVariantWeight
+                        }
+                        helperText={
+                          errors.productVariants?.[index]?.productVariantWeight
+                            ?.message
+                        }
+                        inputProps={{ inputMode: "numeric" }}
+                        onWheel={(e) => e.currentTarget.blur()}
+                      />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12}>
+                  <Typography color="text.secondary" mb={1}>
+                    Gambar varian (600×600 px, maks 2MB)
+                  </Typography>
+                  <Controller
+                    name={`productVariants.${index}.productVariantImage`}
+                    control={control}
+                    render={({ field: f }) => (
+                      <Box>
+                        {!f.value ? (
+                          <ButtonUploadWithOption
+                            onUpload={(img) => f.onChange(img)}
+                          />
+                        ) : (
+                          <Stack spacing={1} alignItems="flex-start">
+                            <img
+                              src={getImageUrl(f.value)}
+                              alt="preview"
+                              style={{
+                                width: 160,
+                                height: 160,
+                                objectFit: "cover",
+                                borderRadius: 8,
+                              }}
+                            />
+                            <ButtonDeleteFile
+                              filename={f.value}
+                              onDelete={() => f.onChange("")}
+                            />
+                          </Stack>
+                        )}
+                        <FormHelperText
+                          error={
+                            !!errors.productVariants?.[index]
+                              ?.productVariantImage
+                          }
+                        >
+                          {
+                            errors.productVariants?.[index]?.productVariantImage
+                              ?.message as string
+                          }
+                        </FormHelperText>
+                      </Box>
+                    )}
+                  />
+                </Grid>
+              </Grid>
+            </Box>
+          ))}
 
           <Stack direction="row" justifyContent="flex-end">
             <Button

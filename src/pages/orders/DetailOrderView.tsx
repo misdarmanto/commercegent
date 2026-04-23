@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useHttp } from "../../hooks/http";
 import { ReactNode, useEffect, useState } from "react";
 import {
@@ -67,6 +67,7 @@ const getOrderStatus = (status: string) => {
 export default function DetailOrderView() {
   const { handleGetRequest, handlePostRequest } = useHttp();
   const { orderId } = useParams();
+  const navigate = useNavigate();
 
   const [detailOrder, setDetailOrder] = useState<IOrderDetail | null>(null);
   const [shipping, setShipping] = useState<IShippingTrackInfo>();
@@ -74,8 +75,6 @@ export default function DetailOrderView() {
   // ===== MODAL STATE =====
   const [openDraftModal, setOpenDraftModal] = useState(false);
   const [openConfirmModal, setOpenConfirmModal] = useState(false);
-
-  console.log("===== orderId =====", shipping);
 
   const fetchTrackingShipping = async (shippingOrderId: number) => {
     try {
@@ -96,7 +95,6 @@ export default function DetailOrderView() {
     });
 
     if (result) {
-      console.log("===== detail order =====", result);
       setDetailOrder(result);
 
       if (result.orderStatus === "delivery") {
@@ -110,7 +108,6 @@ export default function DetailOrderView() {
       const payload: ICreateShippingDraftRequest = {
         orderId: orderId ? Number(orderId) : 0,
       };
-      console.log("===== payload =====", payload);
 
       await handlePostRequest({ path: "/shipping/draft", body: payload });
       getDetailOrder();
@@ -167,12 +164,17 @@ export default function DetailOrderView() {
           boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
         }}
       >
+        <Box sx={{ mb: 2 }}>
+          <Button variant="outlined" onClick={() => navigate(-1)}>
+            Kembali
+          </Button>
+        </Box>
         <Grid container spacing={4}>
           {/* IMAGE */}
           <Grid item xs={12} md={5}>
             <Carousel showThumbs={false}>
               {detailOrder.orderItems.map((item) => {
-                const image = item.product?.productImages?.[0];
+                const image = item.orderItemProductImage;
                 return (
                   <Box
                     key={item.orderItemId}
@@ -187,7 +189,7 @@ export default function DetailOrderView() {
                   >
                     <img
                       src={getImageUrl(image!)}
-                      alt={item.productNameSnapshot}
+                      alt={item.orderItemProductName}
                       style={{ maxHeight: "100%", objectFit: "contain" }}
                     />
                   </Box>
@@ -252,12 +254,12 @@ export default function DetailOrderView() {
                     marginBottom={5}
                   >
                     <Typography>
-                      ({item.product?.productCode}) {item.productNameSnapshot}
+                      ({item.product?.productCode}) {item.orderItemProductName}
                     </Typography>
                     <Typography color="text.secondary">
-                      {item.quantity} x Rp
+                      {item.orderItemQuantity} x Rp
                       {convertNumberToCurrency(
-                        Number(item.productPriceSnapshot),
+                        Number(item.orderItemProductSellPrice),
                       )}
                     </Typography>
                   </Stack>
@@ -268,7 +270,7 @@ export default function DetailOrderView() {
                 sx={{
                   p: 2,
                   borderRadius: 2,
-                  backgroundColor: "#f5f7fa",
+                  backgroundColor: "background.default",
                 }}
               >
                 <Stack spacing={1}>
