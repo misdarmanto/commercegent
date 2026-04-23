@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useHttp } from "../../hooks/http";
 import { ReactNode, useEffect, useState } from "react";
 import {
@@ -67,6 +67,7 @@ const getOrderStatus = (status: string) => {
 export default function DetailOrderView() {
   const { handleGetRequest, handlePostRequest } = useHttp();
   const { orderId } = useParams();
+  const navigate = useNavigate();
 
   const [detailOrder, setDetailOrder] = useState<IOrderDetail | null>(null);
   const [shipping, setShipping] = useState<IShippingTrackInfo>();
@@ -163,6 +164,11 @@ export default function DetailOrderView() {
           boxShadow: "0 8px 30px rgba(0,0,0,0.06)",
         }}
       >
+        <Box sx={{ mb: 2 }}>
+          <Button variant="outlined" onClick={() => navigate(-1)}>
+            Kembali
+          </Button>
+        </Box>
         <Grid container spacing={4}>
           {/* IMAGE */}
           <Grid item xs={12} md={5}>
