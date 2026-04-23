@@ -56,9 +56,7 @@ export class CartService {
               'productVariantSellPrice',
               'productVariantDiscount',
               'productVariantStock',
-              'productVariantWeight',
-              'productVariantColor',
-              'productVariantSize'
+              'productVariantWeight'
             ]
           }
         ],

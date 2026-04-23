@@ -3,6 +3,7 @@ import { MiddleWares } from '../middlewares'
 import { AddressController } from '../controllers/addresses'
 import {
   createAddressSchema,
+  findAllAddressesSchema,
   removeAddressQuerySchema,
   updateAddressSchema,
   updateAddressTypeSchema
@@ -12,7 +13,11 @@ const AddressRoute = Router()
 
 AddressRoute.use(MiddleWares.authorization)
 
-AddressRoute.get('/users', AddressController.findUserAddress)
+AddressRoute.get(
+  '/users',
+  MiddleWares.validate({ query: findAllAddressesSchema }),
+  AddressController.findUserAddress
+)
 
 AddressRoute.post(
   '/users',
@@ -29,6 +34,7 @@ AddressRoute.patch(
 AddressRoute.get(
   '/admins',
   MiddleWares.allowAppRoles('admin', 'superAdmin'),
+  MiddleWares.validate({ query: findAllAddressesSchema }),
   AddressController.findAdminAddress
 )
 

@@ -39,10 +39,12 @@ export class OtpService {
         `*${otpCode}* adalah kode verifikasi Anda.\n\n` +
         'Pengingat keamanan: Untuk memastikan keamanan akun Anda, mohon jangan bagikan informasi apa pun tentang akun Anda kepada siapa pun.'
 
-      await WablasAPIService.sendMessage({
-        phone: payload.whatsappNumber,
-        message
-      })
+      console.log('message', message)
+
+      // await WablasAPIService.sendMessage({
+      //   phone: payload.whatsappNumber,
+      //   message
+      // })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[OtpService] requestOtp failed: ${String(serviceError)}`)
@@ -55,7 +57,7 @@ export class OtpService {
       const storedOtp = await redis.get(`otp:${payload.otpCode}`)
 
       if (!storedOtp || storedOtp !== payload.otpCode) {
-        throw new AppError('Invalid or expired OTP!', StatusCodes.UNAUTHORIZED)
+        throw new AppError('Invalid or expired OTP!', StatusCodes.BAD_REQUEST)
       }
 
       await redis.del(`otp:${payload.otpCode}`)

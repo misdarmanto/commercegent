@@ -4,20 +4,18 @@ import { sequelizeInit } from '../configs/database'
 import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 import { ProductModel } from './ProductModel'
 
-/**
- * ORDER ITEMS
- * many items belong to one order
- */
 export interface OrderItemsAttributes extends IBaseModelFields {
   orderItemId: number
-  orderId: number
-  productId: number
-  productNameSnapshot: string
-  productPriceSnapshot: number
-  productDiscountSnapshot?: number
-  productSellPriceSnapshot?: number
-  quantity: number
-  totalPrice: number
+  orderItemOrderId: number
+  orderItemProductId: number
+  orderItemProductVariantId: number
+  orderItemProductName: string
+  orderItemProductPrice: number
+  orderItemProductDiscount?: number
+  orderItemProductSellPrice?: number
+  orderItemProductImage?: string
+  orderItemQuantity: number
+  orderItemTotalPrice: number
 }
 
 type OrderItemsCreationAttributes = Optional<
@@ -33,50 +31,49 @@ export const OrderItemsModel = sequelizeInit.define<OrderItemsInstance>(
   'OrderItemModel',
   {
     ...BaseModelFields,
-
     orderItemId: {
-      type: DataTypes.BIGINT,
+      type: DataTypes.INTEGER,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-
-    orderId: {
-      type: DataTypes.BIGINT,
-      allowNull: false
-    },
-
-    productId: {
+    orderItemOrderId: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-
-    productNameSnapshot: {
+    orderItemProductId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    orderItemProductVariantId: {
+      type: DataTypes.INTEGER,
+      allowNull: false
+    },
+    orderItemProductName: {
       type: DataTypes.STRING,
       allowNull: false
     },
-
-    productPriceSnapshot: {
+    orderItemProductPrice: {
       type: DataTypes.DECIMAL(15, 2),
       allowNull: false
     },
-
-    productDiscountSnapshot: {
+    orderItemProductDiscount: {
       type: DataTypes.DECIMAL(15, 2),
       allowNull: true
     },
-
-    productSellPriceSnapshot: {
+    orderItemProductSellPrice: {
       type: DataTypes.DECIMAL(15, 2),
       allowNull: false
     },
-
-    quantity: {
+    orderItemProductImage: {
+      type: DataTypes.STRING,
+      allowNull: true
+    },
+    orderItemQuantity: {
       type: DataTypes.INTEGER,
       allowNull: false
     },
-
-    totalPrice: {
+    orderItemTotalPrice: {
       type: DataTypes.DECIMAL(15, 2),
       allowNull: false
     }
@@ -95,6 +92,7 @@ export const OrderItemsModel = sequelizeInit.define<OrderItemsInstance>(
 /* ===================== RELATION ===================== */
 
 OrderItemsModel.belongsTo(ProductModel, {
-  foreignKey: 'productId',
-  targetKey: 'productId'
+  foreignKey: 'orderItemProductId',
+  targetKey: 'productId',
+  as: 'product'
 })

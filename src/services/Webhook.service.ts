@@ -10,6 +10,8 @@ import { appConfigs } from '../configs/appConfig'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type { IBitshipWebhook, IMidtransWebhook } from '../schemas/WebhookSchema'
+import { WablasAPIService } from './external/WablasApi.service'
+import { SettingModel } from '../models/SettingModel'
 
 export class WebhookService {
   static async handleMidtransWebhook(payload: IMidtransWebhook) {
@@ -119,7 +121,22 @@ export class WebhookService {
       }
 
       await dbTransaction.commit()
-      return { message: 'success' as const }
+
+      if (transactionStatus === 'success') {
+        const setting = await SettingModel.findOne({
+          where: {
+            deleted: false
+          }
+        })
+        const message = `Pembayaran berhasil untuk order ${order_id}`
+
+        console.log('message', message)
+        console.log('setting', setting)
+        // await WablasAPIService.sendMessage({
+        //   phone: setting?.whatsappNumber ?? '',
+        //   message
+        // })
+      }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[WebhookService] midtrans failed: ${String(serviceError)}`)

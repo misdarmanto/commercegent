@@ -12,89 +12,38 @@
  *     CreateSetting:
  *       type: object
  *       required:
- *         - settingType
+ *         - whatsappNumber
  *       properties:
- *         settingType:
- *           type: string
- *           enum: [bank, qris, general, wa_blas]
- *           example: "bank"
- *         bankName:
- *           type: string
- *           example: "Bank Central Asia"
- *         bankNumber:
- *           type: string
- *           example: "1234567890"
- *         bankOwner:
- *           type: string
- *           example: "John Doe"
- *         qris:
- *           type: string
- *           example: "https://example.com/qris.png"
- *         banner:
- *           type: string
- *           example: "https://example.com/banner.jpg"
  *         whatsappNumber:
  *           type: string
  *           example: "+6281234567890"
- *         waBlasToken:
- *           type: string
- *           example: "YOUR_WA_BLAS_TOKEN"
- *         waBlasServer:
- *           type: string
- *           example: "https://wablas.com/api/send"
- *
  *     Setting:
  *       type: object
  *       required:
  *         - settingId
- *         - settingType
+ *         - whatsappNumber
  *       properties:
  *         settingId:
  *           type: string
  *           example: "7c6d2b2f-52f3-4b6a-9c84-3c6fa7f2e22b"
- *         settingType:
- *           type: string
- *           enum: [bank, qris, general, wa_blas]
- *           example: "general"
- *         bankName:
- *           type: string
- *           example: "Bank Central Asia"
- *         bankNumber:
- *           type: string
- *           example: "1234567890"
- *         bankOwner:
- *           type: string
- *           example: "John Doe"
- *         qris:
- *           type: string
- *           example: "https://example.com/qris.png"
- *         banner:
- *           type: string
- *           example: "https://example.com/banner.jpg"
  *         whatsappNumber:
  *           type: string
  *           example: "+6281234567890"
- *         waBlasToken:
- *           type: string
- *           example: "YOUR_WA_BLAS_TOKEN"
- *         waBlasServer:
- *           type: string
- *           example: "https://wablas.com/api/send"
  */
 
 /**
  * @swagger
  * /api/v1/settings:
  *   get:
- *     summary: Get all settings (optionally filter by settingType)
+ *     summary: Get all settings
  *     tags: [SETTINGS]
  *     parameters:
  *       - in: query
- *         name: settingType
+ *         name: settingId
  *         schema:
  *           type: string
- *           enum: [bank, qris, general, wa_blas]
- *         description: Filter settings by type
+ *           example: "7c6d2b2f-52f3-4b6a-9c84-3c6fa7f2e22b"
+ *         description: The ID of the setting to get
  *     responses:
  *       200:
  *         description: List of settings
@@ -179,7 +128,7 @@
  *       400:
  *         description: Invalid input data
  *       409:
- *         description: Setting already exists (for unique types)
+ *         description: Setting already exists
  *       500:
  *         description: Server error
  */

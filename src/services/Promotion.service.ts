@@ -96,9 +96,7 @@ export class PromotionService {
               'productVariantDiscount',
               'productVariantTotalSale',
               'productVariantStock',
-              'productVariantWeight',
-              'productVariantColor',
-              'productVariantSize'
+              'productVariantWeight'
             ]
           }
         ],

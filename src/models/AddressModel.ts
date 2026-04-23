@@ -10,11 +10,15 @@ export interface AddressesAttributes extends IBaseModelFields {
   addressKontak: string
   addressDetail: string
   addressPostalCode: string
-  addressProvinsi: string
-  addressKabupaten: string
-  addressKecamatan: string
+  addressProvinsiId: string
+  addressProvinsiName: string
+  addressKabupatenId: string
+  addressKabupatenName: string
+  addressKecamatanId: string
+  addressKecamatanName: string
+  addressDesaId: string
+  addressDesaName: string
   addressCategory: 'user' | 'admin'
-  addressDesa: string
   addressLatitude: string
   addressLongitude: string
   addressType: 'main' | 'secondary'
@@ -63,19 +67,35 @@ export const AddressesModel = sequelizeInit.define<AddressesInstance>(
       type: DataTypes.STRING,
       allowNull: false
     },
-    addressProvinsi: {
+    addressProvinsiId: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    addressKabupaten: {
+    addressProvinsiName: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    addressKecamatan: {
+    addressKabupatenId: {
       type: DataTypes.STRING,
       allowNull: false
     },
-    addressDesa: {
+    addressKabupatenName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    addressKecamatanId: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    addressKecamatanName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    addressDesaId: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    addressDesaName: {
       type: DataTypes.STRING,
       allowNull: false
     },

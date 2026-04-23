@@ -283,6 +283,11 @@
  *           type: string
  *           enum: [true, false]
  *         description: Enable pagination
+ *       - in: query
+ *         name: productBarcode
+ *         schema:
+ *           type: string
+ *         description: Filter by product barcode
  *     responses:
  *       200:
  *         description: List of products
@@ -331,6 +336,11 @@
  *           type: string
  *           enum: [true, false]
  *         description: Enable pagination
+ *       - in: query
+ *         name: productBarcode
+ *         schema:
+ *           type: string
+ *         description: Filter by product barcode
  *     responses:
  *       200:
  *         description: List of highlight products

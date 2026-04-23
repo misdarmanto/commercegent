@@ -60,14 +60,6 @@ module.exports = {
         type: DataTypes.INTEGER,
         allowNull: true,
         defaultValue: 0
-      },
-      product_variant_color: {
-        type: DataTypes.STRING,
-        allowNull: true
-      },
-      product_variant_size: {
-        type: DataTypes.STRING,
-        allowNull: true
       }
     })
   },

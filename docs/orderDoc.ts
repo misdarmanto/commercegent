@@ -13,9 +13,13 @@
  *       type: object
  *       required:
  *         - productId
+ *         - productVariantId
  *         - quantity
  *       properties:
  *         productId:
+ *           type: integer
+ *           example: 1
+ *         productVariantId:
  *           type: integer
  *           example: 1
  *         quantity:

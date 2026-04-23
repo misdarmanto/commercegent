@@ -34,11 +34,11 @@ export const createProductSchema = z.object({
 
 export const updateProductSchema = z
   .object({
-    productId: z.number().int().positive(),
+    productId: z.coerce.number().int().positive(),
     productName: z.string().trim().min(3).max(255).optional(),
     productDescription: z.string().optional(),
-    productCategoryId: z.number().optional(),
-    productSubCategoryId: z.number().optional(),
+    productCategoryId: z.coerce.number().optional(),
+    productSubCategoryId: z.coerce.number().optional(),
     productCode: z.string().trim().optional(),
     productBarcode: z.string().optional(),
     productUnit: z.string().optional(),
@@ -59,7 +59,8 @@ export const findAllProductsQuerySchema = z.object({
     .optional()
     .transform((v) => v === 'true'),
   productCategoryId: z.coerce.number().int().optional(),
-  productSubCategoryId: z.coerce.number().int().optional()
+  productSubCategoryId: z.coerce.number().int().optional(),
+  productBarcode: z.string().optional()
 })
 
 export const findAllProductsAdminQuerySchema = findAllProductsQuerySchema
