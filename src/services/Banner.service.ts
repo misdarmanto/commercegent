@@ -2,6 +2,7 @@ import { Op } from 'sequelize'
 import { StatusCodes } from 'http-status-codes'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
+import { sequelizeInit } from '../configs/database'
 import type {
   ICreateBanner,
   IRemoveBanner,
@@ -43,13 +44,41 @@ export class BannerService {
 
   static async createBanner(payload: ICreateBanner) {
     try {
-      const createdBannerPayload = {
-        bannerImage: payload.bannerImage ?? '',
-        bannerOrder: payload.bannerOrder ?? 0,
-        deleted: false
-      } as BannerAttributes
+      await sequelizeInit.transaction(async (transaction) => {
+        const requestedOrder = payload.bannerOrder ?? 0
 
-      await BannerModel.create(createdBannerPayload)
+        const existingBannerWithOrder = await BannerModel.findOne({
+          where: {
+            deleted: { [Op.eq]: false },
+            bannerOrder: { [Op.eq]: requestedOrder }
+          },
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        })
+
+        if (existingBannerWithOrder != null) {
+          const currentMaxOrder =
+            (await BannerModel.max('bannerOrder', {
+              where: { deleted: { [Op.eq]: false } },
+              transaction
+            })) ?? 0
+
+          await existingBannerWithOrder.update(
+            {
+              bannerOrder: Number(currentMaxOrder) + 1
+            },
+            { transaction }
+          )
+        }
+
+        const createdBannerPayload = {
+          bannerImage: payload.bannerImage ?? '',
+          bannerOrder: requestedOrder,
+          deleted: false
+        } as BannerAttributes
+
+        await BannerModel.create(createdBannerPayload, { transaction })
+      })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[BannerService] createBanner failed: ${String(serviceError)}`)

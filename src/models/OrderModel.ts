@@ -126,16 +126,18 @@ export const OrdersModel = sequelizeInit.define<OrdersInstance>(
 
 OrdersModel.belongsTo(UserModel, {
   foreignKey: 'orderUserId',
-  targetKey: 'userId'
+  targetKey: 'userId',
+  as: 'user'
 })
 
 OrdersModel.belongsTo(AddressesModel, {
   foreignKey: 'orderUserId',
-  targetKey: 'addressUserId'
+  targetKey: 'addressUserId',
+  as: 'address'
 })
 
 OrdersModel.hasMany(OrderItemsModel, {
   as: 'orderItems',
-  foreignKey: 'orderId',
+  foreignKey: 'orderItemOrderId',
   sourceKey: 'orderId'
 })

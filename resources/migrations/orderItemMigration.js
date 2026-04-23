@@ -10,40 +10,48 @@ module.exports = {
     await queryInterface.createTable('order_items', {
       ...BaseModelFields,
       order_item_id: {
-        type: DataTypes.BIGINT,
+        type: DataTypes.INTEGER,
         autoIncrement: true,
         primaryKey: true,
         allowNull: false
       },
-      order_id: {
-        type: DataTypes.BIGINT,
-        allowNull: false
-      },
-      product_id: {
+      order_item_order_id: {
         type: DataTypes.INTEGER,
         allowNull: false
       },
-      product_name_snapshot: {
+      order_item_product_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      order_item_product_variant_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
+      order_item_product_name: {
         type: DataTypes.STRING,
         allowNull: false
       },
-      product_price_snapshot: {
+      order_item_product_price: {
         type: DataTypes.DECIMAL(15, 2),
         allowNull: false
       },
-      product_discount_snapshot: {
+      order_item_product_discount: {
         type: DataTypes.DECIMAL(15, 2),
         allowNull: true
       },
-      product_sell_price_snapshot: {
+      order_item_product_sell_price: {
         type: DataTypes.DECIMAL(15, 2),
         allowNull: false
       },
-      quantity: {
+      order_item_product_image: {
+        type: DataTypes.STRING,
+        allowNull: true
+      },
+      order_item_quantity: {
         type: DataTypes.INTEGER,
         allowNull: false
       },
-      total_price: {
+      order_item_total_price: {
         type: DataTypes.DECIMAL(15, 2),
         allowNull: false
       }

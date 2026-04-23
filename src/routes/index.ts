@@ -34,6 +34,7 @@ routers.use('/api/v1/auth', RoutesRegistry.AuthRoute)
 routers.use('/api/v1/upload-products', RoutesRegistry.UploadProductRoute)
 routers.use('/api/v1/banners', RoutesRegistry.BannerRoute)
 routers.use('/api/v1/local-shippings', RoutesRegistry.LocalShippingRoute)
+routers.use('/api/v1/stats', RoutesRegistry.StatRoute)
 
 routers.use(
   '/api/v1/docs',

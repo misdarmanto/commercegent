@@ -149,6 +149,10 @@ export class ProductService {
       where.productSubCategoryId = { [Op.eq]: payload.productSubCategoryId }
     }
 
+    if (payload.productBarcode != null) {
+      where.productBarcode = { [Op.eq]: payload.productBarcode }
+    }
+
     return where
   }
 
@@ -385,7 +389,47 @@ export class ProductService {
         where: {
           deleted: { [Op.eq]: false },
           productBarcode: { [Op.eq]: payload.barcode }
-        }
+        },
+        include: [
+          {
+            model: CategoryModel,
+            attributes: [
+              'categoryId',
+              'categoryReference',
+              'categoryName',
+              'categoryIcon',
+              'categoryType'
+            ]
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variants',
+            attributes: [
+              'productVariantId',
+              'productVariantProductId',
+              'productVariantName',
+              'productVariantImage',
+              'productVariantPrice',
+              'productVariantSellPrice',
+              'productVariantDiscount',
+              'productVariantTotalSale',
+              'productVariantStock',
+              'productVariantWeight'
+            ]
+          }
+        ],
+        attributes: [
+          'productId',
+          'productName',
+          'productDescription',
+          'productCategoryId',
+          'productSubCategoryId',
+          'productCode',
+          'productIsHighlight',
+          'productIsVisible',
+          'productBarcode',
+          'productUnit'
+        ]
       })
 
       if (result == null) {

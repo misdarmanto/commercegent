@@ -59,7 +59,8 @@ export const findAllProductsQuerySchema = z.object({
     .optional()
     .transform((v) => v === 'true'),
   productCategoryId: z.coerce.number().int().optional(),
-  productSubCategoryId: z.coerce.number().int().optional()
+  productSubCategoryId: z.coerce.number().int().optional(),
+  productBarcode: z.string().optional()
 })
 
 export const findAllProductsAdminQuerySchema = findAllProductsQuerySchema

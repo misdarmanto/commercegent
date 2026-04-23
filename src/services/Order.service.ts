@@ -31,6 +31,7 @@ export class OrderService {
         include: [
           {
             model: UserModel,
+            as: 'user',
             where: {
               deleted: { [Op.eq]: false },
               ...(Boolean(payload.search) && {
@@ -40,11 +41,27 @@ export class OrderService {
             attributes: ['userName']
           },
           {
+            model: AddressesModel,
+            as: 'address'
+          },
+          {
             model: OrderItemsModel,
             as: 'orderItems',
             include: [
               {
-                model: ProductModel
+                model: ProductModel,
+                as: 'product'
+                // include: [
+                //   {
+                //     model: ProductVariantModel,
+                //     as: 'variants',
+                //     attributes: [
+                //       'productVariantId',
+                //       'productVariantName',
+                //       'productVariantImage'
+                //     ]
+                //   }
+                // ]
               }
             ]
           }
@@ -84,15 +101,18 @@ export class OrderService {
             as: 'orderItems',
             include: [
               {
-                model: ProductModel
+                model: ProductModel,
+                as: 'product'
               }
             ]
           },
           {
-            model: AddressesModel
+            model: AddressesModel,
+            as: 'address'
           },
           {
             model: UserModel,
+            as: 'user',
             where: {
               deleted: { [Op.eq]: false }
             },
@@ -118,26 +138,20 @@ export class OrderService {
       const { items, orderShippingFee, orderCourierCompany, orderCourierType } = payload
 
       const result = await sequelizeInit.transaction(async (transaction) => {
-        const destinationAddress = await this.getMainUserAddressOrThrow(
-          userId,
-          transaction
-        )
+        const destinationAddress = await this.getMainUserAddress(userId, transaction)
 
         const { quantityByVariantId, productIdsToClear, variantIds } =
           this.aggregateOrderItems(items)
 
-        const productVariants = await this.getLockedVariantsOrThrow(
-          variantIds,
-          transaction
-        )
+        const productVariants = await this.getProductVariants(variantIds, transaction)
 
         const variantById = this.indexVariantsById(productVariants)
-        this.assertStockOrThrow(quantityByVariantId, variantById)
+        this.checkStock(quantityByVariantId, variantById)
 
         const { orderItemsPayload, orderSubtotal, orderTotalItem } =
           this.buildOrderItemsPayload(items, variantById)
 
-        const order = await this.createOrderAndItems(
+        const order = await this.saveOrder(
           userId,
           {
             orderSubtotal,
@@ -201,7 +215,7 @@ export class OrderService {
     }
   }
 
-  private static async getMainUserAddressOrThrow(userId: number, transaction: unknown) {
+  private static async getMainUserAddress(userId: number, transaction: unknown) {
     const destinationAddress = await AddressesModel.findOne({
       where: {
         deleted: { [Op.eq]: false },
@@ -233,7 +247,7 @@ export class OrderService {
     return { quantityByVariantId, productIdsToClear, variantIds }
   }
 
-  private static async getLockedVariantsOrThrow(
+  private static async getProductVariants(
     variantIds: number[],
     transaction: any
   ): Promise<Array<(typeof ProductVariantModel)['prototype']>> {
@@ -261,7 +275,7 @@ export class OrderService {
     return variantById
   }
 
-  private static assertStockOrThrow(
+  private static checkStock(
     quantityByVariantId: Map<number, number>,
     variantById: Map<number, any>
   ) {
@@ -300,21 +314,22 @@ export class OrderService {
       orderTotalItem += quantity
 
       return {
-        productVariantId: Number(v.productVariantId),
-        productVariantProductId: Number(v.productVariantProductId),
-        productNameSnapshot: v.productVariantName,
-        productPriceSnapshot: price,
-        productDiscountSnapshot: v.productVariantDiscount,
-        productSellPriceSnapshot: v.productVariantSellPrice,
-        quantity,
-        totalPrice
+        orderItemProductId: Number(v.productVariantProductId),
+        orderItemProductVariantId: Number(v.productVariantId),
+        orderItemProductName: v.productVariantName,
+        orderItemProductPrice: price,
+        orderItemProductDiscount: v.productVariantDiscount,
+        orderItemProductSellPrice: v.productVariantSellPrice,
+        orderItemProductImage: v.productVariantImage,
+        orderItemQuantity: quantity,
+        orderItemTotalPrice: totalPrice
       }
     })
 
     return { orderItemsPayload, orderSubtotal, orderTotalItem }
   }
 
-  private static async createOrderAndItems(
+  private static async saveOrder(
     userId: number,
     payload: {
       orderSubtotal: number
@@ -324,13 +339,15 @@ export class OrderService {
       orderCourierType?: string | null
     },
     orderItemsPayload: Array<{
-      productVariantProductId: number
-      productNameSnapshot: string
-      productPriceSnapshot: number
-      productDiscountSnapshot: unknown
-      productSellPriceSnapshot: unknown
-      quantity: number
-      totalPrice: number
+      orderItemProductId: number
+      orderItemProductVariantId: number
+      orderItemProductName: string
+      orderItemProductPrice: number
+      orderItemProductDiscount: unknown
+      orderItemProductSellPrice: unknown
+      orderItemQuantity: number
+      orderItemTotalPrice: number
+      orderItemProductImage?: string
     }>,
     transaction: any
   ) {
@@ -347,14 +364,16 @@ export class OrderService {
     const order = await OrdersModel.create(orderPayload, { transaction })
 
     const orderItemsRows: OrderItemsAttributes[] = orderItemsPayload.map((item) => ({
-      orderId: order.orderId,
-      productId: item.productVariantProductId,
-      productNameSnapshot: item.productNameSnapshot,
-      productPriceSnapshot: item.productPriceSnapshot,
-      productDiscountSnapshot: item.productDiscountSnapshot as any,
-      productSellPriceSnapshot: item.productSellPriceSnapshot as any,
-      quantity: item.quantity,
-      totalPrice: item.totalPrice
+      orderItemOrderId: order.orderId,
+      orderItemProductId: item.orderItemProductId,
+      orderItemProductVariantId: item.orderItemProductVariantId,
+      orderItemProductName: item.orderItemProductName,
+      orderItemProductPrice: item.orderItemProductPrice,
+      orderItemProductDiscount: item.orderItemProductDiscount,
+      orderItemProductSellPrice: item.orderItemProductSellPrice,
+      orderItemQuantity: item.orderItemQuantity,
+      orderItemTotalPrice: item.orderItemTotalPrice,
+      orderItemProductImage: item.orderItemProductImage
     })) as unknown as OrderItemsAttributes[]
 
     await OrderItemsModel.bulkCreate(orderItemsRows, { transaction })
@@ -393,12 +412,15 @@ export class OrderService {
     customerPhone: string
     orderShippingFee: number
     orderItemsPayload: Array<{
-      productVariantProductId: number
-      productNameSnapshot: string
-      productPriceSnapshot: number
-      productDiscountSnapshot: unknown
-      productSellPriceSnapshot: unknown
-      quantity: number
+      orderItemProductId: number
+      orderItemProductVariantId: number
+      orderItemProductName: string
+      orderItemProductPrice: number
+      orderItemProductDiscount?: number
+      orderItemProductSellPrice?: number
+      orderItemProductImage?: string
+      orderItemQuantity: number
+      orderItemTotalPrice: number
     }>
   }) {
     return {
@@ -412,12 +434,13 @@ export class OrderService {
       },
       item_details: [
         ...args.orderItemsPayload.map((item) => ({
-          id: String(item.productVariantProductId),
-          price: item.productPriceSnapshot,
-          discount: item.productDiscountSnapshot,
-          sellPrice: item.productSellPriceSnapshot,
-          quantity: item.quantity,
-          name: item.productNameSnapshot
+          id: String(item.orderItemProductId),
+          variant_id: String(item.orderItemProductVariantId),
+          price: item.orderItemProductPrice,
+          discount: item.orderItemProductDiscount,
+          sellPrice: item.orderItemProductSellPrice,
+          quantity: item.orderItemQuantity,
+          name: item.orderItemProductName
         })),
         {
           id: 'SHIPPING',

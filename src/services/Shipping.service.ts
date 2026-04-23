@@ -61,7 +61,8 @@ export class ShippingService {
 
       const localShippings = await LocalShippingModel.findAll({
         where: {
-          localShippingProvinceId: destinationAddress.addressProvinsiId
+          localShippingProvinceId: destinationAddress.addressProvinsiId,
+          deleted: false
         }
       })
 
@@ -85,7 +86,7 @@ export class ShippingService {
             ),
             courier_code: 'local',
             courier_service_code: 'local',
-            duration: '1 day',
+            duration: isLocalShipping?.localShippingDuration ?? '',
             price: shippingPrice
           }
         ]
@@ -163,7 +164,7 @@ export class ShippingService {
           where: { addressCategory: 'admin' }
         }),
         OrderItemsModel.findAll({
-          where: { orderId: order.orderId },
+          where: { orderItemOrderId: order.orderId, deleted: false },
           include: [
             {
               model: ProductModel,
