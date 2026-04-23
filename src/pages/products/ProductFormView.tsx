@@ -50,8 +50,6 @@ const emptyVariant = (): ProductFormValues["productVariants"][number] => ({
   productVariantStock: 0,
   productVariantDiscount: 0,
   productVariantWeight: 0,
-  productVariantColor: "",
-  productVariantSize: "",
 });
 
 export default function ProductFormView() {
@@ -144,8 +142,6 @@ export default function ProductFormView() {
         productVariantStock: Number(v.productVariantStock ?? 0),
         productVariantDiscount: Number(v.productVariantDiscount ?? 0),
         productVariantWeight: Number(v.productVariantWeight ?? 0),
-        productVariantColor: v.productVariantColor ?? "",
-        productVariantSize: v.productVariantSize ?? "",
       }));
     }
     return [
@@ -156,8 +152,6 @@ export default function ProductFormView() {
         productVariantStock: res.productStock ?? 0,
         productVariantDiscount: res.productDiscount ?? 0,
         productVariantWeight: res.productWeight ?? 0,
-        productVariantColor: "",
-        productVariantSize: "",
       },
     ];
   };
@@ -248,15 +242,10 @@ export default function ProductFormView() {
             ) {
               row.productVariantWeight = v.productVariantWeight;
             }
-            if (v.productVariantColor?.trim()) {
-              row.productVariantColor = v.productVariantColor.trim();
-            }
-            if (v.productVariantSize?.trim()) {
-              row.productVariantSize = v.productVariantSize.trim();
-            }
             return row;
           }),
         };
+
         await handleUpdateRequest({ path: "/products", body: payload });
       } else {
         const payload: IProductCreate = {
@@ -275,10 +264,9 @@ export default function ProductFormView() {
             productVariantStock: v.productVariantStock,
             productVariantDiscount: v.productVariantDiscount,
             productVariantWeight: v.productVariantWeight!,
-            productVariantColor: v.productVariantColor!.trim(),
-            productVariantSize: v.productVariantSize!.trim(),
           })),
         };
+
         await handlePostRequest({ path: "/products", body: payload });
       }
 
@@ -575,46 +563,6 @@ export default function ProductFormView() {
                         }
                         helperText={
                           errors.productVariants?.[index]?.productVariantName
-                            ?.message
-                        }
-                      />
-                    )}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Controller
-                    name={`productVariants.${index}.productVariantColor`}
-                    control={control}
-                    render={({ field: f }) => (
-                      <TextField
-                        {...f}
-                        label="Warna"
-                        fullWidth
-                        error={
-                          !!errors.productVariants?.[index]?.productVariantColor
-                        }
-                        helperText={
-                          errors.productVariants?.[index]?.productVariantColor
-                            ?.message
-                        }
-                      />
-                    )}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <Controller
-                    name={`productVariants.${index}.productVariantSize`}
-                    control={control}
-                    render={({ field: f }) => (
-                      <TextField
-                        {...f}
-                        label="Ukuran"
-                        fullWidth
-                        error={
-                          !!errors.productVariants?.[index]?.productVariantSize
-                        }
-                        helperText={
-                          errors.productVariants?.[index]?.productVariantSize
                             ?.message
                         }
                       />

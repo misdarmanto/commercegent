@@ -210,12 +210,6 @@ export default function DetailProductView() {
                     <TableCell>
                       <strong>Nama</strong>
                     </TableCell>
-                    <TableCell>
-                      <strong>Warna</strong>
-                    </TableCell>
-                    <TableCell>
-                      <strong>Ukuran</strong>
-                    </TableCell>
                     <TableCell align="right">
                       <strong>Harga</strong>
                     </TableCell>
@@ -256,8 +250,6 @@ export default function DetailProductView() {
                         )}
                       </TableCell>
                       <TableCell>{v.productVariantName}</TableCell>
-                      <TableCell>{v.productVariantColor ?? "—"}</TableCell>
-                      <TableCell>{v.productVariantSize ?? "—"}</TableCell>
                       <TableCell align="right">
                         {formatRp(v.productVariantPrice)}
                       </TableCell>

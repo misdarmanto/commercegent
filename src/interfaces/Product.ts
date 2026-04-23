@@ -12,8 +12,6 @@ export interface IProductVariant {
   productVariantTotalSale?: number;
   productVariantStock?: number;
   productVariantWeight?: number;
-  productVariantColor?: string;
-  productVariantSize?: string;
 }
 
 /** Response GET `/products/detail/:id` (field `variants` dari API) */
@@ -85,8 +83,6 @@ export interface IProductCreate {
     productVariantStock: number;
     productVariantDiscount: number;
     productVariantWeight: number;
-    productVariantColor: string;
-    productVariantSize: string;
   }>;
 }
 
@@ -108,8 +104,6 @@ export interface IProductUpdate {
     productVariantStock: number;
     productVariantDiscount: number;
     productVariantWeight?: number;
-    productVariantColor?: string;
-    productVariantSize?: string;
   }>;
 }
 

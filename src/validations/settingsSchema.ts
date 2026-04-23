@@ -17,4 +17,5 @@ export const LocalShippingSchema = z.object({
   localShippingDuration: z.string().min(1, "Durasi wajib diisi"),
 });
 
+export type LocalShippingFormInputType = z.input<typeof LocalShippingSchema>;
 export type LocalShippingFormType = z.infer<typeof LocalShippingSchema>;

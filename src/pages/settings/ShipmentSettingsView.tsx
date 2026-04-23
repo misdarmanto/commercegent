@@ -26,6 +26,7 @@ import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { useHttp } from "../../hooks/http";
 import {
+  LocalShippingFormInputType,
   LocalShippingFormType,
   LocalShippingSchema,
 } from "../../validations/settingsSchema";
@@ -79,7 +80,7 @@ export default function ShipmentSettingsView() {
     watch,
     reset,
     formState: { errors },
-  } = useForm<LocalShippingFormType>({
+  } = useForm<LocalShippingFormInputType, unknown, LocalShippingFormType>({
     resolver: zodResolver(LocalShippingSchema),
     defaultValues: {
       localShippingCompanyName: "",
@@ -122,17 +123,12 @@ export default function ShipmentSettingsView() {
   useEffect(() => {
     void loadProvinces();
     void loadShippings();
-    // mount only — handleGetRequest identity changes each render
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const onProvinceSelect = (id: string) => {
     const p = provinces.find((x) => x.id === id);
     setValue("localShippingProvinceId", id, { shouldValidate: true });
     setValue("localShippingProvinceName", p?.name ?? "", {
-      shouldValidate: true,
-    });
-    setValue("localShippingCompanyName", p?.name ?? "", {
       shouldValidate: true,
     });
   };
@@ -219,6 +215,15 @@ export default function ShipmentSettingsView() {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
+                fullWidth
+                label="Nama perusahaan"
+                error={!!errors.localShippingCompanyName}
+                helperText={errors.localShippingCompanyName?.message}
+                {...register("localShippingCompanyName")}
+              />
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
                 select
                 fullWidth
                 label="Provinsi (nama & kode dari data wilayah)"
@@ -251,8 +256,8 @@ export default function ShipmentSettingsView() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Durasi"
-                placeholder="contoh: 1 day"
+                label="Durasi (hari)"
+                type="number"
                 error={!!errors.localShippingDuration}
                 helperText={errors.localShippingDuration?.message}
                 {...register("localShippingDuration")}
@@ -281,10 +286,10 @@ export default function ShipmentSettingsView() {
               <TableHead>
                 <TableRow>
                   <TableCell>ID</TableCell>
-                  <TableCell>Nama (perusahaan / daerah)</TableCell>
+                  <TableCell>Nama perusahaan</TableCell>
                   <TableCell>Provinsi</TableCell>
                   <TableCell align="right">Harga / kg</TableCell>
-                  <TableCell>Durasi</TableCell>
+                  <TableCell>Durasi (Hari)</TableCell>
                   <TableCell align="right" width={120}>
                     Aksi
                   </TableCell>

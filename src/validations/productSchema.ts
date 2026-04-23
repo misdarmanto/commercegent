@@ -9,8 +9,6 @@ const productVariantRowSchema = z.object({
   productVariantStock: z.coerce.number().min(0, "Stok >= 0"),
   productVariantDiscount: z.coerce.number().min(0).max(100, "Diskon 0–100"),
   productVariantWeight: z.coerce.number().min(0, "Berat >= 0").optional(),
-  productVariantColor: z.string().optional(),
-  productVariantSize: z.string().optional(),
 });
 
 const productBaseSchema = z.object({
@@ -50,20 +48,6 @@ export const productFormCreateSchema = productBaseSchema.superRefine(
           path: ["productVariants", i, "productVariantWeight"],
         });
       }
-      if (!v.productVariantColor?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Warna wajib diisi",
-          path: ["productVariants", i, "productVariantColor"],
-        });
-      }
-      if (!v.productVariantSize?.trim()) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Ukuran wajib diisi",
-          path: ["productVariants", i, "productVariantSize"],
-        });
-      }
     });
   },
 );
@@ -89,20 +73,6 @@ export const productFormUpdateSchema = productBaseSchema.superRefine(
             code: z.ZodIssueCode.custom,
             message: "Berat wajib untuk varian baru",
             path: ["productVariants", i, "productVariantWeight"],
-          });
-        }
-        if (!v.productVariantColor?.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Warna wajib untuk varian baru",
-            path: ["productVariants", i, "productVariantColor"],
-          });
-        }
-        if (!v.productVariantSize?.trim()) {
-          ctx.addIssue({
-            code: z.ZodIssueCode.custom,
-            message: "Ukuran wajib untuk varian baru",
-            path: ["productVariants", i, "productVariantSize"],
           });
         }
       }
