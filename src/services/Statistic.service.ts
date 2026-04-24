@@ -9,6 +9,8 @@ import { VisitorModel, type VisitorModelCreationAttributes } from '../models/Vis
 import type { ICreateVisitor, IFindTotalVisitor } from '../schemas/StatisticSchema'
 
 export class StatisticService {
+  private static readonly WIB_OFFSET_MS = 7 * 60 * 60 * 1000
+
   private static parseRangeMs(range: IFindTotalVisitor['range']): number {
     switch (range) {
       case '1d':
@@ -43,8 +45,23 @@ export class StatisticService {
     date: Date,
     interval: IFindTotalVisitor['interval']
   ): string {
-    if (interval === '1d') return date.toISOString().slice(0, 10)
-    return `${date.toISOString().slice(0, 13)}:00:00Z`
+    const wibDate = new Date(date.getTime() + this.WIB_OFFSET_MS)
+    const yyyy = wibDate.getUTCFullYear()
+    const mm = String(wibDate.getUTCMonth() + 1).padStart(2, '0')
+    const dd = String(wibDate.getUTCDate()).padStart(2, '0')
+    const hh = String(wibDate.getUTCHours()).padStart(2, '0')
+    const mi = String(wibDate.getUTCMinutes()).padStart(2, '0')
+    const ss = String(wibDate.getUTCSeconds()).padStart(2, '0')
+
+    if (interval === '1d') return `${yyyy}-${mm}-${dd}`
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss} WIB`
+  }
+
+  private static alignToWibBucketStart(nowMs: number, intervalMs: number): number {
+    return (
+      Math.floor((nowMs + this.WIB_OFFSET_MS) / intervalMs) * intervalMs -
+      this.WIB_OFFSET_MS
+    )
   }
 
   static async findTotal() {
@@ -112,7 +129,7 @@ export class StatisticService {
       }
 
       const nowMs = Date.now()
-      const endBucketStartMs = Math.floor(nowMs / intervalMs) * intervalMs
+      const endBucketStartMs = this.alignToWibBucketStart(nowMs, intervalMs)
       const bucketCount = Math.floor(rangeMs / intervalMs)
       const startBucketStartMs = endBucketStartMs - (bucketCount - 1) * intervalMs
       const from = new Date(startBucketStartMs)
