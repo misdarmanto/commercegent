@@ -16,10 +16,6 @@ export const getShippingRatesBodySchema = z
   .min(1, 'Minimal satu item')
 
 export const createShippingDraftBodySchema = z.object({
-  userId: z.coerce
-    .number({ invalid_type_error: 'userId harus berupa angka' })
-    .int('userId harus bilangan bulat')
-    .positive('userId harus lebih dari 0'),
   orderId: z.coerce
     .number({ invalid_type_error: 'orderId harus berupa angka' })
     .int('orderId harus bilangan bulat')

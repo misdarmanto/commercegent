@@ -4,7 +4,6 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { ShippingService } from '../../services/Shipping.service'
 import { IAuthenticatedRequest } from '../../interfaces/shared'
-import { AppError } from '../../utilities/appError'
 import { type ICreateShippingDraft } from '../../schemas/ShippingSchema'
 
 export const createShippingDraft = async (
@@ -13,15 +12,8 @@ export const createShippingDraft = async (
 ): Promise<Response> => {
   try {
     const payload = req.body as unknown as ICreateShippingDraft
-    const userId = req.jwtPayload?.userId
-    if (userId == null) {
-      throw new AppError('Unauthorized', StatusCodes.UNAUTHORIZED)
-    }
 
-    await ShippingService.createDraftFromOrder({
-      userId,
-      orderId: payload.orderId
-    })
+    await ShippingService.createDraftFromOrder(payload)
 
     return res
       .status(StatusCodes.CREATED)

@@ -7,11 +7,7 @@ const dataBaseConfig = appConfigs.dataBase.development as Options
 
 const sequelizeConfig: Options = {
   ...dataBaseConfig,
-  timezone: '+07:00',
-  dialectOptions: {
-    ...(dataBaseConfig.dialectOptions ?? {}),
-    useUTC: false
-  }
+  timezone: '+07:00'
 }
 
 export const sequelizeInit = new Sequelize(sequelizeConfig)

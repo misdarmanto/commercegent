@@ -133,16 +133,14 @@ export class ShippingService {
 
   static async createDraftFromOrder(payload: ICreateShippingDraft) {
     try {
-      const { userId, orderId } = payload
+      const { orderId } = payload
+
+      console.log('createDraftFromOrder payload', payload)
 
       /* ===================== 1. FETCH ORDER + ITEMS ===================== */
       const order = await OrdersModel.findByPk(orderId)
       if (order == null) {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
-      }
-
-      if (String(order.orderUserId) !== String(userId)) {
-        throw new AppError('access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (order.orderStatus !== 'process') {
@@ -168,7 +166,8 @@ export class ShippingService {
           include: [
             {
               model: ProductModel,
-              attributes: ['productDescription', 'productWeight']
+              as: 'product',
+              attributes: ['productDescription', 'productName']
             }
           ]
         })
@@ -275,17 +274,14 @@ export class ShippingService {
     }
   }
 
-  static async confirmDraftOrder(userId: number, payload: IConfirmDraftOrder) {
+  static async confirmDraftOrder(payload: IConfirmDraftOrder) {
     const { orderId } = payload
+    console.log('confirmDraftOrder payload', payload)
     try {
       const order = await OrdersModel.findByPk(orderId)
 
       if (order == null) {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
-      }
-
-      if (order.orderUserId !== String(userId)) {
-        throw new AppError('Access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (!order.orderDraftId) {
@@ -327,16 +323,13 @@ export class ShippingService {
     }
   }
 
-  static async trackShipment(userId: number, payload: ITrackShipment) {
+  static async trackShipment(payload: ITrackShipment) {
+    console.log('trackShipment payload', payload)
     try {
       const order = await OrdersModel.findByPk(payload.orderId)
 
       if (order == null) {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
-      }
-
-      if (order.orderUserId !== String(userId)) {
-        throw new AppError('Access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (!order.orderWaybillId || !order.orderCourierCompany) {

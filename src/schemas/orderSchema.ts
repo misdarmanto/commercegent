@@ -88,6 +88,6 @@ export type ICreateOrder = z.infer<typeof createOrderSchema>
 export type IFindAllOrder = z.infer<typeof findAllOrderQuerySchema>
 export type IFindDetailOrder = z.infer<typeof orderDetailParamsSchema>
 export type IUpdateOrder = z.infer<typeof updateOrderBodySchema>
-export type ICreateDraftFromOrder = z.infer<typeof createDraftFromOrderSchema>
+export type ICreateDraft = z.infer<typeof createDraftFromOrderSchema>
 export type IConfirmDraftOrder = z.infer<typeof confirmDraftOrderSchema>
 export type ITrackOrder = z.infer<typeof trackOrderSchema>
