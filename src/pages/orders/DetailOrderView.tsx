@@ -97,6 +97,8 @@ export default function DetailOrderView() {
     if (result) {
       setDetailOrder(result);
 
+      console.log("detailOrder", result);
+
       if (result.orderStatus === "delivery") {
         await fetchTrackingShipping(result.orderId);
       }
@@ -317,12 +319,23 @@ export default function DetailOrderView() {
             <Info label="Alamat" value={detailOrder.address?.addressDetail} />
             <Info
               label="Wilayah"
-              value={`${detailOrder.address?.addressKecamatan}, ${detailOrder.address?.addressKabupaten}, ${detailOrder.address?.addressProvinsi}`}
+              value={`${detailOrder.address?.addressKecamatanName}, ${detailOrder.address?.addressKabupatenName}, ${detailOrder.address?.addressProvinsiName}`}
             />
             <Info
               label="Kode Pos"
               value={detailOrder.address?.addressPostalCode}
             />
+          </Stack>
+        </Card>
+
+        <Card variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 2 }}>
+          <Stack spacing={1}>
+            <Info label="Status" value={detailOrder.orderStatus} bold />
+            <Info
+              label="Kurir"
+              value={`${detailOrder.orderCourierCompany} - ${detailOrder.orderCourierType}`}
+            />
+            <Info label="Layanan" value={detailOrder.orderShippingProvider} />
           </Stack>
         </Card>
 
