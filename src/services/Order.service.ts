@@ -135,7 +135,13 @@ export class OrderService {
 
   static async createOrder(userId: number, payload: ICreateOrder) {
     try {
-      const { items, orderShippingFee, orderCourierCompany, orderCourierType } = payload
+      const {
+        items,
+        orderShippingFee,
+        orderCourierCompany,
+        orderCourierType,
+        orderShippingProvider
+      } = payload
 
       const result = await sequelizeInit.transaction(async (transaction) => {
         const destinationAddress = await this.getMainUserAddress(userId, transaction)
@@ -158,7 +164,8 @@ export class OrderService {
             orderShippingFee,
             orderTotalItem,
             orderCourierCompany,
-            orderCourierType
+            orderCourierType,
+            orderShippingProvider
           },
           orderItemsPayload,
           transaction
@@ -321,6 +328,7 @@ export class OrderService {
         orderItemProductDiscount: v.productVariantDiscount,
         orderItemProductSellPrice: v.productVariantSellPrice,
         orderItemProductImage: v.productVariantImage,
+        orderItemProductWeight: v.productVariantWeight,
         orderItemQuantity: quantity,
         orderItemTotalPrice: totalPrice
       }
@@ -337,6 +345,7 @@ export class OrderService {
       orderTotalItem: number
       orderCourierCompany?: string | null
       orderCourierType?: string | null
+      orderShippingProvider: 'FRESH' | 'BITESHIP'
     },
     orderItemsPayload: Array<{
       orderItemProductId: number
@@ -345,6 +354,7 @@ export class OrderService {
       orderItemProductPrice: number
       orderItemProductDiscount: unknown
       orderItemProductSellPrice: unknown
+      orderItemProductWeight: number
       orderItemQuantity: number
       orderItemTotalPrice: number
       orderItemProductImage?: string
@@ -358,7 +368,8 @@ export class OrderService {
       orderGrandTotal: payload.orderSubtotal + payload.orderShippingFee,
       orderTotalItem: payload.orderTotalItem,
       orderCourierCompany: payload.orderCourierCompany ?? '',
-      orderCourierType: payload.orderCourierType ?? ''
+      orderCourierType: payload.orderCourierType ?? '',
+      orderShippingProvider: payload.orderShippingProvider
     } as OrdersAttributes
 
     const order = await OrdersModel.create(orderPayload, { transaction })
@@ -371,6 +382,7 @@ export class OrderService {
       orderItemProductPrice: item.orderItemProductPrice,
       orderItemProductDiscount: item.orderItemProductDiscount,
       orderItemProductSellPrice: item.orderItemProductSellPrice,
+      orderItemProductWeight: item.orderItemProductWeight,
       orderItemQuantity: item.orderItemQuantity,
       orderItemTotalPrice: item.orderItemTotalPrice,
       orderItemProductImage: item.orderItemProductImage
@@ -419,6 +431,7 @@ export class OrderService {
       orderItemProductDiscount?: number
       orderItemProductSellPrice?: number
       orderItemProductImage?: string
+      orderItemProductWeight: number
       orderItemQuantity: number
       orderItemTotalPrice: number
     }>
@@ -439,6 +452,7 @@ export class OrderService {
           price: item.orderItemProductPrice,
           discount: item.orderItemProductDiscount,
           sellPrice: item.orderItemProductSellPrice,
+          weight: item.orderItemProductWeight,
           quantity: item.orderItemQuantity,
           name: item.orderItemProductName
         })),

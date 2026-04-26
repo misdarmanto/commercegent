@@ -47,6 +47,10 @@ module.exports = {
         type: DataTypes.STRING,
         allowNull: true
       },
+      order_item_product_weight: {
+        type: DataTypes.INTEGER,
+        allowNull: false
+      },
       order_item_quantity: {
         type: DataTypes.INTEGER,
         allowNull: false

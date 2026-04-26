@@ -25,6 +25,8 @@ export class WebhookService {
       signature_key
     } = payload
 
+    console.log('handleMidtransWebhook payload', payload)
+
     const expectedSignature = crypto
       .createHash('sha512')
       .update(order_id + status_code + gross_amount + appConfigs.midtrans.serverKey)

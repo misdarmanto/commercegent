@@ -23,6 +23,11 @@ module.exports = {
         type: DataTypes.DECIMAL(15, 2),
         allowNull: false
       },
+      order_shipping_provider: {
+        type: DataTypes.ENUM('FRESH', 'BITESHIP'),
+        allowNull: false,
+        defaultValue: 'BITESHIP'
+      },
       order_shipping_fee: {
         type: DataTypes.DECIMAL(15, 2),
         allowNull: false
@@ -35,7 +40,6 @@ module.exports = {
         type: DataTypes.INTEGER,
         allowNull: false
       },
-
       order_courier_company: {
         type: DataTypes.STRING,
         allowNull: true

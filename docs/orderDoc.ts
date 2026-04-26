@@ -12,10 +12,14 @@
  *     CreateOrderItem:
  *       type: object
  *       required:
+ *         - orderItemProductWeight
  *         - productId
  *         - productVariantId
  *         - quantity
  *       properties:
+ *         orderItemProductWeight:
+ *           type: number
+ *           example: 100
  *         productId:
  *           type: integer
  *           example: 1
@@ -31,10 +35,15 @@
  *       type: object
  *       required:
  *         - items
+ *         - orderShippingProvider
  *         - orderShippingFee
  *         - orderCourierCompany
  *         - orderCourierType
  *       properties:
+ *         orderShippingProvider:
+ *           type: string
+ *           enum: [FRESH, BITESHIP]
+ *           example: BITESHIP
  *         orderShippingFee:
  *           type: number
  *           example: 15000
@@ -56,6 +65,9 @@
  *         orderItemId:
  *           type: number
  *           example: 1
+ *         orderItemProductWeight:
+ *           type: number
+ *           example: 100
  *         productId:
  *           type: string
  *           example: "12"

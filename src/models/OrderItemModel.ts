@@ -14,6 +14,7 @@ export interface OrderItemsAttributes extends IBaseModelFields {
   orderItemProductDiscount?: number
   orderItemProductSellPrice?: number
   orderItemProductImage?: string
+  orderItemProductWeight: number
   orderItemQuantity: number
   orderItemTotalPrice: number
 }
@@ -68,6 +69,10 @@ export const OrderItemsModel = sequelizeInit.define<OrderItemsInstance>(
     orderItemProductImage: {
       type: DataTypes.STRING,
       allowNull: true
+    },
+    orderItemProductWeight: {
+      type: DataTypes.INTEGER,
+      allowNull: false
     },
     orderItemQuantity: {
       type: DataTypes.INTEGER,
