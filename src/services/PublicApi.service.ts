@@ -164,25 +164,23 @@ export class PublicApiService {
         discountPercent: 0
       })
 
-      await ProductModel.create({
-        productName: payload.name,
-        productDescription: '',
-        productImages: [],
-        productPrice: payload.price,
-        productDiscount: 0,
-        productStock: payload.stock,
-        productWeight: payload.weight,
-        productIsHighlight: false,
-        productSellPrice,
-        productIsVisible: payload.isVisible,
-        productCode: payload.code,
-        productBarcode: payload.barcode,
-        productUnit: payload.unit,
-        deleted: 0,
-        productCategoryId: '0',
-        productSubCategoryId: '0',
-        productTotalSale: 0
-      })
+      // await ProductModel.create({
+      //   productName: payload.name,
+      //   productDescription: '',
+      //   productPrice: payload.price,
+      //   productDiscount: 0,
+      //   productStock: payload.stock,
+      //   productWeight: payload.weight,
+      //   productIsHighlight: false,
+      //   productSellPrice,
+      //   productIsVisible: payload.isVisible,
+      //   productCode: payload.code,
+      //   productBarcode: payload.barcode,
+      //   productUnit: payload.unit,
+      //   productCategoryId: '0',
+      //   productSubCategoryId: '0',
+      //   productTotalSale: 0
+      // })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(

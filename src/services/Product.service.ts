@@ -198,6 +198,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',
@@ -263,6 +264,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',
@@ -346,6 +348,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',
@@ -398,6 +401,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',

@@ -2,8 +2,8 @@ import { type Request, type Response } from 'express'
 import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
-import { type IFindDistricts } from '../../schemas/AddressSchema'
 import { RegionService } from '../../services/Region.service'
+import { type IFindDistricts } from '../../schemas/RegionSchema'
 
 export const findDistricts = async (req: Request, res: Response): Promise<Response> => {
   try {

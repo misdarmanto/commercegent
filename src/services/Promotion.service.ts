@@ -80,6 +80,7 @@ export class PromotionService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',
