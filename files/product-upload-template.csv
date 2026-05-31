@@ -1,0 +1,4 @@
+nama,deskripsi,kategori,subkategori,kode,barcode,unit,visible,image,warna,ukuran,varian,harga,stok,diskon,berat
+Kaos Oversize Basic,Kaos cotton combed 24s,1,3,TS-OVS-001,8991234567001,pcs,1,https://cdn.example.com/kaos-oversize-black.jpg,Black,L,Hitam - L,120000,25,10,250
+Hoodie Zipper Premium,Hoodie fleece premium,2,7,HD-ZIP-001,8991234567002,pcs,true,https://cdn.example.com/hoodie-zipper-navy.jpg,Navy,XL,Navy - XL,250000,10,5,600
+Topi Trucker,Topi trucker mesh,4,9,TOPI-TRK-001,,pcs,false,https://cdn.example.com/topi-trucker-red.jpg,Red,All Size,Merah - All Size,75000,40,0,120

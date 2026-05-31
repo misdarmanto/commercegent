@@ -5,6 +5,9 @@ import { z } from 'zod'
 /* ============================= */
 
 export const orderItemSchema = z.object({
+  orderItemProductWeight: z
+    .number({ invalid_type_error: 'Product Weight harus berupa angka' })
+    .min(0, 'Product Weight tidak boleh negatif'),
   productId: z
     .number({ invalid_type_error: 'Product ID harus berupa angka' })
     .min(0, 'Product ID tidak boleh negatif'),
@@ -28,6 +31,7 @@ const courierField = z.union([
 /* ============================= */
 
 export const createOrderSchema = z.object({
+  orderShippingProvider: z.enum(['FRESH', 'BITESHIP']).default('BITESHIP'),
   orderShippingFee: z
     .number({ invalid_type_error: 'Ongkos kirim harus berupa angka' })
     .min(0, 'Ongkos kirim tidak boleh negatif'),
@@ -88,6 +92,6 @@ export type ICreateOrder = z.infer<typeof createOrderSchema>
 export type IFindAllOrder = z.infer<typeof findAllOrderQuerySchema>
 export type IFindDetailOrder = z.infer<typeof orderDetailParamsSchema>
 export type IUpdateOrder = z.infer<typeof updateOrderBodySchema>
-export type ICreateDraftFromOrder = z.infer<typeof createDraftFromOrderSchema>
+export type ICreateDraft = z.infer<typeof createDraftFromOrderSchema>
 export type IConfirmDraftOrder = z.infer<typeof confirmDraftOrderSchema>
 export type ITrackOrder = z.infer<typeof trackOrderSchema>

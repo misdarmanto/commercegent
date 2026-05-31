@@ -11,7 +11,8 @@ import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type { IBitshipWebhook, IMidtransWebhook } from '../schemas/WebhookSchema'
 import { WablasAPIService } from './external/WablasApi.service'
-import { SettingModel } from '../models/SettingModel'
+import { SettingService } from './Setting.service'
+import { UserModel } from '../models/UserModel'
 
 export class WebhookService {
   static async handleMidtransWebhook(payload: IMidtransWebhook) {
@@ -24,6 +25,8 @@ export class WebhookService {
       signature_key
     } = payload
 
+    console.log('handleMidtransWebhook payload', payload)
+
     const expectedSignature = crypto
       .createHash('sha512')
       .update(order_id + status_code + gross_amount + appConfigs.midtrans.serverKey)
@@ -34,6 +37,7 @@ export class WebhookService {
     }
 
     const dbTransaction = await sequelizeInit.transaction()
+    let isTransactionCommitted = false
 
     try {
       const order = await OrdersModel.findOne({
@@ -42,7 +46,6 @@ export class WebhookService {
       })
 
       if (order == null) {
-        await dbTransaction.rollback()
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
       }
 
@@ -121,23 +124,68 @@ export class WebhookService {
       }
 
       await dbTransaction.commit()
+      isTransactionCommitted = true
 
       if (transactionStatus === 'success') {
-        const setting = await SettingModel.findOne({
-          where: {
-            deleted: false
-          }
-        })
-        const message = `Pembayaran berhasil untuk order ${order_id}`
+        try {
+          const [setting, user] = await Promise.all([
+            SettingService.findSetting({}),
+            UserModel.findOne({
+              where: {
+                userId: order.orderUserId,
+                deleted: false
+              },
+              attributes: ['userWhatsAppNumber', 'userName']
+            })
+          ])
 
-        console.log('message', message)
-        console.log('setting', setting)
-        // await WablasAPIService.sendMessage({
-        //   phone: setting?.whatsappNumber ?? '',
-        //   message
-        // })
+          const adminPhone = setting?.whatsappNumber ?? ''
+          const userPhone = user?.userWhatsAppNumber ?? ''
+
+          const messageToAdmin = `Ada pesanan baru dengan nomor order ${order_id}, nama pelanggan ${user?.userName} dan total belanja ${gross_amount} yang belum diproses. Silahkan cek di dashboard.
+          `
+          const messageToUser = `Halo ${
+            user?.userName ?? 'kak'
+          }, pembayaran untuk order ${order_id} berhasil kami terima. Pesanan kamu sedang diproses.`
+
+          const whatsappTargets = [
+            { phone: adminPhone, message: messageToAdmin },
+            { phone: userPhone, message: messageToUser }
+          ].filter((target) => target.phone.trim() !== '')
+
+          if (whatsappTargets.length > 0) {
+            const sendResults = await Promise.allSettled(
+              whatsappTargets.map(async (target) => {
+                await WablasAPIService.sendMessage({
+                  phone: target.phone,
+                  message: target.message
+                })
+              })
+            )
+
+            sendResults.forEach((result, index) => {
+              if (result.status === 'rejected') {
+                logger.error(
+                  `[WebhookService] send whatsapp failed to ${
+                    whatsappTargets[index].phone
+                  }: ${String(result.reason)}`
+                )
+              }
+            })
+          }
+        } catch (notificationError) {
+          logger.error(
+            `[WebhookService] send whatsapp notification failed: ${String(
+              notificationError
+            )}`
+          )
+        }
       }
     } catch (serviceError) {
+      if (!isTransactionCommitted) {
+        await dbTransaction.rollback()
+      }
+
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[WebhookService] midtrans failed: ${String(serviceError)}`)
       throw new AppError(

@@ -94,7 +94,8 @@ export const ProductModel = sequelizeInit.define<ProductInstance>(
 
 ProductModel.hasOne(CategoryModel, {
   sourceKey: 'productCategoryId',
-  foreignKey: 'categoryId'
+  foreignKey: 'categoryId',
+  as: 'category'
 })
 
 ProductModel.hasMany(ProductVariantModel, {

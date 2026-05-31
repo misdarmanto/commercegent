@@ -4,6 +4,7 @@ import { ResponseData } from '../utilities/response'
 import { verifyAccessToken } from '../utilities/jwt'
 import { type IAuthenticatedRequest } from '../interfaces/shared'
 import { handleError } from '../utilities/requestHandler'
+import { IJwtPayload } from '../interfaces/shared'
 
 export const authorization = (
   req: IAuthenticatedRequest,
@@ -29,7 +30,7 @@ export const authorization = (
         .json(ResponseData.error({ message: 'Invalid Authorization.' }))
     }
 
-    req.jwtPayload = verify
+    req.jwtPayload = verify as IJwtPayload
 
     next()
   } catch (serverError) {

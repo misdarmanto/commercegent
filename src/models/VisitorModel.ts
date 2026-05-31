@@ -3,42 +3,42 @@ import { DataTypes, type Model, type Optional } from 'sequelize'
 import { sequelizeInit } from '../configs/database'
 import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields'
 
-export interface StatModelAttributes extends IBaseModelFields {
-  statId: number
-  statTotalVisit: number
+export interface VisitorModelAttributes extends IBaseModelFields {
+  visitorId: number
+  visitorMeta: string
 }
 
 // we're telling the Model that 'id' is optional
 // when creating an instance of the model (such as using Model.create()).
-export type StatModelCreationAttributes = Optional<
-  StatModelAttributes,
-  'statId' | 'createdAt' | 'updatedAt'
+export type VisitorModelCreationAttributes = Optional<
+  VisitorModelAttributes,
+  'visitorId' | 'createdAt' | 'updatedAt'
 >
 
 // We need to declare an interface for our model that is basically what our class would be
 
-interface StatModelInstance
-  extends Model<StatModelAttributes, StatModelCreationAttributes>,
-    StatModelAttributes {}
+interface VisitorModelInstance
+  extends Model<VisitorModelAttributes, VisitorModelCreationAttributes>,
+    VisitorModelAttributes {}
 
-export const StatModel = sequelizeInit.define<StatModelInstance>(
-  'StatModel',
+export const VisitorModel = sequelizeInit.define<VisitorModelInstance>(
+  'VisitorModel',
   {
     ...BaseModelFields,
-    statId: {
+    visitorId: {
       type: DataTypes.BIGINT,
       autoIncrement: true,
       primaryKey: true,
       allowNull: false
     },
-    statTotalVisit: {
-      type: DataTypes.INTEGER,
+    visitorMeta: {
+      type: DataTypes.TEXT,
       allowNull: true
     }
   },
   {
     timestamps: false,
-    tableName: 'stats',
+    tableName: 'visitors',
     deletedAt: false,
     paranoid: true,
     underscored: true,

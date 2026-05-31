@@ -7,23 +7,22 @@ const { BaseModelFields } = require('../baseModel')
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, DataTypes) {
-    await queryInterface.createTable('stats', {
+    await queryInterface.createTable('visitors', {
       ...BaseModelFields,
-      stat_id: {
+      visitor_id: {
         type: DataTypes.BIGINT,
         autoIncrement: true,
         primaryKey: true,
         allowNull: false
       },
-      stat_total_visit: {
-        type: DataTypes.INTEGER,
-        allowNull: true,
-        defaultValue: 0
+      visitor_meta: {
+        type: DataTypes.TEXT,
+        allowNull: true
       }
     })
   },
 
   async down(queryInterface) {
-    await queryInterface.dropTable('stats')
+    await queryInterface.dropTable('visitors')
   }
 }

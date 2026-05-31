@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { RegionService } from '../../services/Region.service'
-import { type IFindRegencies } from '../../schemas/AddressSchema'
+import { type IFindRegencies } from '../../schemas/RegionSchema'
 
 export const findRegencies = async (req: Request, res: Response): Promise<Response> => {
   try {

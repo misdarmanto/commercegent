@@ -4,7 +4,7 @@ import {
   districtsParamsSchema,
   regenciesParamsSchema,
   villagesParamsSchema
-} from '../schemas/AddressSchema'
+} from '../schemas/RegionSchema'
 import { RegionController } from '../controllers/region'
 
 const RegionRoute = Router()

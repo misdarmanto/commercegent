@@ -172,16 +172,21 @@ export class ProductService {
     }
     const variants = plain.variants ?? []
     const { variants: _drop, ...rest } = plain
+    const productIsHasVariant = variants.length > 1
+    const productTotalStock = variants.reduce((total, variant) => {
+      const variantStock = Number(variant.productVariantStock)
+      return total + (Number.isNaN(variantStock) ? 0 : variantStock)
+    }, 0)
 
     if (variants.length === 0) {
-      return { ...rest, cheapestVariant: null }
+      return { ...rest, variant: null, productIsHasVariant: false, productTotalStock: 0 }
     }
 
     const variant = [...variants].sort(
       (a, b) => this.variantComparablePrice(a) - this.variantComparablePrice(b)
     )[0]
 
-    return { ...rest, variant }
+    return { ...rest, variant, productIsHasVariant, productTotalStock }
   }
 
   static async findAllProducts(payload: IFindAllProducts) {
@@ -193,6 +198,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',
@@ -258,6 +264,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',
@@ -341,6 +348,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',
@@ -393,6 +401,7 @@ export class ProductService {
         include: [
           {
             model: CategoryModel,
+            as: 'category',
             attributes: [
               'categoryId',
               'categoryReference',

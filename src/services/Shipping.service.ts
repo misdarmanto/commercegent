@@ -1,6 +1,9 @@
-import { BiteShipAPIService } from './external/BiteShipApi.service'
+import {
+  BiteShipAPIService,
+  getBiteShipErrorDetail
+} from './external/BiteShipApi.service'
 import { OrdersModel } from '../models/OrderModel'
-import { OrderItemsModel } from '../models/OrderItemModel'
+import { OrderItemsAttributes, OrderItemsModel } from '../models/OrderItemModel'
 import { ProductModel } from '../models/ProductModel'
 import { AddressesModel } from '../models/AddressModel'
 import { sequelizeInit } from '../configs/database'
@@ -87,7 +90,8 @@ export class ShippingService {
             courier_code: 'local',
             courier_service_code: 'local',
             duration: isLocalShipping?.localShippingDuration ?? '',
-            price: shippingPrice
+            price: shippingPrice,
+            provider: 'FRESH'
           }
         ]
       } else {
@@ -114,10 +118,17 @@ export class ShippingService {
             items: biteshipItems
           })
 
-          return biteshipResponse?.data?.pricing ?? []
+          return (
+            biteshipResponse?.data?.pricing.map((item: any) => ({
+              ...item,
+              provider: 'BITESHIP'
+            })) ?? []
+          )
         } catch (serviceError) {
           logger.error(
-            `[ShippingService] getShippingRates failed: ${String(serviceError)}`
+            `[ShippingService] getShippingRates failed: ${getBiteShipErrorDetail(
+              serviceError
+            )}`
           )
         }
       }
@@ -133,16 +144,14 @@ export class ShippingService {
 
   static async createDraftFromOrder(payload: ICreateShippingDraft) {
     try {
-      const { userId, orderId } = payload
+      const { orderId } = payload
+
+      console.log('createDraftFromOrder payload', payload)
 
       /* ===================== 1. FETCH ORDER + ITEMS ===================== */
       const order = await OrdersModel.findByPk(orderId)
       if (order == null) {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
-      }
-
-      if (String(order.orderUserId) !== String(userId)) {
-        throw new AppError('access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (order.orderStatus !== 'process') {
@@ -156,112 +165,141 @@ export class ShippingService {
         throw new AppError('Draft order already exists', StatusCodes.CONFLICT)
       }
 
-      const [destination, origin, orderItems] = await Promise.all([
-        AddressesModel.findOne({
-          where: { addressUserId: order.orderUserId, addressCategory: 'user' }
-        }),
-        AddressesModel.findOne({
-          where: { addressCategory: 'admin' }
-        }),
-        OrderItemsModel.findAll({
-          where: { orderItemOrderId: order.orderId, deleted: false },
-          include: [
-            {
-              model: ProductModel,
-              attributes: ['productDescription', 'productWeight']
-            }
-          ]
+      if (order.orderShippingProvider === 'FRESH') {
+        await sequelizeInit.transaction(async (tx) => {
+          await order.update(
+            { orderDraftId: `#FRESH-${order?.orderId}`, orderStatus: 'draft' },
+            { transaction: tx }
+          )
         })
-      ])
 
-      if (!destination)
-        throw new AppError('User address not found', StatusCodes.BAD_REQUEST)
-      if (!origin) throw new AppError('Admin address not found', StatusCodes.BAD_REQUEST)
-      if (!orderItems.length)
-        throw new AppError('Order items empty', StatusCodes.BAD_REQUEST)
-
-      /* ===================== 2. BUILD ITEMS ===================== */
-
-      const items = orderItems.map((item: any) => ({
-        name: item.productNameSnapshot,
-        description: item.product?.productDescription ?? '',
-        value: Number(item.productPriceSnapshot),
-        quantity: item.quantity,
-        weight: Math.max(item.product?.productWeight ?? 1, 1)
-      }))
-
-      const biteshipPayload = {
-        reference_id: order.orderReferenceId,
-
-        shipper_contact_name: origin.addressUserName,
-        shipper_contact_phone: origin.addressKontak,
-        shipper_organization: 'FRESH',
-
-        origin_contact_name: origin.addressUserName,
-        origin_contact_phone: origin.addressKontak,
-        origin_address: origin.addressDetail,
-        origin_postal_code: origin.addressPostalCode,
-        origin_coordinate: {
-          latitude: Number(origin.addressLatitude),
-          longitude: Number(origin.addressLongitude)
-        },
-
-        destination_contact_name: destination.addressUserName,
-        destination_contact_phone: destination.addressKontak,
-        destination_address: destination.addressDetail,
-        destination_postal_code: destination.addressPostalCode,
-        destination_coordinate: {
-          latitude: Number(destination.addressLatitude),
-          longitude: Number(destination.addressLongitude)
-        },
-
-        courier_company: order.orderCourierCompany,
-        courier_type: order.orderCourierType,
-        delivery_type: 'now',
-        shipment_category: 'parcel',
-
-        order_note: `Order #${order.orderReferenceId}`,
-        metadata: {
-          orderId: order.orderReferenceId,
-          userId: order.orderUserId
-        },
-
-        items
+        return {
+          draftOrderId: order?.orderDraftId
+        }
       }
 
-      /* ===================== 4. CALL BITESHIP ===================== */
+      if (order.orderShippingProvider === 'BITESHIP') {
+        const [destination, origin, orderItems] = await Promise.all([
+          AddressesModel.findOne({
+            where: { addressUserId: order.orderUserId, addressCategory: 'user' }
+          }),
+          AddressesModel.findOne({
+            where: { addressCategory: 'admin' }
+          }),
+          OrderItemsModel.findAll({
+            where: { orderItemOrderId: order.orderId, deleted: false },
+            include: [
+              {
+                model: ProductModel,
+                as: 'product',
+                attributes: ['productDescription', 'productName']
+              }
+            ]
+          })
+        ])
 
-      type DraftResponse = {
-        id: string
-      }
+        if (!destination) {
+          throw new AppError('User address not found', StatusCodes.BAD_REQUEST)
+        }
 
-      let draftResponse = {} as DraftResponse
+        if (!origin) {
+          throw new AppError('Admin address not found', StatusCodes.BAD_REQUEST)
+        }
 
-      try {
-        const { data } = await BiteShipAPIService.post('/draft_orders', biteshipPayload)
-        draftResponse = data
-      } catch (serviceError) {
-        if (serviceError instanceof AppError) throw serviceError
-        logger.error(
-          `[ShippingService] createDraftFromOrder failed: ${String(serviceError)}`
-        )
-        throw new AppError(
-          'Failed to create draft order from shipping provider',
-          StatusCodes.BAD_GATEWAY
-        )
-      }
+        if (!orderItems.length) {
+          throw new AppError('Order items empty', StatusCodes.BAD_REQUEST)
+        }
 
-      /* ===================== 5. SAVE DRAFT ID (DB TX) ===================== */
-      await sequelizeInit.transaction(async (tx) => {
-        await order.update(
-          { orderDraftId: draftResponse.id, orderStatus: 'draft' },
-          { transaction: tx }
-        )
-      })
+        /* ===================== 2. BUILD ITEMS ===================== */
 
-      return {
-        draftOrderId: draftResponse.id,
-        biteshipResponse: draftResponse
+        console.log('createDraftFromOrder orderItems', orderItems)
+
+        const items = orderItems.map((item: any) => ({
+          name: item.orderItemProductName,
+          description: item.product?.productDescription ?? '',
+          value: Number(item.orderItemTotalPrice),
+          quantity: item.orderItemQuantity,
+          weight: Math.max(item.orderItemProductWeight ?? 1, 1)
+        }))
+
+        console.log('createDraftFromOrder items', items)
+
+        const biteshipPayload = {
+          reference_id: order.orderReferenceId,
+
+          shipper_contact_name: origin.addressUserName,
+          shipper_contact_phone: origin.addressKontak,
+          shipper_organization: 'FRESH',
+
+          origin_contact_name: origin.addressUserName,
+          origin_contact_phone: origin.addressKontak,
+          origin_address: origin.addressDetail,
+          origin_postal_code: origin.addressPostalCode,
+          origin_coordinate: {
+            latitude: Number(origin.addressLatitude),
+            longitude: Number(origin.addressLongitude)
+          },
+
+          destination_contact_name: destination.addressUserName,
+          destination_contact_phone: destination.addressKontak,
+          destination_address: destination.addressDetail,
+          destination_postal_code: destination.addressPostalCode,
+          destination_coordinate: {
+            latitude: Number(destination.addressLatitude),
+            longitude: Number(destination.addressLongitude)
+          },
+
+          courier_company: order.orderCourierCompany,
+          courier_type: order.orderCourierType,
+          delivery_type: 'now',
+          shipment_category: 'parcel',
+
+          order_note: `Order #${order.orderReferenceId}`,
+          metadata: {
+            orderId: order.orderReferenceId,
+            userId: order.orderUserId
+          },
+
+          items
+        }
+
+        /* ===================== 4. CALL BITESHIP ===================== */
+
+        type DraftResponse = {
+          id: string
+        }
+
+        let draftResponse = {} as DraftResponse
+
+        try {
+          const { data } = await BiteShipAPIService.post('/draft_orders', biteshipPayload)
+          console.log('createDraftFromOrder biteshipResponse', data)
+          draftResponse = data
+        } catch (serviceError) {
+          if (serviceError instanceof AppError) throw serviceError
+          logger.error(
+            `[ShippingService] createDraftFromOrder failed: ${getBiteShipErrorDetail(
+              serviceError
+            )}`
+          )
+          throw new AppError(
+            'Failed to create draft order from shipping provider',
+            StatusCodes.BAD_GATEWAY
+          )
+        }
+
+        /* ===================== 5. SAVE DRAFT ID (DB TX) ===================== */
+        await sequelizeInit.transaction(async (tx) => {
+          await order.update(
+            { orderDraftId: draftResponse.id, orderStatus: 'draft' },
+            { transaction: tx }
+          )
+        })
+
+        return {
+          draftOrderId: draftResponse.id,
+          biteshipResponse: draftResponse
+        }
       }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
@@ -275,17 +313,14 @@ export class ShippingService {
     }
   }
 
-  static async confirmDraftOrder(userId: number, payload: IConfirmDraftOrder) {
+  static async confirmDraftOrder(payload: IConfirmDraftOrder) {
     const { orderId } = payload
+    console.log('confirmDraftOrder payload', payload)
     try {
       const order = await OrdersModel.findByPk(orderId)
 
       if (order == null) {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
-      }
-
-      if (order.orderUserId !== String(userId)) {
-        throw new AppError('Access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (!order.orderDraftId) {
@@ -296,26 +331,65 @@ export class ShippingService {
         throw new AppError('Order must be in DRAFT status', StatusCodes.BAD_REQUEST)
       }
 
-      const { data: confirmResponse } = await BiteShipAPIService.post(
-        `/draft_orders/${order.orderDraftId}/confirm`
-      )
+      if (order.orderShippingProvider === 'FRESH') {
+        await sequelizeInit.transaction(async (tx) => {
+          await order.update(
+            {
+              orderStatus: 'delivery',
+              orderWaybillId: `${order.orderId}-FRESH`,
+              orderTrackingId: `${order.orderId}-FRESH`
+            },
+            { transaction: tx }
+          )
+        })
 
-      await sequelizeInit.transaction(async (tx) => {
-        await order.update(
-          {
-            orderStatus: 'delivery',
-            orderWaybillId: confirmResponse?.courier?.waybill_id,
-            orderTrackingId: confirmResponse?.courier?.tracking_id
-          },
-          { transaction: tx }
-        )
-      })
+        return {
+          orderId: order.orderId,
+          waybillId: `${order.orderId}-FRESH`,
+          trackingId: `${order.orderId}-FRESH`,
+          courier: 'FRESH'
+        }
+      }
 
-      return {
-        orderId: order.orderId,
-        waybillId: confirmResponse?.waybill_id,
-        trackingId: confirmResponse?.tracking_id,
-        courier: confirmResponse?.courier
+      if (order.orderShippingProvider === 'BITESHIP') {
+        let confirmResponse = {} as any
+        try {
+          console.log('confirm draft payload', order.orderDraftId)
+
+          const { data } = await BiteShipAPIService.post(
+            `/draft_orders/${order.orderDraftId}/confirm`
+          )
+          confirmResponse = data
+        } catch (serviceError) {
+          if (serviceError instanceof AppError) throw serviceError
+          logger.error(
+            `[ShippingService] confirmDraftOrder failed: ${getBiteShipErrorDetail(
+              serviceError
+            )}`
+          )
+          throw new AppError(
+            'Failed to confirm draft order',
+            StatusCodes.INTERNAL_SERVER_ERROR
+          )
+        }
+
+        await sequelizeInit.transaction(async (tx) => {
+          await order.update(
+            {
+              orderStatus: 'delivery',
+              orderWaybillId: confirmResponse?.courier?.waybill_id,
+              orderTrackingId: confirmResponse?.courier?.tracking_id
+            },
+            { transaction: tx }
+          )
+        })
+
+        return {
+          orderId: order.orderId,
+          waybillId: confirmResponse?.waybill_id,
+          trackingId: confirmResponse?.tracking_id,
+          courier: confirmResponse?.courier
+        }
       }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
@@ -327,30 +401,77 @@ export class ShippingService {
     }
   }
 
-  static async trackShipment(userId: number, payload: ITrackShipment) {
+  static async trackShipment(payload: ITrackShipment) {
     try {
       const order = await OrdersModel.findByPk(payload.orderId)
 
-      if (order == null) {
+      if (!order) {
         throw new AppError('Order not found', StatusCodes.NOT_FOUND)
-      }
-
-      if (order.orderUserId !== String(userId)) {
-        throw new AppError('Access denied!', StatusCodes.FORBIDDEN)
       }
 
       if (!order.orderWaybillId || !order.orderCourierCompany) {
         throw new AppError('Shipment data not available', StatusCodes.BAD_REQUEST)
       }
 
-      const { data } = await BiteShipAPIService.get(
-        `/trackings/${order.orderWaybillId}/couriers/${order.orderCourierCompany}`
-      )
+      if (order.orderShippingProvider === 'FRESH') {
+        const originAddress = await AddressesModel.findOne({
+          where: {
+            addressCategory: 'admin'
+          }
+        })
 
-      return data
+        const destinationAddress = await AddressesModel.findOne({
+          where: {
+            addressUserId: order.orderUserId,
+            addressCategory: 'user',
+            addressType: 'main'
+          }
+        })
+
+        if (!originAddress) {
+          throw new AppError('Origin address not found', StatusCodes.BAD_REQUEST)
+        }
+
+        if (!destinationAddress) {
+          throw new AppError('Destination address not found', StatusCodes.BAD_REQUEST)
+        }
+
+        return {
+          waybill_id: order.orderWaybillId,
+          courier: {
+            company: order.orderCourierCompany
+          },
+          origin: {
+            contact_name: originAddress.addressUserName,
+            address: originAddress.addressDetail
+          },
+          destination: {
+            contact_name: destinationAddress.addressUserName,
+            address: destinationAddress.addressDetail
+          },
+          history: [
+            {
+              note: 'Order delivered',
+              status: order.orderStatus,
+              updated_at: order.updatedAt
+            }
+          ],
+          weight: ''
+        }
+      }
+
+      if (order.orderShippingProvider === 'BITESHIP') {
+        const { data } = await BiteShipAPIService.get(
+          `/trackings/${order.orderWaybillId}/couriers/${order.orderCourierCompany}`
+        )
+
+        return data
+      }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
-      logger.error(`[ShippingService] trackShipment failed: ${String(serviceError)}`)
+      logger.error(
+        `[ShippingService] trackShipment failed: ${getBiteShipErrorDetail(serviceError)}`
+      )
       throw new AppError('Failed to track shipment', StatusCodes.INTERNAL_SERVER_ERROR)
     }
   }

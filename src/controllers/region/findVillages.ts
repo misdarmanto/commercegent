@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { RegionService } from '../../services/Region.service'
-import { type IFindVillages } from '../../schemas/AddressSchema'
+import { type IFindVillages } from '../../schemas/RegionSchema'
 
 export const findVillages = async (req: Request, res: Response): Promise<Response> => {
   try {

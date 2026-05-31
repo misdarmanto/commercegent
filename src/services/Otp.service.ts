@@ -39,12 +39,10 @@ export class OtpService {
         `*${otpCode}* adalah kode verifikasi Anda.\n\n` +
         'Pengingat keamanan: Untuk memastikan keamanan akun Anda, mohon jangan bagikan informasi apa pun tentang akun Anda kepada siapa pun.'
 
-      console.log('message', message)
-
-      // await WablasAPIService.sendMessage({
-      //   phone: payload.whatsappNumber,
-      //   message
-      // })
+      await WablasAPIService.sendMessage({
+        phone: payload.whatsappNumber,
+        message
+      })
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[OtpService] requestOtp failed: ${String(serviceError)}`)

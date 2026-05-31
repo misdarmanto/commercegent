@@ -5,7 +5,6 @@ import { BaseModelFields, IBaseModelFields } from '../interfaces/baseModelFields
 import { UserModel } from './UserModel'
 import { AddressesModel } from './AddressModel'
 import { OrderItemsModel } from './OrderItemModel'
-
 /**
  * ORDER HEADER
  * 1 order = many order_items
@@ -18,6 +17,7 @@ export interface OrdersAttributes extends IBaseModelFields {
   orderShippingFee: number
   orderGrandTotal: number
   orderTotalItem: number
+  orderShippingProvider: 'FRESH' | 'BITESHIP'
 
   orderCourierCompany: string
   orderCourierType: string
@@ -28,7 +28,6 @@ export interface OrdersAttributes extends IBaseModelFields {
   orderPaymentUrl?: string
   orderPaymentToken?: string
   orderReferenceId?: string
-
   orderStatus: 'waiting' | 'process' | 'draft' | 'delivery' | 'done' | 'cancel'
 }
 
@@ -71,7 +70,11 @@ export const OrdersModel = sequelizeInit.define<OrdersInstance>(
       type: DataTypes.INTEGER,
       allowNull: false
     },
-
+    orderShippingProvider: {
+      type: DataTypes.ENUM('FRESH', 'BITESHIP'),
+      allowNull: false,
+      defaultValue: 'BITESHIP'
+    },
     orderCourierCompany: {
       type: DataTypes.STRING,
       allowNull: true
