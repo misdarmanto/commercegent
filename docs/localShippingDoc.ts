@@ -36,6 +36,8 @@
  *         - localShippingCompanyName
  *         - localShippingProvinceName
  *         - localShippingProvinceId
+ *         - localShippingKabupatenName
+ *         - localShippingKabupatenId
  *         - localShippingPricePerKg
  *         - localShippingDuration
  *       properties:
@@ -50,6 +52,14 @@
  *           maxLength: 120
  *           example: "Jawa Tengah"
  *         localShippingProvinceId:
+ *           type: string
+ *           example: "1"
+ *         localShippingKabupatenName:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 120
+ *           example: "Kota Bandung"
+ *         localShippingKabupatenId:
  *           type: string
  *           example: "1"
  *         localShippingPricePerKg:
@@ -73,7 +83,17 @@
  *           minLength: 2
  *           maxLength: 120
  *           example: "Jawa Barat"
- *         localShippingProvinceId:
+ *         localShippingProvinceName:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 120
+ *           example: "Jawa Tengah"
+ *         localShippingKabupatenName:
+ *           type: string
+ *           minLength: 2
+ *           maxLength: 120
+ *           example: "Kota Bandung"
+ *         localShippingKabupatenId:
  *           type: string
  *           example: "1"
  *         localShippingPricePerKg:

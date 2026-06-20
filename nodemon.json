@@ -1,0 +1,14 @@
+{
+  "watch": ["src", "server.ts"],
+  "ext": "ts,json",
+  "ignore": [
+    "uploads/**",
+    "build/**",
+    "logs/**",
+    "public/**",
+    "scripts/**",
+    "node_modules/**"
+  ],
+  "exec": "tsx server.ts",
+  "delay": "300"
+}

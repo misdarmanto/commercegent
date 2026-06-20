@@ -26,6 +26,14 @@ module.exports = {
         type: DataTypes.STRING(255),
         allowNull: false
       },
+      local_shipping_kabupaten_id: {
+        type: DataTypes.STRING(255),
+        allowNull: false
+      },
+      local_shipping_kabupaten_name: {
+        type: DataTypes.STRING(255),
+        allowNull: false
+      },
       local_shipping_price_per_kg: {
         type: DataTypes.INTEGER,
         allowNull: false

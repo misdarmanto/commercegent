@@ -6,10 +6,12 @@
   "scripts": {
     "build": "tsc",
     "start": "tsc && node ./build/src/server.js",
-    "dev": "tsx watch . server.ts --ignore build --clear-screen=false",
+    "dev": "nodemon",
+    "dev:tsx": "tsx watch server.ts --exclude \"./uploads/**\" --exclude \"./build/**\" --exclude \"./logs/**\" --exclude \"./public/**\" --clear-screen=false",
     "migrate:up": "npx sequelize-cli db:migrate",
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
     "seed": "npx sequelize-cli db:seed:all",
+    "download-product-images": "node scripts/download-product-images.js",
     "lint:fix": "eslint --fix ./*.ts",
     "typecheck": "tsc --noEmit"
   },

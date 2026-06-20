@@ -3,7 +3,7 @@ import {
   getBiteShipErrorDetail
 } from './external/BiteShipApi.service'
 import { OrdersModel } from '../models/OrderModel'
-import { OrderItemsAttributes, OrderItemsModel } from '../models/OrderItemModel'
+import { OrderItemsModel } from '../models/OrderItemModel'
 import { ProductModel } from '../models/ProductModel'
 import { AddressesModel } from '../models/AddressModel'
 import { sequelizeInit } from '../configs/database'
@@ -65,13 +65,16 @@ export class ShippingService {
       const localShippings = await LocalShippingModel.findAll({
         where: {
           localShippingProvinceId: destinationAddress.addressProvinsiId,
+          localShippingKabupatenId: destinationAddress.addressKabupatenId,
           deleted: false
         }
       })
 
       const isLocalShipping = localShippings.find(
         (localShipping) =>
-          localShipping.localShippingProvinceId === destinationAddress.addressProvinsiId
+          localShipping.localShippingProvinceId ===
+            destinationAddress.addressProvinsiId &&
+          localShipping.localShippingKabupatenId === destinationAddress.addressKabupatenId
       )
 
       if (isLocalShipping) {
