@@ -31,12 +31,14 @@ import {
   LocalShippingSchema,
 } from "../../validations/settingsSchema";
 
-type ProvinceOption = { id: string; name: string };
+type RegionOption = { id: string; name: string };
 
 interface LocalShippingListItem {
   localShippingId: number;
   localShippingCompanyName: string;
   localShippingProvinceId: string;
+  localShippingKabupatenId?: string;
+  localShippingKabupatenName?: string;
   localShippingPricePerKg: number;
   localShippingDuration: string;
   deleted: boolean;
@@ -49,7 +51,7 @@ interface LocalShippingListResponse {
   currentPage: number;
 }
 
-const normalizeProvinces = (raw: unknown): ProvinceOption[] => {
+const normalizeRegions = (raw: unknown): RegionOption[] => {
   if (!Array.isArray(raw)) return [];
   return raw.map((p: { id: string | number; name: string }) => ({
     id: String(p.id),
@@ -61,7 +63,8 @@ export default function ShipmentSettingsView() {
   const { handleGetRequest, handlePostRequest, handleRemoveRequest } =
     useHttp();
 
-  const [provinces, setProvinces] = useState<ProvinceOption[]>([]);
+  const [provinces, setProvinces] = useState<RegionOption[]>([]);
+  const [regencies, setRegencies] = useState<RegionOption[]>([]);
   const [rows, setRows] = useState<LocalShippingListItem[]>([]);
   const [loadingList, setLoadingList] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -92,11 +95,12 @@ export default function ShipmentSettingsView() {
   });
 
   const provinceId = watch("localShippingProvinceId");
+  const kabupatenId = watch("localShippingKabupatenId");
 
   const loadProvinces = async () => {
     const res = await handleGetRequest({ path: "/regions/provinces" });
     if (res) {
-      setProvinces(normalizeProvinces(res));
+      setProvinces(normalizeRegions(res));
     }
   };
 
@@ -125,10 +129,28 @@ export default function ShipmentSettingsView() {
     void loadShippings();
   }, []);
 
-  const onProvinceSelect = (id: string) => {
+  const onProvinceSelect = async (id: string) => {
     const p = provinces.find((x) => x.id === id);
     setValue("localShippingProvinceId", id, { shouldValidate: true });
     setValue("localShippingProvinceName", p?.name ?? "", {
+      shouldValidate: true,
+    });
+    setValue("localShippingKabupatenId", "", { shouldValidate: true });
+    setValue("localShippingKabupatenName", "", { shouldValidate: true });
+    setRegencies([]);
+
+    if (!id) return;
+
+    const res = await handleGetRequest({ path: `/regions/regencies/${id}` });
+    if (res) {
+      setRegencies(normalizeRegions(res));
+    }
+  };
+
+  const onKabupatenSelect = (id: string) => {
+    const r = regencies.find((x) => x.id === id);
+    setValue("localShippingKabupatenId", id, { shouldValidate: true });
+    setValue("localShippingKabupatenName", r?.name ?? "", {
       shouldValidate: true,
     });
   };
@@ -142,16 +164,21 @@ export default function ShipmentSettingsView() {
           localShippingCompanyName: data.localShippingCompanyName,
           localShippingProvinceName: data.localShippingProvinceName,
           localShippingProvinceId: data.localShippingProvinceId,
+          localShippingKabupatenName: data.localShippingKabupatenName,
+          localShippingKabupatenId: data.localShippingKabupatenId,
           localShippingPricePerKg: data.localShippingPricePerKg,
           localShippingDuration: data.localShippingDuration,
         },
       });
       setSnackbarMessage("Pengiriman lokal berhasil disimpan.");
       setOpenSnackbar(true);
+      setRegencies([]);
       reset({
         localShippingCompanyName: "",
         localShippingProvinceName: "",
         localShippingProvinceId: "",
+        localShippingKabupatenName: "",
+        localShippingKabupatenId: "",
         localShippingPricePerKg: 0,
         localShippingDuration: "",
       });
@@ -226,9 +253,9 @@ export default function ShipmentSettingsView() {
               <TextField
                 select
                 fullWidth
-                label="Provinsi (nama & kode dari data wilayah)"
+                label="Provinsi"
                 value={provinceId}
-                onChange={(e) => onProvinceSelect(e.target.value)}
+                onChange={(e) => void onProvinceSelect(e.target.value)}
                 error={!!errors.localShippingProvinceId}
                 helperText={errors.localShippingProvinceId?.message}
               >
@@ -238,6 +265,27 @@ export default function ShipmentSettingsView() {
                 {provinces.map((p) => (
                   <MenuItem key={p.id} value={p.id}>
                     {p.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <TextField
+                select
+                fullWidth
+                label="Kabupaten / Kota"
+                value={kabupatenId}
+                onChange={(e) => onKabupatenSelect(e.target.value)}
+                error={!!errors.localShippingKabupatenId}
+                helperText={errors.localShippingKabupatenId?.message}
+                disabled={!provinceId || regencies.length === 0}
+              >
+                <MenuItem value="">
+                  <em>Pilih kabupaten/kota</em>
+                </MenuItem>
+                {regencies.map((r) => (
+                  <MenuItem key={r.id} value={r.id}>
+                    {r.name}
                   </MenuItem>
                 ))}
               </TextField>
@@ -256,7 +304,7 @@ export default function ShipmentSettingsView() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Durasi (hari)"
+                label="Estimasi Pengiriman (Hari)"
                 type="number"
                 error={!!errors.localShippingDuration}
                 helperText={errors.localShippingDuration?.message}
@@ -288,8 +336,9 @@ export default function ShipmentSettingsView() {
                   <TableCell>ID</TableCell>
                   <TableCell>Nama perusahaan</TableCell>
                   <TableCell>Provinsi</TableCell>
+                  <TableCell>Kabupaten / Kota</TableCell>
                   <TableCell align="right">Harga / kg</TableCell>
-                  <TableCell>Durasi (Hari)</TableCell>
+                  <TableCell>Estimasi Pengiriman (Hari)</TableCell>
                   <TableCell align="right" width={120}>
                     Aksi
                   </TableCell>
@@ -302,6 +351,11 @@ export default function ShipmentSettingsView() {
                     <TableCell>{r.localShippingCompanyName}</TableCell>
                     <TableCell>
                       {provinceNameById(String(r.localShippingProvinceId))}
+                    </TableCell>
+                    <TableCell>
+                      {r.localShippingKabupatenName ??
+                        r.localShippingKabupatenId ??
+                        "-"}
                     </TableCell>
                     <TableCell align="right">
                       {r.localShippingPricePerKg?.toLocaleString("id-ID")}
