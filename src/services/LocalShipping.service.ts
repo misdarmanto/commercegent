@@ -92,6 +92,8 @@ export class LocalShippingService {
         localShippingCompanyName: payload.localShippingCompanyName ?? '',
         localShippingProvinceName: payload.localShippingProvinceName ?? '',
         localShippingProvinceId: payload.localShippingProvinceId ?? '',
+        localShippingKabupatenName: payload.localShippingKabupatenName ?? '',
+        localShippingKabupatenId: payload.localShippingKabupatenId ?? '',
         localShippingPricePerKg: payload.localShippingPricePerKg ?? 0,
         localShippingDuration: payload.localShippingDuration ?? '',
         deleted: false

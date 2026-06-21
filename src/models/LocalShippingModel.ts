@@ -6,6 +6,8 @@ export interface LocalShippingAttributes extends IBaseModelFields {
   localShippingId: number
   localShippingCompanyName: string
   localShippingProvinceName: string
+  localShippingKabupatenName: string
+  localShippingKabupatenId: string
   localShippingProvinceId: string
   localShippingPricePerKg: number
   localShippingDuration: string
@@ -39,6 +41,14 @@ export const LocalShippingModel = sequelizeInit.define<LocalShippingInstance>(
       allowNull: false
     },
     localShippingProvinceId: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    localShippingKabupatenName: {
+      type: DataTypes.STRING,
+      allowNull: false
+    },
+    localShippingKabupatenId: {
       type: DataTypes.STRING,
       allowNull: false
     },
