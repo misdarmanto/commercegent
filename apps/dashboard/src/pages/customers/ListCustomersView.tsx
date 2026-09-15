@@ -9,8 +9,8 @@ import {
   GridToolbarExport,
 } from "@mui/x-data-grid";
 import { MoreOutlined } from "@mui/icons-material";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
+import { useCustomers } from "../../services/customers";
 import { Button, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
@@ -19,39 +19,19 @@ import { convertTime } from "../../utilities/convertTime";
 
 export default function ListCustomersView() {
   const navigation = useNavigate();
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const { handleGetTableDataRequest } = useHttp();
-
-  const [loading, setLoading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 25,
     page: 0,
   });
 
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/users",
-        page: paginationModel.page ?? 0,
-        size: paginationModel.pageSize ?? 10,
-        filter: { search },
-      });
-      if (result) {
-        setTableData(result.items);
-        setRowCount(result.total_items);
-      }
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getTableData({ search: "" });
-  }, [paginationModel]);
+  const { data, isLoading: loading } = useCustomers({
+    page: paginationModel.page,
+    size: paginationModel.pageSize,
+    filters: { search },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
 
   const columns: GridColDef[] = [
     {
@@ -99,7 +79,7 @@ export default function ListCustomersView() {
   ];
 
   function CustomToolbar() {
-    const [search, setSearch] = useState("");
+    const [searchInput, setSearchInput] = useState(search);
 
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
@@ -110,10 +90,10 @@ export default function ListCustomersView() {
           <TextField
             size="small"
             placeholder="search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button variant="outlined" onClick={() => getTableData({ search })}>
+          <Button variant="outlined" onClick={() => setSearch(searchInput)}>
             Search
           </Button>
         </Stack>
