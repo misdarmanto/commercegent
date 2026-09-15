@@ -9,8 +9,8 @@ import {
   GridToolbarExport,
 } from "@mui/x-data-grid";
 import { MoreOutlined } from "@mui/icons-material";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
+import { useOrders } from "../../services/orders";
 import { Button, Chip, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
@@ -20,49 +20,19 @@ import { convertNumberToCurrency } from "../../utilities/convertNumberToCurrency
 
 export default function ListOrderView() {
   const navigation = useNavigate();
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const { handleGetTableDataRequest } = useHttp();
-
-  const [loading, setLoading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/orders",
-        page: paginationModel.page ?? 0,
-        size: paginationModel.pageSize ?? 10,
-        filter: { search },
-      });
-
-      if (result && result.items) {
-        console.log(result.items);
-        const mapingData = result.items.map((item: any) => {
-          return {
-            ...item,
-            userName: item?.user?.userName,
-            orderProductName: item?.product?.productName,
-          };
-        });
-
-        setTableData(mapingData);
-        setRowCount(result.total_items);
-      }
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getTableData({ search: "" });
-  }, [paginationModel]);
+  const { data, isLoading: loading } = useOrders({
+    page: paginationModel.page,
+    size: paginationModel.pageSize,
+    filters: { search },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
 
   const columns: GridColDef[] = [
     {
@@ -163,7 +133,7 @@ export default function ListOrderView() {
   ];
 
   function CustomToolbar() {
-    const [search, setSearch] = useState<string>("");
+    const [searchInput, setSearchInput] = useState<string>(search);
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={2}>
@@ -173,10 +143,10 @@ export default function ListOrderView() {
           <TextField
             size="small"
             placeholder="search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button variant="outlined" onClick={() => getTableData({ search })}>
+          <Button variant="outlined" onClick={() => setSearch(searchInput)}>
             Search
           </Button>
         </Stack>

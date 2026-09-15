@@ -1,6 +1,11 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useHttp } from "../../hooks/http";
-import { ReactNode, useEffect, useState } from "react";
+import {
+  useOrder,
+  useOrderShippingTracking,
+  useCreateShippingDraft,
+  useConfirmShippingDraft,
+} from "../../services/orders";
+import { ReactNode, useState } from "react";
 import {
   Box,
   Button,
@@ -21,12 +26,6 @@ import { Carousel } from "react-responsive-carousel";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { getImageUrl } from "../../utilities/getImageUrl";
-import {
-  IConfirmShippingRequest,
-  ICreateShippingDraftRequest,
-  IShippingTrackInfo,
-} from "../../interfaces/Shipping";
-import { IOrderDetail } from "../../interfaces/Order";
 
 import LocalShippingIcon from "@mui/icons-material/LocalShipping";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -65,54 +64,26 @@ const getOrderStatus = (status: string) => {
 };
 
 export default function DetailOrderView() {
-  const { handleGetRequest, handlePostRequest } = useHttp();
   const { orderId } = useParams();
   const navigate = useNavigate();
 
-  const [detailOrder, setDetailOrder] = useState<IOrderDetail | null>(null);
-  const [shipping, setShipping] = useState<IShippingTrackInfo>();
+  const { data: detailOrder } = useOrder(orderId);
+  const { data: shipping } = useOrderShippingTracking(detailOrder?.orderId, {
+    enabled: detailOrder?.orderStatus === "delivery",
+  });
 
   // ===== MODAL STATE =====
   const [openDraftModal, setOpenDraftModal] = useState(false);
   const [openConfirmModal, setOpenConfirmModal] = useState(false);
 
-  const fetchTrackingShipping = async (shippingOrderId: number) => {
-    try {
-      const result = await handleGetRequest({
-        path: `/shipping/tracking?orderId=${shippingOrderId}`,
-      });
-
-      console.log("trackiong", result);
-      setShipping(result);
-    } catch (error) {
-      console.error("Error fetching shipping details:", error);
-    }
-  };
-
-  const getDetailOrder = async () => {
-    const result: IOrderDetail = await handleGetRequest({
-      path: "/orders/detail/" + orderId,
-    });
-
-    if (result) {
-      setDetailOrder(result);
-
-      console.log("detailOrder", result);
-
-      if (result.orderStatus === "delivery") {
-        await fetchTrackingShipping(result.orderId);
-      }
-    }
-  };
+  const createShippingDraft = useCreateShippingDraft();
+  const confirmShippingDraft = useConfirmShippingDraft();
 
   const handleUpdateOrderToDraft = async () => {
     try {
-      const payload: ICreateShippingDraftRequest = {
+      await createShippingDraft.mutateAsync({
         orderId: orderId ? Number(orderId) : 0,
-      };
-
-      await handlePostRequest({ path: "/shipping/draft", body: payload });
-      getDetailOrder();
+      });
       setOpenDraftModal(false);
     } catch (error) {
       console.error(error);
@@ -121,25 +92,14 @@ export default function DetailOrderView() {
 
   const handleUpdateOrderToDelivered = async () => {
     try {
-      const payload: IConfirmShippingRequest = {
+      await confirmShippingDraft.mutateAsync({
         orderId: orderId ? Number(orderId) : 0,
-      };
-
-      await handlePostRequest({
-        path: "/shipping/draft/confirm",
-        body: payload,
       });
-
-      getDetailOrder();
       setOpenConfirmModal(false);
     } catch (error) {
       console.error(error);
     }
   };
-
-  useEffect(() => {
-    getDetailOrder();
-  }, []);
 
   if (!detailOrder) return null;
 
