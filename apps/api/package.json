@@ -1,6 +1,7 @@
 {
-  "name": "leora-ecommerce",
+  "name": "@fresh-ecommerce/api",
   "version": "1.0.0",
+  "private": true,
   "description": "",
   "main": "server.ts",
   "scripts": {
