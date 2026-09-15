@@ -36,6 +36,7 @@ export interface IOrderItems {
   orderItemProductDiscount: string;
   orderItemProductSellPrice: string;
   orderItemProductImage: string;
+  orderItemProductWeight: number;
   orderItemQuantity: number;
   orderItemTotalPrice: string;
   product?: IProduct;
@@ -64,6 +65,7 @@ export interface IOrderDetail {
   orderPaymentUrl: string | null;
   orderPaymentToken: string | null;
   orderReferenceId: string | null;
+  orderShippingProvider: "FRESH" | "BITESHIP";
 
   orderStatus: "waiting" | "process" | "draft" | "delivery" | "done" | "cancel";
 

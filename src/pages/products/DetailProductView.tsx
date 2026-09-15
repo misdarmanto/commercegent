@@ -53,6 +53,8 @@ export default function DetailProductView() {
     const result = (await handleGetRequest({
       path: "/products/detail/" + productId,
     })) as IProduct | undefined;
+
+    console.log("result", result);
     if (result) {
       setProductDetail(result);
     }

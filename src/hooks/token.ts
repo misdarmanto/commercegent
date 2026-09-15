@@ -1,6 +1,6 @@
 import { CONFIGS } from "../configs";
 import { jwtDecode } from "jwt-decode";
-import { IJwtToken } from "../models/userModel";
+import { IJwtPayload } from "../interfaces/Auth";
 
 export const useToken = () => {
   const TOKEN_KEY = CONFIGS.localStorageKey;
@@ -14,7 +14,7 @@ export const useToken = () => {
 
     if (token) {
       const resultToken: any = jwtDecode(token);
-      const userToken: IJwtToken = resultToken;
+      const userToken: IJwtPayload = resultToken;
       return userToken;
     }
     return null;

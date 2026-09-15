@@ -6,6 +6,10 @@ import {
   Typography,
   IconButton,
   useTheme,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from "@mui/material";
 import ReactApexChart from "react-apexcharts";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -22,6 +26,10 @@ const DashboardView = () => {
   const theme = useTheme();
 
   const [statisticTotal, setStatisticTotal] = useState<IStatisticTotal>();
+  const [visitorRange, setVisitorRange] = useState("1d");
+  const [visitorInterval, setVisitorInterval] = useState("1h");
+  const [visitorSeries, setVisitorSeries] = useState<number[]>([]);
+  const [visitorCategories, setVisitorCategories] = useState<string[]>([]);
 
   const getStatistic = async () => {
     const result: IStatisticTotal = await handleGetRequest({
@@ -30,9 +38,36 @@ const DashboardView = () => {
     setStatisticTotal(result);
   };
 
+  const getVisitorStatistic = async (range: string, interval: string) => {
+    try {
+      const result = await handleGetRequest({
+        path: `/statistic/visitor?range=${range}&interval=${interval}`,
+      });
+
+      const rows = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+          ? result.data
+          : [];
+
+      setVisitorCategories(rows.map((item: { date: string }) => item.date));
+      setVisitorSeries(
+        rows.map((item: { total: number | string }) => Number(item.total ?? 0)),
+      );
+    } catch (error) {
+      console.log(error);
+      setVisitorCategories([]);
+      setVisitorSeries([]);
+    }
+  };
+
   useEffect(() => {
     getStatistic();
   }, []);
+
+  useEffect(() => {
+    getVisitorStatistic(visitorRange, visitorInterval);
+  }, [visitorRange, visitorInterval]);
 
   const summaryCards = [
     {
@@ -136,14 +171,50 @@ const DashboardView = () => {
               boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
             }}
           >
-            <Typography
-              variant="h6"
-              fontWeight="bold"
-              color="text.primary"
-              mb={2}
+            <Box
+              sx={{
+                mb: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 2,
+                flexWrap: "wrap",
+              }}
             >
-              Trafik Pengunjung
-            </Typography>
+              <Typography variant="h6" fontWeight="bold" color="text.primary">
+                Trafik Pengunjung
+              </Typography>
+              <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
+                <FormControl size="small" sx={{ minWidth: 100 }}>
+                  <InputLabel id="visitor-range-label">Range</InputLabel>
+                  <Select
+                    labelId="visitor-range-label"
+                    value={visitorRange}
+                    label="Range"
+                    onChange={(e) => setVisitorRange(e.target.value)}
+                  >
+                    <MenuItem value="1d">1d</MenuItem>
+                    <MenuItem value="7d">7d</MenuItem>
+                    <MenuItem value="1m">1m</MenuItem>
+                    <MenuItem value="3m">3m</MenuItem>
+                    <MenuItem value="1y">1y</MenuItem>
+                  </Select>
+                </FormControl>
+                <FormControl size="small" sx={{ minWidth: 100 }}>
+                  <InputLabel id="visitor-interval-label">Interval</InputLabel>
+                  <Select
+                    labelId="visitor-interval-label"
+                    value={visitorInterval}
+                    label="Interval"
+                    onChange={(e) => setVisitorInterval(e.target.value)}
+                  >
+                    <MenuItem value="1h">1h</MenuItem>
+                    <MenuItem value="12h">12h</MenuItem>
+                    <MenuItem value="1d">1d</MenuItem>
+                  </Select>
+                </FormControl>
+              </Box>
+            </Box>
             <ReactApexChart
               options={{
                 chart: { height: 350, type: "area", toolbar: { show: false } },
@@ -159,25 +230,18 @@ const DashboardView = () => {
                   },
                 },
                 xaxis: {
-                  type: "datetime",
-                  labels: { style: { colors: theme.palette.text.secondary } },
-                  categories: [
-                    "2025-11-01T00:00:00.000Z",
-                    "2025-11-02T00:00:00.000Z",
-                    "2025-11-03T00:00:00.000Z",
-                    "2025-11-04T00:00:00.000Z",
-                    "2025-11-05T00:00:00.000Z",
-                    "2025-11-06T00:00:00.000Z",
-                    "2025-11-07T00:00:00.000Z",
-                  ],
+                  type: "category",
+                  labels: {
+                    show: false,
+                    style: { colors: theme.palette.text.secondary },
+                  },
+                  categories: visitorCategories,
                 },
                 tooltip: {
-                  x: { format: "dd MMM" },
+                  x: { show: true },
                 },
               }}
-              series={[
-                { name: "Trafik", data: [31, 40, 28, 51, 42, 109, 100] },
-              ]}
+              series={[{ name: "Trafik", data: visitorSeries }]}
               type="area"
               height={350}
             />
