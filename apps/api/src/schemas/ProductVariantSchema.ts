@@ -1,0 +1,94 @@
+import { z } from 'zod'
+
+export const createProductVariantSchema = z.object({
+  productVariantName: z
+    .string({ required_error: 'Nama varian produk wajib diisi' })
+    .min(3, 'Nama varian produk minimal 3 karakter')
+    .max(150, 'Nama varian produk maksimal 150 karakter'),
+
+  productVariantImage: z.string().optional(),
+
+  productVariantPrice: z.coerce
+    .number({ invalid_type_error: 'Harga varian produk harus berupa angka' })
+    .min(0, 'Harga varian produk tidak boleh kurang dari 0'),
+
+  productVariantStock: z.preprocess(
+    (v) => (v === null || v === undefined || v === '' ? undefined : v),
+    z.coerce
+      .number({ invalid_type_error: 'Stok produk harus berupa angka' })
+      .int('Stok produk harus bilangan bulat')
+      .min(0, 'Stok produk tidak boleh kurang dari 0')
+      .default(1)
+  ),
+
+  productVariantDiscount: z.preprocess(
+    (v) => (v === null || v === undefined || v === '' ? undefined : v),
+    z.coerce
+      .number({ invalid_type_error: 'Diskon produk harus berupa angka' })
+      .min(0, 'Diskon produk tidak boleh kurang dari 0')
+      .max(100, 'Diskon produk tidak boleh lebih dari 100')
+      .default(0)
+  ),
+
+  productVariantWeight: z.preprocess(
+    (v) => (v === null || v === undefined || v === '' ? undefined : v),
+    z.coerce
+      .number({ invalid_type_error: 'Berat produk harus berupa angka' })
+      .min(0, 'Berat produk tidak boleh kurang dari 0')
+      .default(1)
+  )
+})
+
+/** PATCH: varian lama (wajib productVariantId) atau varian baru (tanpa id, sama seperti create) */
+export const updateExistingProductVariantSchema = z
+  .object({
+    productVariantId: z.coerce.number().int().positive(),
+
+    productVariantName: z
+      .string({ required_error: 'Nama varian produk wajib diisi' })
+      .trim()
+      .min(3)
+      .max(255)
+      .optional(),
+
+    productVariantImage: z.string().optional(),
+
+    productVariantPrice: z.coerce
+      .number({ invalid_type_error: 'Harga varian produk harus berupa angka' })
+      .min(0, 'Harga varian produk tidak boleh kurang dari 0')
+      .optional(),
+
+    productVariantStock: z.coerce
+      .number({ invalid_type_error: 'Stok produk harus berupa angka' })
+      .int('Stok produk harus bilangan bulat')
+      .min(0, 'Stok produk tidak boleh kurang dari 0')
+      .optional(),
+
+    productVariantDiscount: z.coerce
+      .number({ invalid_type_error: 'Diskon produk harus berupa angka' })
+      .min(0, 'Diskon produk tidak boleh kurang dari 0')
+      .max(100, 'Diskon produk tidak boleh lebih dari 100')
+      .optional(),
+
+    productVariantWeight: z.coerce
+      .number({ invalid_type_error: 'Berat produk harus berupa angka' })
+      .min(0, 'Berat produk tidak boleh kurang dari 0')
+      .optional()
+  })
+  .strict()
+
+export const updateProductVariantSchema = z.union([
+  updateExistingProductVariantSchema,
+  createProductVariantSchema
+])
+
+export const removeProductVariantQuerySchema = z.object({
+  productId: z.coerce
+    .number({ invalid_type_error: 'productId harus berupa angka' })
+    .int('productId harus bilangan bulat')
+    .positive('productId harus lebih dari 0')
+})
+
+export type ICreateProductVariant = z.infer<typeof createProductVariantSchema>
+export type IUpdateProductVariant = z.infer<typeof updateProductVariantSchema>
+export type IRemoveProductVariant = z.infer<typeof removeProductVariantQuerySchema>
