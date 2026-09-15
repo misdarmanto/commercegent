@@ -17,14 +17,20 @@ import TextField from "@mui/material/TextField";
 import Stack from "@mui/material/Stack";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { useHttp } from "../../hooks/http";
+import {
+  useAdmin,
+  useCreateAdmin,
+  useUpdateAdmin,
+} from "../../services/admins";
 import { AdminForm, AdminSchema } from "../../validations/adminSchema";
 
 export default function FormAdminView() {
-  const { handlePostRequest, handleGetRequest, handleUpdateRequest } =
-    useHttp();
   const navigate = useNavigate();
   const { id } = useParams();
+
+  const { data: admin } = useAdmin(id);
+  const createAdmin = useCreateAdmin();
+  const updateAdmin = useUpdateAdmin();
 
   const {
     register,
@@ -40,30 +46,21 @@ export default function FormAdminView() {
   });
 
   useEffect(() => {
-    if (id) {
-      (async () => {
-        const data = await handleGetRequest({ path: `/admins/detail/${id}` });
-        reset({
-          userName: data.userName,
-          userWhatsAppNumber: data.userWhatsAppNumber,
-          userRole: data.userRole,
-        });
-      })();
+    if (admin) {
+      reset({
+        userName: admin.userName,
+        userWhatsAppNumber: admin.userWhatsAppNumber,
+        userRole: admin.userRole,
+      });
     }
-  }, [id, reset]);
+  }, [admin, reset]);
 
   const onSubmit = async (formData: AdminForm) => {
     try {
       if (id) {
-        await handleUpdateRequest({
-          path: `/admins`,
-          body: { ...formData, productId: id },
-        });
+        await updateAdmin.mutateAsync({ id, formData });
       } else {
-        await handlePostRequest({
-          path: "/admins/register",
-          body: formData,
-        });
+        await createAdmin.mutateAsync(formData);
       }
       navigate("/admins");
     } catch (error) {
