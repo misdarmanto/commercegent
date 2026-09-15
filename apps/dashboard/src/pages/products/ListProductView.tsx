@@ -10,8 +10,12 @@ import {
   GridToolbarExport,
 } from "@mui/x-data-grid";
 import { Add, MoreOutlined, UploadFile } from "@mui/icons-material";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
+import {
+  useProducts,
+  useRemoveProduct,
+  useUploadProductsExcel,
+} from "../../services/products";
 import {
   Button,
   Stack,
@@ -34,29 +38,32 @@ import { IListProduct } from "../../interfaces/Product";
 export default function ProductListView() {
   const navigation = useNavigate();
 
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const { handleGetTableDataRequest, handleRemoveRequest, handlePostRequest } =
-    useHttp();
   const [modalDeleteData, setModalDeleteData] = useState<IListProduct>();
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
 
   // Upload Excel State
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadLoading, setUploadLoading] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 1,
   });
 
-  const handleDeleteCategory = async (productId: number) => {
-    await handleRemoveRequest({
-      path: `/products?productId=${productId}`,
-    });
-    await getTableData({ search: "" });
+  const { data, isLoading } = useProducts({
+    page: paginationModel.page,
+    size: paginationModel.pageSize,
+    filters: { search },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
+
+  const removeProduct = useRemoveProduct();
+  const uploadExcel = useUploadProductsExcel();
+
+  const handleDeleteCategory = (productId: number) => {
+    removeProduct.mutate(productId);
   };
 
   const handleOpenModalDelete = (data: IListProduct) => {
@@ -64,52 +71,15 @@ export default function ProductListView() {
     setOpenModalDelete(true);
   };
 
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/products/admin",
-        page: paginationModel.page ?? 1,
-        size: paginationModel.pageSize ?? 10,
-        filter: { search },
-      });
-
-      console.log(result);
-      if (result) {
-        setTableData(result.items);
-        setRowCount(result.totalItems);
-      }
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getTableData({ search: "" });
-  }, [paginationModel]);
-
-  const handleUploadExcel = async () => {
+  const handleUploadExcel = () => {
     if (!uploadFile) return alert("Pilih file Excel terlebih dahulu!");
-    try {
-      setUploadLoading(true);
-      const formData = new FormData();
-      formData.append("file", uploadFile);
 
-      await handlePostRequest({
-        path: "/products/upload-excel",
-        body: formData,
-      });
-
-      setOpenUploadDialog(false);
-      setUploadFile(null);
-      await getTableData({ search: "" });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setUploadLoading(false);
-    }
+    uploadExcel.mutate(uploadFile, {
+      onSuccess: () => {
+        setOpenUploadDialog(false);
+        setUploadFile(null);
+      },
+    });
   };
 
   const columns: GridColDef[] = [
@@ -218,7 +188,7 @@ export default function ProductListView() {
   ];
 
   function CustomToolbar() {
-    const [search, setSearch] = useState<string>("");
+    const [searchInput, setSearchInput] = useState<string>(search);
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={2}>
@@ -243,10 +213,10 @@ export default function ProductListView() {
           <TextField
             size="small"
             placeholder="search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button variant="outlined" onClick={() => getTableData({ search })}>
+          <Button variant="outlined" onClick={() => setSearch(searchInput)}>
             Search
           </Button>
         </Stack>
@@ -278,7 +248,7 @@ export default function ProductListView() {
           pageSizeOptions={[10, 25, 50]}
           paginationMode="server"
           rowCount={rowCount}
-          loading={loading}
+          loading={isLoading}
           slots={{
             toolbar: CustomToolbar,
           }}
@@ -330,10 +300,10 @@ export default function ProductListView() {
           </Button>
           <Button
             onClick={handleUploadExcel}
-            disabled={uploadLoading}
+            disabled={uploadExcel.isPending}
             variant="contained"
           >
-            {uploadLoading ? "Mengunggah..." : "Upload"}
+            {uploadExcel.isPending ? "Mengunggah..." : "Upload"}
           </Button>
         </DialogActions>
       </Dialog>
