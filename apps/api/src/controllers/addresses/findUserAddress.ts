@@ -5,7 +5,7 @@ import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
 import { AppError } from '../../utilities/appError'
-import { IFindAllAddresses } from '../../schemas/AddressSchema'
+import { IFindAllAddresses } from '../../schemas/addressSchema'
 
 export const findUserAddress = async (
   req: IAuthenticatedRequest,

@@ -7,7 +7,7 @@ import {
   removeAddressQuerySchema,
   updateAddressSchema,
   updateAddressTypeSchema
-} from '../schemas/AddressSchema'
+} from '../schemas/addressSchema'
 
 const AddressRoute = Router()
 

@@ -5,7 +5,7 @@ import {
   findAllPromotionQuerySchema,
   removePromotionQuerySchema,
   updatePromotionSchema
-} from '../schemas/PromotionSchema'
+} from '../schemas/promotionSchema'
 
 const PromotionRoute = Router()
 

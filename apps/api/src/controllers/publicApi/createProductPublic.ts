@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { PublicApiService } from '../../services/PublicApi.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type ICreateProductPublic } from '../../schemas/PublicApiSchema'
+import { type ICreateProductPublic } from '../../schemas/publicApiSchema'
 
 export const createProductPublic = async (
   req: IAuthenticatedRequest,

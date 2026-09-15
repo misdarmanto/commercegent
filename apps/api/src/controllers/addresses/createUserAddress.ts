@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type ICreateAddress } from '../../schemas/AddressSchema'
+import { type ICreateAddress } from '../../schemas/addressSchema'
 import { AppError } from '../../utilities/appError'
 
 export const createUserAddress = async (

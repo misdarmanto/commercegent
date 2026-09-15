@@ -5,7 +5,7 @@ import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
 import { AppError } from '../../utilities/appError'
-import { type IUpdateAddress } from '../../schemas/AddressSchema'
+import { type IUpdateAddress } from '../../schemas/addressSchema'
 
 export const updateAdminAddress = async (
   req: IAuthenticatedRequest,

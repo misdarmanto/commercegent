@@ -10,7 +10,7 @@ import type {
   IRemoveAddress,
   IUpdateAddress,
   IUpdateAddressType
-} from '../schemas/AddressSchema'
+} from '../schemas/addressSchema'
 
 export class AddressService {
   static buildFindAllWhere(userId: number, payload: IFindAllAddresses) {

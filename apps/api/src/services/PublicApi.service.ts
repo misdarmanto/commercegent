@@ -12,7 +12,7 @@ import type {
   ICreateProductPublic,
   IFindAllOrderPublic,
   IUpdateProductPublic
-} from '../schemas/PublicApiSchema'
+} from '../schemas/publicApiSchema'
 
 export class PublicApiService {
   private static buildFindAllWhere(

@@ -9,8 +9,8 @@ import {
   productDetailParamsSchema,
   removeProductQuerySchema,
   updateProductSchema
-} from '../schemas/ProductSchema'
-import { findProductByBarcodeSchema } from '../schemas/ProductSchema'
+} from '../schemas/productSchema'
+import { findProductByBarcodeSchema } from '../schemas/productSchema'
 
 const ProductRoute = Router()
 

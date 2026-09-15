@@ -5,7 +5,7 @@ import { handleError } from '../../utilities/requestHandler'
 import { AddressService } from '../../services/Address.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
 import { AppError } from '../../utilities/appError'
-import { type ICreateAddress } from '../../schemas/AddressSchema'
+import { type ICreateAddress } from '../../schemas/addressSchema'
 
 export const createAdminAddress = async (
   req: IAuthenticatedRequest,

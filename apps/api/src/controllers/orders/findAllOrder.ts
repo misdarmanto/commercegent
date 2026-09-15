@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { OrderService } from '../../services/Order.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IFindAllOrder } from '../../schemas/OrderSchema'
+import { type IFindAllOrder } from '../../schemas/orderSchema'
 import { AppError } from '../../utilities/appError'
 
 export const findAllOrder = async (

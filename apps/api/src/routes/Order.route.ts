@@ -6,7 +6,7 @@ import {
   findAllOrderQuerySchema,
   orderDetailParamsSchema,
   updateOrderBodySchema
-} from '../schemas/OrderSchema'
+} from '../schemas/orderSchema'
 
 const OrderRoute = Router()
 
