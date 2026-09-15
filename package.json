@@ -2,6 +2,7 @@
   "name": "fresh-ecommerce",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "FRESH Ecommerce monorepo - backend API and admin dashboard.",
   "license": "UNLICENSED",
   "packageManager": "pnpm@11.25.0",
