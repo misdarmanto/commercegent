@@ -538,9 +538,6 @@ export default function AppLayout() {
                   <List disablePadding sx={{ mt: 0.5 }}>
                     {group.children.map((child) => {
                       const active = isLeafActive(child.link);
-                      const { outline: OutlineIcon, fill: FillIcon } =
-                        IconMenusSidebar[child.iconKey];
-                      const Icon = active ? FillIcon : OutlineIcon;
 
                       return (
                         <ListItem key={child.link} disablePadding sx={{ mb: 0.5 }}>
@@ -568,16 +565,6 @@ export default function AppLayout() {
                               },
                             }}
                           >
-                            <ListItemIcon
-                              sx={{
-                                minWidth: 32,
-                                color: active
-                                  ? sidebarTokens.onActiveItem
-                                  : sidebarTokens.textInactive,
-                              }}
-                            >
-                              <Icon fontSize="small" />
-                            </ListItemIcon>
                             <ListItemText
                               primary={child.title}
                               sx={{
