@@ -14,6 +14,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import ButtonDeleteFile from "../../components/buttons/ButtonDeleteFile";
 import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
@@ -27,10 +28,12 @@ import {
 import { getImageUrl } from "../../utilities/getImageUrl";
 
 export default function BannerSettingsView() {
+  const { t } = useTranslation();
   const [bannerImage, setBannerImage] = useState("");
   const [bannerOrder, setBannerOrder] = useState<number>(1);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState<BannerItem | null>(null);
 
@@ -41,7 +44,8 @@ export default function BannerSettingsView() {
 
   const handleSubmit = async () => {
     if (!bannerImage) {
-      setSnackbarMessage("Banner image wajib diisi.");
+      setSnackbarMessage(t("settings.bannerPanel.imageRequired"));
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
       return;
     }
@@ -52,13 +56,15 @@ export default function BannerSettingsView() {
         bannerOrder: Number(bannerOrder),
       });
 
-      setSnackbarMessage("Banner berhasil disimpan.");
+      setSnackbarMessage(t("settings.bannerPanel.savedSuccess"));
+      setSnackbarSeverity("success");
       setOpenSnackbar(true);
       setBannerImage("");
       setBannerOrder(1);
     } catch (error) {
       console.error(error);
-      setSnackbarMessage("Terjadi kesalahan saat menyimpan banner.");
+      setSnackbarMessage(t("settings.bannerPanel.errorSaving"));
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
   };
@@ -73,13 +79,15 @@ export default function BannerSettingsView() {
 
     try {
       await removeBanner.mutateAsync(selectedBanner.bannerId);
-      setSnackbarMessage("Banner berhasil dihapus.");
+      setSnackbarMessage(t("settings.bannerPanel.deletedSuccess"));
+      setSnackbarSeverity("success");
       setOpenSnackbar(true);
       setOpenDeleteDialog(false);
       setSelectedBanner(null);
     } catch (error) {
       console.error(error);
-      setSnackbarMessage("Terjadi kesalahan saat menghapus banner.");
+      setSnackbarMessage(t("settings.bannerPanel.errorDeleting"));
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
   };
@@ -89,11 +97,11 @@ export default function BannerSettingsView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Settings",
+            label: t("settings.title"),
             link: "/settings",
             icon: <IconMenus.settings fontSize="small" />,
           },
-          { label: "Banner", link: "/settings?tab=banner" },
+          { label: t("settings.banner"), link: "/settings?tab=banner" },
         ]}
       />
 
@@ -101,7 +109,7 @@ export default function BannerSettingsView() {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={6}>
             <TextField
-              label="Urutan Banner"
+              label={t("settings.bannerPanel.order")}
               type="number"
               fullWidth
               value={bannerOrder}
@@ -113,7 +121,7 @@ export default function BannerSettingsView() {
 
         <Box sx={{ my: 3 }}>
           <Typography color="text.secondary">
-            Banner: 1080x540 px (rasio 2:1), maks 2MB
+            {t("settings.bannerPanel.imageHint")}
           </Typography>
           <Stack direction="row" flexWrap="wrap" spacing={2} mt={1}>
             {bannerImage ? (
@@ -145,20 +153,20 @@ export default function BannerSettingsView() {
 
         <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
           <Button variant="outlined" onClick={handleSubmit} disabled={saving}>
-            {saving ? "Menyimpan..." : "Simpan"}
+            {saving ? t("settings.bannerPanel.saving") : t("settings.bannerPanel.save")}
           </Button>
         </Box>
       </Card>
 
       <Card sx={{ p: 3, mt: 2 }}>
         <Typography variant="h6" fontWeight="bold" mb={2}>
-          Daftar Banner Tersimpan
+          {t("settings.bannerPanel.savedList")}
         </Typography>
 
         {loadingBanners ? (
-          <Typography color="text.secondary">Memuat banner...</Typography>
+          <Typography color="text.secondary">{t("settings.bannerPanel.loadingBanners")}</Typography>
         ) : banners.length === 0 ? (
-          <Typography color="text.secondary">Belum ada banner.</Typography>
+          <Typography color="text.secondary">{t("settings.bannerPanel.noBanners")}</Typography>
         ) : (
           <Stack direction="row" flexWrap="wrap" spacing={2}>
             {banners.map((banner) => (
@@ -178,7 +186,7 @@ export default function BannerSettingsView() {
                   }}
                 />
                 <Typography variant="body2" color="text.secondary">
-                  ID: {banner.bannerId} | Order: {banner.bannerOrder}
+                  {t("settings.bannerPanel.idOrder", { id: banner.bannerId, order: banner.bannerOrder })}
                 </Typography>
                 <Button
                   variant="outlined"
@@ -186,7 +194,7 @@ export default function BannerSettingsView() {
                   size="small"
                   onClick={() => handleOpenDeleteDialog(banner)}
                 >
-                  Delete
+                  {t("settings.bannerPanel.delete")}
                 </Button>
               </Stack>
             ))}
@@ -200,21 +208,20 @@ export default function BannerSettingsView() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Konfirmasi Hapus Banner</DialogTitle>
+        <DialogTitle>{t("settings.bannerPanel.confirmDeleteTitle")}</DialogTitle>
         <DialogContent>
           <Typography>
-            Apakah anda yakin ingin menghapus banner ID{" "}
-            {selectedBanner?.bannerId ?? "-"}?
+            {t("settings.bannerPanel.confirmDeleteMessage", { id: selectedBanner?.bannerId ?? "-" })}
           </Typography>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteDialog(false)}>Batal</Button>
+          <Button onClick={() => setOpenDeleteDialog(false)}>{t("settings.bannerPanel.cancel")}</Button>
           <Button
             variant="contained"
             color="error"
             onClick={handleConfirmDelete}
           >
-            Hapus
+            {t("settings.bannerPanel.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -227,7 +234,7 @@ export default function BannerSettingsView() {
       >
         <Alert
           onClose={() => setOpenSnackbar(false)}
-          severity={snackbarMessage.includes("kesalahan") ? "error" : "success"}
+          severity={snackbarSeverity}
           sx={{ width: "100%" }}
         >
           {snackbarMessage}

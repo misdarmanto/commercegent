@@ -20,6 +20,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -38,10 +39,11 @@ import {
 import {
   LocalShippingFormInputType,
   LocalShippingFormType,
-  LocalShippingSchema,
+  getLocalShippingSchema,
 } from "../../validations/settingsSchema";
 
 export default function ShipmentSettingsView() {
+  const { t } = useTranslation();
   const { data: provinces = [] } = useProvinces();
   const [regencies, setRegencies] = useState<RegionOption[]>([]);
   const { data: rows = [], isLoading: loadingList } = useLocalShippings();
@@ -50,6 +52,7 @@ export default function ShipmentSettingsView() {
   const saving = createLocalShipping.isPending;
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<LocalShippingListItem | null>(
     null,
@@ -64,7 +67,7 @@ export default function ShipmentSettingsView() {
     reset,
     formState: { errors },
   } = useForm<LocalShippingFormInputType, unknown, LocalShippingFormType>({
-    resolver: zodResolver(LocalShippingSchema),
+    resolver: zodResolver(getLocalShippingSchema()),
     defaultValues: {
       localShippingCompanyName: "",
       localShippingProvinceName: "",
@@ -112,7 +115,8 @@ export default function ShipmentSettingsView() {
         localShippingPricePerKg: data.localShippingPricePerKg,
         localShippingDuration: data.localShippingDuration,
       });
-      setSnackbarMessage("Pengiriman lokal berhasil disimpan.");
+      setSnackbarMessage(t("settings.shipmentPanel.savedSuccess"));
+      setSnackbarSeverity("success");
       setOpenSnackbar(true);
       setRegencies([]);
       reset({
@@ -126,7 +130,8 @@ export default function ShipmentSettingsView() {
       });
     } catch (e) {
       console.error(e);
-      setSnackbarMessage("Gagal menyimpan data pengiriman lokal.");
+      setSnackbarMessage(t("settings.shipmentPanel.errorSaving"));
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
   };
@@ -143,13 +148,15 @@ export default function ShipmentSettingsView() {
     if (selectedRow == null) return;
     try {
       await removeLocalShipping.mutateAsync(selectedRow.localShippingId);
-      setSnackbarMessage("Pengiriman lokal berhasil dihapus.");
+      setSnackbarMessage(t("settings.shipmentPanel.deletedSuccess"));
+      setSnackbarSeverity("success");
       setOpenSnackbar(true);
       setOpenDeleteDialog(false);
       setSelectedRow(null);
     } catch (e) {
       console.error(e);
-      setSnackbarMessage("Gagal menghapus data pengiriman lokal.");
+      setSnackbarMessage(t("settings.shipmentPanel.errorDeleting"));
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
   };
@@ -159,24 +166,24 @@ export default function ShipmentSettingsView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Settings",
+            label: t("settings.title"),
             link: "/settings",
             icon: <IconMenus.settings fontSize="small" />,
           },
-          { label: "Shipment", link: "/settings?tab=shipment" },
+          { label: t("settings.shipment"), link: "/settings?tab=shipment" },
         ]}
       />
 
       <Card sx={{ p: 3 }}>
         <Typography variant="h6" fontWeight="bold" mb={2}>
-          Tambah pengiriman lokal
+          {t("settings.shipmentPanel.addTitle")}
         </Typography>
         <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Nama perusahaan"
+                label={t("settings.shipmentPanel.companyName")}
                 error={!!errors.localShippingCompanyName}
                 helperText={errors.localShippingCompanyName?.message}
                 {...register("localShippingCompanyName")}
@@ -186,14 +193,14 @@ export default function ShipmentSettingsView() {
               <TextField
                 select
                 fullWidth
-                label="Provinsi"
+                label={t("settings.shipmentPanel.province")}
                 value={provinceId}
                 onChange={(e) => void onProvinceSelect(e.target.value)}
                 error={!!errors.localShippingProvinceId}
                 helperText={errors.localShippingProvinceId?.message}
               >
                 <MenuItem value="">
-                  <em>Pilih provinsi</em>
+                  <em>{t("settings.shipmentPanel.selectProvince")}</em>
                 </MenuItem>
                 {provinces.map((p) => (
                   <MenuItem key={p.id} value={p.id}>
@@ -206,7 +213,7 @@ export default function ShipmentSettingsView() {
               <TextField
                 select
                 fullWidth
-                label="Kabupaten / Kota"
+                label={t("settings.shipmentPanel.regency")}
                 value={kabupatenId}
                 onChange={(e) => onKabupatenSelect(e.target.value)}
                 error={!!errors.localShippingKabupatenId}
@@ -214,7 +221,7 @@ export default function ShipmentSettingsView() {
                 disabled={!provinceId || regencies.length === 0}
               >
                 <MenuItem value="">
-                  <em>Pilih kabupaten/kota</em>
+                  <em>{t("settings.shipmentPanel.selectRegency")}</em>
                 </MenuItem>
                 {regencies.map((r) => (
                   <MenuItem key={r.id} value={r.id}>
@@ -227,7 +234,7 @@ export default function ShipmentSettingsView() {
               <TextField
                 fullWidth
                 type="number"
-                label="Harga per kg"
+                label={t("settings.shipmentPanel.pricePerKg")}
                 inputProps={{ min: 0, step: 1 }}
                 error={!!errors.localShippingPricePerKg}
                 helperText={errors.localShippingPricePerKg?.message}
@@ -237,7 +244,7 @@ export default function ShipmentSettingsView() {
             <Grid item xs={12} sm={6}>
               <TextField
                 fullWidth
-                label="Estimasi Pengiriman (Hari)"
+                label={t("settings.shipmentPanel.duration")}
                 type="number"
                 error={!!errors.localShippingDuration}
                 helperText={errors.localShippingDuration?.message}
@@ -247,7 +254,7 @@ export default function ShipmentSettingsView() {
           </Grid>
           <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
             <Button type="submit" variant="outlined" disabled={saving}>
-              {saving ? "Menyimpan..." : "Simpan"}
+              {saving ? t("settings.shipmentPanel.saving") : t("settings.shipmentPanel.save")}
             </Button>
           </Box>
         </Box>
@@ -255,25 +262,25 @@ export default function ShipmentSettingsView() {
 
       <Card sx={{ p: 3, mt: 2 }}>
         <Typography variant="h6" fontWeight="bold" mb={2}>
-          Daftar pengiriman lokal
+          {t("settings.shipmentPanel.listTitle")}
         </Typography>
         {loadingList ? (
-          <Typography color="text.secondary">Memuat data...</Typography>
+          <Typography color="text.secondary">{t("settings.shipmentPanel.loading")}</Typography>
         ) : rows.length === 0 ? (
-          <Typography color="text.secondary">Belum ada data.</Typography>
+          <Typography color="text.secondary">{t("settings.shipmentPanel.noData")}</Typography>
         ) : (
           <TableContainer>
             <Table size="small">
               <TableHead>
                 <TableRow>
-                  <TableCell>ID</TableCell>
-                  <TableCell>Nama perusahaan</TableCell>
-                  <TableCell>Provinsi</TableCell>
-                  <TableCell>Kabupaten / Kota</TableCell>
-                  <TableCell align="right">Harga / kg</TableCell>
-                  <TableCell>Estimasi Pengiriman (Hari)</TableCell>
+                  <TableCell>{t("settings.shipmentPanel.column.id")}</TableCell>
+                  <TableCell>{t("settings.shipmentPanel.column.companyName")}</TableCell>
+                  <TableCell>{t("settings.shipmentPanel.column.province")}</TableCell>
+                  <TableCell>{t("settings.shipmentPanel.column.regency")}</TableCell>
+                  <TableCell align="right">{t("settings.shipmentPanel.column.pricePerKg")}</TableCell>
+                  <TableCell>{t("settings.shipmentPanel.column.duration")}</TableCell>
                   <TableCell align="right" width={120}>
-                    Aksi
+                    {t("settings.shipmentPanel.column.actions")}
                   </TableCell>
                 </TableRow>
               </TableHead>
@@ -301,7 +308,7 @@ export default function ShipmentSettingsView() {
                         size="small"
                         onClick={() => openDelete(r)}
                       >
-                        Hapus
+                        {t("settings.shipmentPanel.delete")}
                       </Button>
                     </TableCell>
                   </TableRow>
@@ -318,12 +325,13 @@ export default function ShipmentSettingsView() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Konfirmasi hapus</DialogTitle>
+        <DialogTitle>{t("settings.shipmentPanel.confirmDeleteTitle")}</DialogTitle>
         <DialogContent>
           <Typography>
-            Hapus pengiriman lokal ID{" "}
-            <strong>{selectedRow?.localShippingId ?? "-"}</strong> (
-            {selectedRow?.localShippingCompanyName})?
+            {t("settings.shipmentPanel.confirmDeleteMessage", {
+              id: selectedRow?.localShippingId ?? "-",
+              name: selectedRow?.localShippingCompanyName,
+            })}
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -334,7 +342,7 @@ export default function ShipmentSettingsView() {
             }}
             disabled={deleting}
           >
-            Batal
+            {t("settings.shipmentPanel.cancel")}
           </Button>
           <Button
             variant="contained"
@@ -342,7 +350,7 @@ export default function ShipmentSettingsView() {
             onClick={handleConfirmDelete}
             disabled={deleting}
           >
-            {deleting ? "Menghapus..." : "Hapus"}
+            {deleting ? t("settings.shipmentPanel.deleting") : t("settings.shipmentPanel.delete")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -355,7 +363,7 @@ export default function ShipmentSettingsView() {
       >
         <Alert
           onClose={() => setOpenSnackbar(false)}
-          severity={snackbarMessage.includes("Gagal") ? "error" : "success"}
+          severity={snackbarSeverity}
           sx={{ width: "100%" }}
         >
           {snackbarMessage}

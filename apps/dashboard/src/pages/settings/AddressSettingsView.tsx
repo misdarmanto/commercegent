@@ -12,6 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -26,7 +27,7 @@ import {
 } from "../../services/regions";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { AddressFormType, AddressSchema } from "../../validations/addresSchema";
+import { AddressFormType, getAddressSchema } from "../../validations/addresSchema";
 
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -90,6 +91,7 @@ const findNameById = (
 };
 
 export default function AddressSettingsView() {
+  const { t } = useTranslation();
   const { data: provinces = [], isLoading: loadingProvinces } =
     useProvinces();
   const { data: address, isLoading: loadingAddress } = useAdminAddress();
@@ -98,6 +100,7 @@ export default function AddressSettingsView() {
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
 
   const [regencies, setRegencies] = useState<{ id: string; name: string }[]>(
     [],
@@ -122,7 +125,7 @@ export default function AddressSettingsView() {
     setValue,
     formState: { errors },
   } = useForm<AddressFormType>({
-    resolver: zodResolver(AddressSchema),
+    resolver: zodResolver(getAddressSchema()),
     defaultValues: {
       addressUserName: "",
       addressKontak: "",
@@ -345,10 +348,12 @@ export default function AddressSettingsView() {
         addressLatitude: data.addressLatitude,
         addressLongitude: data.addressLongitude,
       });
-      setSnackbarMessage("Alamat berhasil disimpan!");
+      setSnackbarMessage(t("settings.addressPanel.savedSuccess"));
+      setSnackbarSeverity("success");
       setOpenSnackbar(true);
     } catch {
-      setSnackbarMessage("Terjadi kesalahan saat menyimpan data.");
+      setSnackbarMessage(t("settings.addressPanel.errorSaving"));
+      setSnackbarSeverity("error");
       setOpenSnackbar(true);
     }
   };
@@ -360,18 +365,18 @@ export default function AddressSettingsView() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [address, provinces]);
 
-  if (loading) return "loading...";
+  if (loading) return t("settings.addressPanel.loading");
 
   return (
     <Box>
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Settings",
+            label: t("settings.title"),
             link: "/settings",
             icon: <IconMenus.settings fontSize="small" />,
           },
-          { label: "Address", link: "/settings" },
+          { label: t("settings.address"), link: "/settings" },
         ]}
       />
 
@@ -380,7 +385,7 @@ export default function AddressSettingsView() {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Nama"
+                label={t("settings.addressPanel.name")}
                 fullWidth
                 {...register("addressUserName")}
                 error={!!errors.addressUserName}
@@ -390,7 +395,7 @@ export default function AddressSettingsView() {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Kontak"
+                label={t("settings.addressPanel.contact")}
                 fullWidth
                 {...register("addressKontak")}
                 error={!!errors.addressKontak}
@@ -400,7 +405,7 @@ export default function AddressSettingsView() {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Kode Pos"
+                label={t("settings.addressPanel.postalCode")}
                 fullWidth
                 {...register("addressPostalCode")}
                 error={!!errors.addressPostalCode}
@@ -411,7 +416,7 @@ export default function AddressSettingsView() {
             <Grid item xs={12} sm={6}>
               <TextField
                 select
-                label="Provinsi"
+                label={t("settings.addressPanel.province")}
                 fullWidth
                 value={provinceId}
                 onChange={(e) => handleProvinceChange(e.target.value)}
@@ -433,7 +438,7 @@ export default function AddressSettingsView() {
             <Grid item xs={12} sm={6}>
               <TextField
                 select
-                label="Kabupaten / Kota"
+                label={t("settings.addressPanel.regency")}
                 fullWidth
                 disabled={!provinceId}
                 value={regencyId}
@@ -456,7 +461,7 @@ export default function AddressSettingsView() {
             <Grid item xs={12} sm={6}>
               <TextField
                 select
-                label="Kecamatan"
+                label={t("settings.addressPanel.district")}
                 fullWidth
                 disabled={!regencyId}
                 value={districtId}
@@ -479,7 +484,7 @@ export default function AddressSettingsView() {
             <Grid item xs={12} sm={6}>
               <TextField
                 select
-                label="Desa / Kelurahan"
+                label={t("settings.addressPanel.village")}
                 fullWidth
                 disabled={!districtId}
                 value={villageId}
@@ -501,7 +506,7 @@ export default function AddressSettingsView() {
 
             <Grid item xs={12}>
               <TextField
-                label="Detail Alamat"
+                label={t("settings.addressPanel.addressDetail")}
                 fullWidth
                 multiline
                 rows={3}
@@ -513,7 +518,7 @@ export default function AddressSettingsView() {
 
             <Grid item xs={12}>
               <Typography fontWeight="bold" mb={1}>
-                Pilih Lokasi (Klik / Geser Marker)
+                {t("settings.addressPanel.pickLocation")}
               </Typography>
 
               <MapContainer
@@ -534,7 +539,7 @@ export default function AddressSettingsView() {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Latitude"
+                label={t("settings.addressPanel.latitude")}
                 fullWidth
                 {...register("addressLatitude")}
                 error={!!errors.addressLatitude}
@@ -544,7 +549,7 @@ export default function AddressSettingsView() {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Longitude"
+                label={t("settings.addressPanel.longitude")}
                 fullWidth
                 {...register("addressLongitude")}
                 error={!!errors.addressLongitude}
@@ -555,7 +560,7 @@ export default function AddressSettingsView() {
 
           <Stack direction="row" justifyContent="flex-end" mt={5}>
             <Button variant="outlined" type="submit">
-              Simpan
+              {t("settings.addressPanel.save")}
             </Button>
           </Stack>
         </Box>
@@ -566,9 +571,7 @@ export default function AddressSettingsView() {
         onClose={() => setOpenSnackbar(false)}
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
       >
-        <Alert
-          severity={snackbarMessage.includes("kesalahan") ? "error" : "success"}
-        >
+        <Alert severity={snackbarSeverity}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
