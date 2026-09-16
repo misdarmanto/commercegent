@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useCategory,
   useCreateCategory,
@@ -24,7 +25,7 @@ import { IconMenus } from "../../components/icon";
 import { getImageUrl } from "../../utilities/getImageUrl";
 import ButtonDeleteFile from "../../components/buttons/ButtonDeleteFile";
 import {
-  categorySchema,
+  getCategorySchema,
   CategoryFormValues,
 } from "../../validations/categorySchema";
 import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
@@ -41,6 +42,7 @@ export default function CategoryFormView({
   categoryId: propsCategoryId,
   onClose,
 }: CategoryFormViewProps = {}) {
+  const { t } = useTranslation();
   const { categoryId: paramsCategoryId } = useParams<{ categoryId: string }>();
   const isModalMode = typeof open === "boolean";
   const categoryId = propsCategoryId ?? paramsCategoryId;
@@ -60,7 +62,7 @@ export default function CategoryFormView({
     reset,
     formState: { errors },
   } = useForm<CategoryFormValues>({
-    resolver: zodResolver(categorySchema),
+    resolver: zodResolver(getCategorySchema()),
     defaultValues: {
       categoryName: "",
       categoryIcon: "",
@@ -125,7 +127,7 @@ export default function CategoryFormView({
           render={({ field }) => (
             <TextField
               {...field}
-              label="Nama Kategori"
+              label={t("category.form.name")}
               fullWidth
               error={!!errors.categoryName}
               helperText={errors.categoryName?.message}
@@ -135,7 +137,7 @@ export default function CategoryFormView({
 
         <Box>
           <Typography color="text.secondary" mb={1}>
-            Icon Kategori (512x512 px, maks 2MB)
+            {t("category.form.iconHint")}
           </Typography>
 
           <Stack
@@ -168,7 +170,7 @@ export default function CategoryFormView({
                 <ButtonUploadWithOption
                   onUpload={(image) => setCategoryIcon(image)}
                 />
-                <FormHelperText>Upload ikon kategori.</FormHelperText>
+                <FormHelperText>{t("category.form.uploadIconHint")}</FormHelperText>
               </Stack>
             )}
           </Stack>
@@ -177,7 +179,7 @@ export default function CategoryFormView({
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
           {isModalMode && (
             <Button variant="outlined" onClick={onClose} disabled={loading}>
-              Batal
+              {t("category.form.cancel")}
             </Button>
           )}
           <Button
@@ -188,11 +190,11 @@ export default function CategoryFormView({
           >
             {loading
               ? categoryId
-                ? "Updating..."
-                : "Submitting..."
+                ? t("category.form.updating")
+                : t("category.form.submitting")
               : categoryId
-                ? "Update"
-                : "Submit"}
+                ? t("category.form.update")
+                : t("category.form.submit")}
           </Button>
         </Stack>
       </Stack>
@@ -203,7 +205,7 @@ export default function CategoryFormView({
     return (
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
         <DialogTitle>
-          {categoryId ? "Edit Kategori" : "Tambah Kategori"}
+          {categoryId ? t("category.form.editTitle") : t("category.form.createTitle")}
         </DialogTitle>
         <DialogContent dividers>{formContent}</DialogContent>
       </Dialog>
@@ -215,12 +217,12 @@ export default function CategoryFormView({
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Category",
+            label: t("category.title"),
             link: "/categories",
             icon: <IconMenus.category fontSize="small" />,
           },
           {
-            label: categoryId ? "Edit" : "Create",
+            label: categoryId ? t("common.edit") : t("common.add"),
             link: categoryId
               ? `/categories/edit/${categoryId}`
               : "/categories/create",
@@ -230,7 +232,7 @@ export default function CategoryFormView({
 
       <Card sx={{ mt: 5, p: { xs: 3, md: 5 } }}>
         <Typography variant="h4" mb={5} color="primary" fontWeight="bold">
-          {categoryId ? "Edit Kategori" : "Tambah Kategori"}
+          {categoryId ? t("category.form.editTitle") : t("category.form.createTitle")}
         </Typography>
         {formContent}
       </Card>

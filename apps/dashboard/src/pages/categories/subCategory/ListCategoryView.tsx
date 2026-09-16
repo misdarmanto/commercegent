@@ -10,6 +10,7 @@ import {
 } from "@mui/x-data-grid";
 import { Add, ArrowBack } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useCategories,
   useRemoveCategory,
@@ -23,6 +24,7 @@ import { ICategory } from "../../../interfaces/Category";
 import SubCategoryFormView from "./SubCategoryFormView";
 
 export default function ListSubCategoryView() {
+  const { t } = useTranslation();
   const navigation = useNavigate();
   const { categoryReference } = useParams<{ categoryReference: string }>();
 
@@ -62,32 +64,32 @@ export default function ListSubCategoryView() {
     {
       field: "categoryReference",
       flex: 1,
-      renderHeader: () => <strong>{"PARENT ID"}</strong>,
+      renderHeader: () => <strong>{t("category.column.parentId")}</strong>,
       editable: true,
     },
     {
       field: "categoryId",
       flex: 1,
-      renderHeader: () => <strong>{"ID"}</strong>,
+      renderHeader: () => <strong>{t("category.column.id")}</strong>,
       editable: true,
     },
     {
       field: "categoryName",
       flex: 1,
-      renderHeader: () => <strong>{"NAMA"}</strong>,
+      renderHeader: () => <strong>{t("category.column.name")}</strong>,
       editable: true,
     },
     {
       field: "actions",
       type: "actions",
-      renderHeader: () => <strong>{"Aksi"}</strong>,
+      renderHeader: () => <strong>{t("category.column.actions")}</strong>,
       flex: 1,
       cellClassName: "actions",
       getActions: ({ row }) => {
         return [
           <GridActionsCellItem
             icon={<EditIcon />}
-            label="Edit"
+            label={t("common.edit")}
             className="textPrimary"
             onClick={() => {
               setSelectedCategoryId(row.categoryId);
@@ -97,7 +99,7 @@ export default function ListSubCategoryView() {
           />,
           <GridActionsCellItem
             icon={<DeleteIcon color="error" />}
-            label="Delete"
+            label={t("common.delete")}
             onClick={() => handleOpenModalDelete(row)}
             color="inherit"
           />,
@@ -116,7 +118,7 @@ export default function ListSubCategoryView() {
             startIcon={<ArrowBack />}
             variant="outlined"
           >
-            Back
+            {t("common.back")}
           </Button>
           <Button
             onClick={() => {
@@ -126,18 +128,18 @@ export default function ListSubCategoryView() {
             startIcon={<Add />}
             variant="outlined"
           >
-            Tambah Kategori
+            {t("category.addSubCategory")}
           </Button>
         </Stack>
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="cari..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Cari
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -149,7 +151,7 @@ export default function ListSubCategoryView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Category",
+            label: t("category.title"),
             link: "/categories/subcategories/",
             icon: <IconMenus.category fontSize="small" />,
           },
@@ -191,10 +193,7 @@ export default function ListSubCategoryView() {
       <Modal
         openModal={openModalDelete}
         handleModalOnCancel={() => setOpenModalDelete(false)}
-        message={
-          "Apakah anda yakin ingin menghapus kategori " +
-          modalDeleteData?.categoryName
-        }
+        message={t("common.confirmDeleteNamed", { name: modalDeleteData?.categoryName })}
         handleModal={() => {
           handleDeleteCategory(modalDeleteData?.categoryId ?? "");
           setOpenModalDelete(!openModalDelete);

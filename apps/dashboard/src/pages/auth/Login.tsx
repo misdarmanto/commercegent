@@ -20,7 +20,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useTranslation } from "react-i18next";
 import { useLoginAdmin } from "../../services/auth";
 import { useToken } from "../../hooks/token";
-import { ILoginAdmin, loginAdminSchema } from "../../validations/AuthSchema";
+import { ILoginAdmin, getLoginAdminSchema } from "../../validations/AuthSchema";
 import logo from "../../assets/logo.jpg";
 import LanguageSwitcher from "../../components/LanguageSwitcher";
 
@@ -36,7 +36,7 @@ export default function LoginView() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<ILoginAdmin>({
-    resolver: zodResolver(loginAdminSchema),
+    resolver: zodResolver(getLoginAdminSchema()),
     defaultValues: {
       adminWhatsAppNumber: "",
       adminPassword: "",

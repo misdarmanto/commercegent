@@ -1,4 +1,5 @@
 import { useEffect, useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -31,8 +32,8 @@ import { getImageUrl } from "../../utilities/getImageUrl";
 import ButtonDeleteFile from "../../components/buttons/ButtonDeleteFile";
 import {
   ProductFormValues,
-  productFormCreateSchema,
-  productFormUpdateSchema,
+  getProductFormCreateSchema,
+  getProductFormUpdateSchema,
 } from "../../validations/productSchema";
 import {
   IProduct,
@@ -57,6 +58,7 @@ const emptyVariant = (): ProductFormValues["productVariants"][number] => ({
 });
 
 export default function ProductFormView() {
+  const { t, i18n } = useTranslation();
   const { productId } = useParams();
   const navigate = useNavigate();
 
@@ -72,9 +74,12 @@ export default function ProductFormView() {
   const resolver = useMemo(
     () =>
       zodResolver(
-        isEdit ? productFormUpdateSchema : productFormCreateSchema,
+        isEdit ? getProductFormUpdateSchema() : getProductFormCreateSchema(),
       ) as any,
-    [isEdit],
+    // i18n.language forces the resolver to rebuild with fresh validation
+    // messages when the user switches language.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [isEdit, i18n.language],
   );
 
   const {
@@ -243,12 +248,12 @@ export default function ProductFormView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Product",
+            label: t("product.title"),
             link: "/products",
             icon: <IconMenus.products fontSize="small" />,
           },
           {
-            label: productId ? "Edit" : "Create",
+            label: productId ? t("common.edit") : t("common.add"),
             link: productId
               ? `/products/edit/${productId}`
               : "/products/create",
@@ -264,16 +269,16 @@ export default function ProductFormView() {
             size="small"
             onClick={handleBack}
           >
-            Kembali
+            {t("product.form.back")}
           </Button>
         </Stack>
         <Typography variant="h4" mb={5} color="primary" fontWeight="bold">
-          {productId ? "Edit Product" : "Tambah Product"}
+          {productId ? t("product.form.editTitle") : t("product.form.createTitle")}
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
           <Typography fontWeight="bold" mb={2}>
-            Informasi produk
+            {t("product.form.productInfo")}
           </Typography>
           <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={6}>
@@ -283,7 +288,7 @@ export default function ProductFormView() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Nama Produk"
+                    label={t("product.form.name")}
                     fullWidth
                     error={!!errors.productName}
                     helperText={errors.productName?.message}
@@ -299,7 +304,7 @@ export default function ProductFormView() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Code (SKU)"
+                    label={t("product.form.sku")}
                     fullWidth
                     error={!!errors.productCode}
                     helperText={errors.productCode?.message}
@@ -315,7 +320,7 @@ export default function ProductFormView() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Barcode Produk"
+                    label={t("product.form.barcode")}
                     fullWidth
                     error={!!errors.productBarcode}
                     helperText={errors.productBarcode?.message}
@@ -331,7 +336,7 @@ export default function ProductFormView() {
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Satuan (pcs, kg, box)"
+                    label={t("product.form.unit")}
                     fullWidth
                     error={!!errors.productUnit}
                     helperText={errors.productUnit?.message}
@@ -352,7 +357,7 @@ export default function ProductFormView() {
                         onChange={(e) => field.onChange(e.target.checked)}
                       />
                     }
-                    label="Tampilkan produk ke publik"
+                    label={t("product.form.visible")}
                   />
                 )}
               />
@@ -362,7 +367,7 @@ export default function ProductFormView() {
           <Grid container spacing={2} mb={4}>
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth error={!!errors.productCategoryId}>
-                <InputLabel id="category-select-label">Kategori</InputLabel>
+                <InputLabel id="category-select-label">{t("product.form.category")}</InputLabel>
                 <Controller
                   name="productCategoryId"
                   control={control}
@@ -371,9 +376,9 @@ export default function ProductFormView() {
                       {...field}
                       value={field.value ?? 0}
                       labelId="category-select-label"
-                      label="Kategori"
+                      label={t("product.form.category")}
                     >
-                      <MenuItem value={0}>Pilih kategori</MenuItem>
+                      <MenuItem value={0}>{t("product.form.selectCategory")}</MenuItem>
                       {listCategory.map((c) => (
                         <MenuItem
                           key={c.categoryId}
@@ -395,7 +400,7 @@ export default function ProductFormView() {
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth error={!!errors.productSubCategoryId}>
                   <InputLabel id="subcategory-select-label">
-                    Subkategori
+                    {t("product.form.subCategory")}
                   </InputLabel>
                   <Controller
                     name="productSubCategoryId"
@@ -405,9 +410,9 @@ export default function ProductFormView() {
                         {...field}
                         value={field.value ?? 0}
                         labelId="subcategory-select-label"
-                        label="Subkategori"
+                        label={t("product.form.subCategory")}
                       >
-                        <MenuItem value={0}>Pilih subkategori</MenuItem>
+                        <MenuItem value={0}>{t("product.form.selectSubCategory")}</MenuItem>
                         {listSubCategory.map((sub) => (
                           <MenuItem
                             key={sub.categoryId}
@@ -429,7 +434,7 @@ export default function ProductFormView() {
 
           <Box sx={{ mb: 4 }}>
             <Typography fontWeight="bold" mb={2}>
-              Deskripsi
+              {t("product.form.description")}
             </Typography>
             <Controller
               name="productDescription"
@@ -437,7 +442,7 @@ export default function ProductFormView() {
               render={({ field }) => (
                 <TextField
                   {...field}
-                  label="Deskripsi"
+                  label={t("product.form.description")}
                   multiline
                   fullWidth
                   rows={4}
@@ -454,7 +459,7 @@ export default function ProductFormView() {
             justifyContent="space-between"
             mb={2}
           >
-            <Typography fontWeight="bold">Varian produk</Typography>
+            <Typography fontWeight="bold">{t("product.form.variants")}</Typography>
             <Button
               type="button"
               variant="outlined"
@@ -462,11 +467,11 @@ export default function ProductFormView() {
               startIcon={<AddIcon />}
               onClick={() => append(emptyVariant())}
             >
-              Tambah varian
+              {t("product.form.addVariant")}
             </Button>
           </Stack>
           <Typography variant="body2" color="text.secondary" mb={2}>
-            Harga, stok, diskon, dan gambar diatur per varian (warna / ukuran).
+            {t("product.form.variantsHint")}
           </Typography>
 
           {fields.map((field, index) => (
@@ -478,7 +483,7 @@ export default function ProductFormView() {
                 mb={1}
               >
                 <Typography fontWeight={600}>
-                  Varian {index + 1}
+                  {t("product.form.variant")} {index + 1}
                   {isEdit &&
                     watch(`productVariants.${index}.productVariantId`) !=
                       null && (
@@ -488,7 +493,7 @@ export default function ProductFormView() {
                         color="text.secondary"
                         sx={{ ml: 1 }}
                       >
-                        (ID:{" "}
+                        ({t("product.form.variantId")}:{" "}
                         {watch(`productVariants.${index}.productVariantId`)})
                       </Typography>
                     )}
@@ -499,7 +504,7 @@ export default function ProductFormView() {
                     size="small"
                     color="error"
                     onClick={() => remove(index)}
-                    aria-label="Hapus varian"
+                    aria-label={t("product.form.removeVariant")}
                   >
                     <DeleteOutline />
                   </IconButton>
@@ -515,8 +520,8 @@ export default function ProductFormView() {
                     render={({ field: f }) => (
                       <TextField
                         {...f}
-                        label="Nama varian"
-                        placeholder="Contoh: Hitam - M"
+                        label={t("product.form.variantName")}
+                        placeholder={t("product.form.variantNamePlaceholder")}
                         fullWidth
                         error={
                           !!errors.productVariants?.[index]?.productVariantName
@@ -536,7 +541,7 @@ export default function ProductFormView() {
                     render={({ field: f }) => (
                       <TextField
                         {...f}
-                        label="Harga"
+                        label={t("product.form.variantPrice")}
                         fullWidth
                         type="number"
                         value={f.value ?? ""}
@@ -567,7 +572,7 @@ export default function ProductFormView() {
                     render={({ field: f }) => (
                       <TextField
                         {...f}
-                        label="Stok"
+                        label={t("product.form.variantStock")}
                         fullWidth
                         type="number"
                         value={f.value ?? ""}
@@ -598,7 +603,7 @@ export default function ProductFormView() {
                     render={({ field: f }) => (
                       <TextField
                         {...f}
-                        label="Diskon (%)"
+                        label={t("product.form.variantDiscount")}
                         fullWidth
                         type="number"
                         value={f.value ?? ""}
@@ -630,7 +635,7 @@ export default function ProductFormView() {
                     render={({ field: f }) => (
                       <TextField
                         {...f}
-                        label="Berat (gram)"
+                        label={t("product.form.variantWeight")}
                         fullWidth
                         type="number"
                         value={f.value ?? ""}
@@ -658,7 +663,7 @@ export default function ProductFormView() {
 
                 <Grid item xs={12}>
                   <Typography color="text.secondary" mb={1}>
-                    Gambar varian (600×600 px, maks 2MB)
+                    {t("product.form.variantImage")}
                   </Typography>
                   <Controller
                     name={`productVariants.${index}.productVariantImage`}
@@ -715,11 +720,11 @@ export default function ProductFormView() {
             >
               {loading
                 ? productId
-                  ? "Updating..."
-                  : "Submitting..."
+                  ? t("product.form.updating")
+                  : t("product.form.submitting")
                 : productId
-                  ? "Update"
-                  : "Submit"}
+                  ? t("product.form.update")
+                  : t("product.form.submit")}
             </Button>
           </Stack>
         </Box>

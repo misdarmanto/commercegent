@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useProduct } from "../../services/products";
 import { useMemo, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { ArrowBack } from "@mui/icons-material";
 import {
   Box,
@@ -35,6 +36,7 @@ function formatRp(value: number | string | undefined | null) {
 }
 
 export default function DetailProductView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { productId } = useParams();
   const { data: productDetail } = useProduct(productId);
@@ -61,31 +63,31 @@ export default function DetailProductView() {
 
   const infoRows: { label: string; value: ReactNode }[] = productDetail
     ? [
-        { label: "Nama", value: productDetail.productName },
+        { label: t("product.detail.name"), value: productDetail.productName },
         {
-          label: "Deskripsi",
+          label: t("product.detail.description"),
           value: productDetail.productDescription ?? "—",
         },
-        { label: "CODE (SKU)", value: productDetail.productCode ?? "—" },
-        { label: "Barcode", value: productDetail.productBarcode ?? "—" },
-        { label: "Satuan", value: productDetail.productUnit ?? "—" },
+        { label: t("product.detail.code"), value: productDetail.productCode ?? "—" },
+        { label: t("product.detail.barcode"), value: productDetail.productBarcode ?? "—" },
+        { label: t("product.detail.unit"), value: productDetail.productUnit ?? "—" },
         {
-          label: "Status",
+          label: t("product.detail.status"),
           value: (
             <Chip
               size="small"
-              label={productDetail.productIsVisible ? "Visible" : "Hidden"}
+              label={productDetail.productIsVisible ? t("product.visible") : t("product.hidden")}
               color={productDetail.productIsVisible ? "success" : "default"}
               variant="outlined"
             />
           ),
         },
         {
-          label: "Kategori",
+          label: t("product.detail.category"),
           value: productDetail.category?.categoryName ?? "—",
         },
         {
-          label: "Subkategori (ID)",
+          label: t("product.detail.subCategoryId"),
           value: String(productDetail.productSubCategoryId ?? "—"),
         },
       ]
@@ -96,12 +98,12 @@ export default function DetailProductView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Product",
+            label: t("product.title"),
             link: "/products",
             icon: <IconMenus.products fontSize="small" />,
           },
           {
-            label: "Detail",
+            label: t("common.detail"),
             link: "/products/detail/" + productId,
           },
         ]}
@@ -113,12 +115,12 @@ export default function DetailProductView() {
             startIcon={<ArrowBack />}
             onClick={handleBack}
           >
-            Kembali
+            {t("product.detail.back")}
           </Button>
         </Stack>
 
         {!productDetail ? (
-          <Typography color="text.secondary">Memuat data…</Typography>
+          <Typography color="text.secondary">{t("product.detail.loading")}</Typography>
         ) : (
           <>
             <Box sx={{ mb: 4 }}>
@@ -128,7 +130,7 @@ export default function DetailProductView() {
                     <div key={image + index}>
                       <img
                         src={getImageUrl(image)}
-                        alt={`Varian ${index + 1}`}
+                        alt={`${t("product.detail.variantAlt")} ${index + 1}`}
                         style={{
                           maxHeight: "400px",
                           width: "100%",
@@ -140,13 +142,13 @@ export default function DetailProductView() {
                 </Carousel>
               ) : (
                 <Typography color="text.secondary" align="center" py={4}>
-                  Tidak ada gambar varian
+                  {t("product.detail.noVariantImage")}
                 </Typography>
               )}
             </Box>
 
             <Typography variant="h6" fontWeight="bold" gutterBottom>
-              Informasi produk
+              {t("product.detail.productInfo")}
             </Typography>
             <Grid container spacing={2} sx={{ mb: 4 }}>
               {infoRows.map((row) => (
@@ -173,7 +175,7 @@ export default function DetailProductView() {
             </Grid>
 
             <Typography variant="h6" fontWeight="bold" gutterBottom>
-              Varian produk
+              {t("product.detail.variants")}
               <Typography
                 component="span"
                 variant="body2"
@@ -181,7 +183,7 @@ export default function DetailProductView() {
                 fontWeight={400}
                 sx={{ ml: 1 }}
               >
-                (diurut dari harga terendah)
+                {t("product.detail.sortedByLowestPrice")}
               </Typography>
             </Typography>
 
@@ -190,28 +192,28 @@ export default function DetailProductView() {
                 <TableHead>
                   <TableRow>
                     <TableCell>
-                      <strong>Gambar</strong>
+                      <strong>{t("product.detail.table.image")}</strong>
                     </TableCell>
                     <TableCell>
-                      <strong>Nama</strong>
+                      <strong>{t("product.detail.table.name")}</strong>
                     </TableCell>
                     <TableCell align="right">
-                      <strong>Harga</strong>
+                      <strong>{t("product.detail.table.price")}</strong>
                     </TableCell>
                     <TableCell align="right">
-                      <strong>Harga jual</strong>
+                      <strong>{t("product.detail.table.sellPrice")}</strong>
                     </TableCell>
                     <TableCell align="right">
-                      <strong>Diskon %</strong>
+                      <strong>{t("product.detail.table.discount")}</strong>
                     </TableCell>
                     <TableCell align="right">
-                      <strong>Stok</strong>
+                      <strong>{t("product.detail.table.stock")}</strong>
                     </TableCell>
                     <TableCell align="right">
-                      <strong>Berat (g)</strong>
+                      <strong>{t("product.detail.table.weight")}</strong>
                     </TableCell>
                     <TableCell align="right">
-                      <strong>Terjual</strong>
+                      <strong>{t("product.detail.table.sold")}</strong>
                     </TableCell>
                   </TableRow>
                 </TableHead>
