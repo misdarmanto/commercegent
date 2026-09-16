@@ -27,7 +27,7 @@ export default function ListOrderView() {
   });
 
   const { data, isLoading: loading } = useOrders({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });

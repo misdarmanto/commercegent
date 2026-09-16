@@ -22,7 +22,7 @@ export default function ListTransactionView() {
   });
 
   const { data, isLoading: loading } = useTransactions({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });

@@ -25,7 +25,7 @@ export default function ListCustomersView() {
   });
 
   const { data, isLoading: loading } = useCustomers({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });

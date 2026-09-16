@@ -32,7 +32,7 @@ export default function ListAdminView() {
   });
 
   const { data, isLoading: loading } = useAdmins({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });

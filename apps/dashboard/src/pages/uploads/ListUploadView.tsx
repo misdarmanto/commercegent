@@ -66,7 +66,7 @@ export default function ListUploadView() {
 
   // === Fetch data ===
   const { data, isLoading: loading } = useUploads({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search: committedSearch },
   });

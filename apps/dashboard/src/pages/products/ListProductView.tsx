@@ -52,7 +52,7 @@ export default function ProductListView() {
   });
 
   const { data, isLoading } = useProducts({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });

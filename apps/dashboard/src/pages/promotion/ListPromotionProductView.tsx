@@ -47,7 +47,7 @@ export default function ListProductPromotionView() {
 
   /** ================== API ================== */
   const { data, isLoading: loading } = usePromotions({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });

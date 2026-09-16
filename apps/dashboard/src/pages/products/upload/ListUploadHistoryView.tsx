@@ -48,7 +48,7 @@ export default function ListUploadHistoryView() {
   });
 
   const { data, isLoading: loading } = useUploadHistories({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });
