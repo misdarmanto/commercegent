@@ -129,7 +129,7 @@ export default function ListCustomersView() {
           getRowId={(row) => row.userId}
           columns={columns}
           editMode="row"
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           initialState={{
             pagination: { paginationModel: { pageSize: 2, page: 0 } },
           }}

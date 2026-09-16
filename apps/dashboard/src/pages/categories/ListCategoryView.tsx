@@ -178,7 +178,7 @@ export default function ListCategoryView() {
           getRowId={(row) => row.categoryId}
           columns={columns}
           editMode="row"
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           initialState={{
             pagination: { paginationModel: { pageSize: 10, page: 0 } },
           }}

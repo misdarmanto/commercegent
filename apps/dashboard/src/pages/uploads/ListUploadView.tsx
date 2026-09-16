@@ -327,7 +327,7 @@ export default function ListUploadView() {
               columns={columns}
               loading={loading}
               sx={{
-                backgroundColor: "background.default",
+                backgroundColor: "background.paper",
                 borderRadius: 2,
                 p: 2,
               }}

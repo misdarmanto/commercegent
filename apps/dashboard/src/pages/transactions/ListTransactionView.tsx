@@ -125,7 +125,7 @@ export default function ListTransactionView() {
           columns={columns}
           getRowId={(row) => row.transactionId}
           editMode="row"
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           initialState={{
             pagination: { paginationModel: { pageSize: 2, page: 0 } },
           }}

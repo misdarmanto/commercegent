@@ -183,7 +183,7 @@ export default function ListOrderView() {
           columns={columns}
           editMode="row"
           getRowId={(row: any) => row.orderId}
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           autoHeight
           initialState={{
             pagination: { paginationModel: { pageSize: 2, page: 1 } },

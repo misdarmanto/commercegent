@@ -243,7 +243,7 @@ export default function ProductListView() {
           getRowId={(row) => row.productId}
           columns={columns}
           autoHeight
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[10, 25, 50]}

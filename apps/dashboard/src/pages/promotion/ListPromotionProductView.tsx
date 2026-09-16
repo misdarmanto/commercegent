@@ -259,7 +259,7 @@ export default function ListProductPromotionView() {
           rows={tableData}
           getRowId={(row) => row.productId}
           columns={columns}
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           autoHeight
           loading={loading}
           rowCount={rowCount}
