@@ -17,6 +17,7 @@ import {
   Avatar,
   Menu,
   MenuItem,
+  Divider,
   Container,
   Tooltip,
   Backdrop,
@@ -31,6 +32,7 @@ import {
   ChevronRight,
   DarkMode,
   LightMode,
+  LogoutRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Link, Outlet, useNavigate } from "react-router-dom";
@@ -42,15 +44,26 @@ import { IconMenusSidebar } from "../components/icon";
 
 import logo from "../assets/logo.jpg";
 
-const drawerWidth = 220;
-const miniDrawerWidth = 72;
+const drawerWidth = 248;
+const miniDrawerWidth = 80;
+
+// The sidebar keeps a fixed dark treatment regardless of the app's
+// light/dark toggle (a deliberate brand anchor, like Vercel/Linear/Notion),
+// while the topbar and content area still follow the theme mode.
+const sidebarTokens = {
+  bg: "#0B1120",
+  bgElevated: "#111A2E",
+  border: "rgba(148,163,184,0.12)",
+  textActive: "#FFFFFF",
+  textInactive: "rgba(226,232,240,0.6)",
+  hover: "rgba(255,255,255,0.06)",
+};
 
 function getLayoutTokens(theme: Theme) {
   const isLight = theme.palette.mode === "light";
 
   return {
     appBg: theme.palette.background.default,
-    sidebar: theme.palette.background.paper,
     border: theme.palette.divider,
     hover: isLight ? theme.palette.grey[100] : "rgba(255,255,255,0.06)",
     textPrimary: theme.palette.text.primary,
@@ -106,8 +119,6 @@ const AppBar = styled(MuiAppBar, {
 });
 
 const Drawer = styled(MuiDrawer)<{ open?: boolean }>(({ theme, open }) => {
-  const t = getLayoutTokens(theme);
-
   return {
     width: drawerWidth,
     flexShrink: 0,
@@ -115,9 +126,11 @@ const Drawer = styled(MuiDrawer)<{ open?: boolean }>(({ theme, open }) => {
     ...(open ? openedMixin(theme) : closedMixin(theme)),
 
     "& .MuiDrawer-paper": {
-      background: t.sidebar,
-      borderRight: `1px solid ${t.border}`,
-      color: t.textSecondary,
+      background: `linear-gradient(180deg, ${sidebarTokens.bgElevated} 0%, ${sidebarTokens.bg} 100%)`,
+      borderRight: `1px solid ${sidebarTokens.border}`,
+      color: sidebarTokens.textInactive,
+      display: "flex",
+      flexDirection: "column",
       ...(open ? openedMixin(theme) : closedMixin(theme)),
     },
   };
@@ -224,36 +237,15 @@ export default function AppLayout() {
       <AppBar position="fixed" open={openDrawer && !isMobile} elevation={0}>
         <Container maxWidth="xl">
           <Toolbar sx={{ minHeight: 68 }}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-              {isMobile && (
-                <IconButton
-                  edge="start"
-                  onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
-                  sx={{ mr: 1 }}
-                >
-                  <MenuIcon />
-                </IconButton>
-              )}
-              <img
-                src={logo}
-                width={40}
-                height={40}
-                style={{ borderRadius: 8 }}
-              />
-              <Typography
-                sx={{
-                  fontWeight: 800,
-                  letterSpacing: ".12em",
-                  background: (t) =>
-                    `linear-gradient(90deg, ${t.palette.primary.dark}, ${t.palette.primary.main})`,
-                  WebkitBackgroundClip: "text",
-                  WebkitTextFillColor: "transparent",
-                  fontSize: { xs: 14, sm: 16 },
-                }}
+            {isMobile && (
+              <IconButton
+                edge="start"
+                onClick={() => setMobileDrawerOpen(!mobileDrawerOpen)}
+                sx={{ mr: 1 }}
               >
-                FRESH
-              </Typography>
-            </Box>
+                <MenuIcon />
+              </IconButton>
+            )}
 
             <Box sx={{ flexGrow: 1 }} />
 
@@ -309,87 +301,179 @@ export default function AppLayout() {
             : undefined
         }
       >
-        <DrawerHeader>
-          {isMobile ? (
-            <IconButton onClick={() => setMobileDrawerOpen(false)}>
-              <ChevronLeft />
-            </IconButton>
-          ) : (
-            <IconButton onClick={() => setOpenDrawer(!openDrawer)}>
-              {openDrawer ? <ChevronLeft /> : <ChevronRight />}
-            </IconButton>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            px: isMobile || openDrawer ? 2.5 : 0,
+            justifyContent: isMobile || openDrawer ? "flex-start" : "center",
+            ...theme.mixins.toolbar,
+          }}
+        >
+          <Box
+            component="img"
+            src={logo}
+            alt="FRESH"
+            sx={{ width: 34, height: 34, borderRadius: 1.5, flexShrink: 0 }}
+          />
+          {(isMobile || openDrawer) && (
+            <Typography
+              sx={{
+                fontWeight: 800,
+                letterSpacing: ".1em",
+                color: sidebarTokens.textActive,
+                whiteSpace: "nowrap",
+              }}
+            >
+              FRESH
+            </Typography>
           )}
-        </DrawerHeader>
+        </Box>
 
-        <List sx={{ px: 1 }}>
+        <Divider sx={{ borderColor: sidebarTokens.border, mx: 2 }} />
+
+        <List sx={{ px: 1.5, py: 2, flex: 1 }}>
           {menuItems.map((item) => {
             const active = activeLink === item.link;
+            const { outline: OutlineIcon, fill: FillIcon } =
+              IconMenusSidebar[item.iconKey];
+            const Icon = active ? FillIcon : OutlineIcon;
 
             return (
-              <ListItem
-                key={item.link}
-                disablePadding
-                sx={{
-                  mb: 0.4,
-                  borderRadius: 2.5,
-                  position: "relative",
-                  background: active ? "primary.lighter" : "transparent",
-                  "&:hover": {
-                    background: active ? "primary.lighter" : t.hover,
-                  },
-                  "&::before": {
-                    content: '""',
-                    position: "absolute",
-                    left: -8,
-                    top: "20%",
-                    height: "60%",
-                    width: 3,
-                    borderRadius: 4,
-                    bgcolor: active ? "primary.main" : "transparent",
-                  },
-                }}
-                onClick={() => {
-                  setActiveLink(item.link);
-                  localStorage.setItem("activeSidebarLink", item.link);
-                  if (isMobile) setMobileDrawerOpen(!mobileDrawerOpen);
-                }}
-              >
-                <ListItemButton
-                  component={Link}
-                  to={item.link}
-                  sx={{
-                    justifyContent: isMobile || openDrawer ? "flex-start" : "center",
-                    px: isMobile || openDrawer ? 2 : 1.5,
-                  }}
+              <ListItem key={item.link} disablePadding sx={{ mb: 0.5 }}>
+                <Tooltip
+                  title={!isMobile && !openDrawer ? item.title : ""}
+                  placement="right"
                 >
-                  <ListItemIcon
+                  <ListItemButton
+                    component={Link}
+                    to={item.link}
+                    onClick={() => {
+                      setActiveLink(item.link);
+                      localStorage.setItem("activeSidebarLink", item.link);
+                      if (isMobile) setMobileDrawerOpen(!mobileDrawerOpen);
+                    }}
                     sx={{
-                      minWidth: isMobile || openDrawer ? 38 : "auto",
-                      color: active ? "primary.main" : t.textSecondary,
+                      borderRadius: 2.5,
+                      justifyContent:
+                        isMobile || openDrawer ? "flex-start" : "center",
+                      px: isMobile || openDrawer ? 2 : 1.5,
+                      py: 1.1,
+                      background: active
+                        ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
+                        : "transparent",
+                      boxShadow: active
+                        ? `0 6px 16px -4px ${theme.palette.primary.main}66`
+                        : "none",
+                      "&:hover": {
+                        background: active
+                          ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
+                          : sidebarTokens.hover,
+                      },
                     }}
                   >
-                    {(() => {
-                      const { outline: OutlineIcon, fill: FillIcon } =
-                        IconMenusSidebar[item.iconKey];
-                      const Icon = active ? OutlineIcon : FillIcon;
-                      return <Icon />;
-                    })()}
-                  </ListItemIcon>
-                  {(isMobile || openDrawer) && (
-                    <ListItemText
-                      primary={item.title}
+                    <ListItemIcon
                       sx={{
-                        whiteSpace: "nowrap",
-                        fontWeight: active ? 700 : 500,
-                        color: active ? t.textPrimary : t.textSecondary,
+                        minWidth: isMobile || openDrawer ? 36 : "auto",
+                        color: active
+                          ? sidebarTokens.textActive
+                          : sidebarTokens.textInactive,
                       }}
-                    />
-                  )}
-                </ListItemButton>
+                    >
+                      <Icon fontSize="small" />
+                    </ListItemIcon>
+                    {(isMobile || openDrawer) && (
+                      <ListItemText
+                        primary={item.title}
+                        sx={{
+                          whiteSpace: "nowrap",
+                          "& .MuiListItemText-primary": {
+                            fontWeight: active ? 700 : 500,
+                            fontSize: "0.875rem",
+                            color: active
+                              ? sidebarTokens.textActive
+                              : sidebarTokens.textInactive,
+                          },
+                        }}
+                      />
+                    )}
+                  </ListItemButton>
+                </Tooltip>
               </ListItem>
             );
           })}
         </List>
+
+        <Divider sx={{ borderColor: sidebarTokens.border, mx: 2, mb: 1.5 }} />
+
+        <Box sx={{ px: 1.5, pb: 2 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 1.25,
+              borderRadius: 2.5,
+              p: isMobile || openDrawer ? 1.25 : 1,
+              justifyContent: isMobile || openDrawer ? "flex-start" : "center",
+              background: sidebarTokens.hover,
+            }}
+          >
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                fontSize: "0.875rem",
+                bgcolor: "primary.main",
+              }}
+            >
+              {(user?.userRole ?? "A").charAt(0).toUpperCase()}
+            </Avatar>
+            {(isMobile || openDrawer) && (
+              <>
+                <Box sx={{ minWidth: 0, flex: 1 }}>
+                  <Typography
+                    noWrap
+                    sx={{ fontSize: "0.8125rem", fontWeight: 600, color: sidebarTokens.textActive }}
+                  >
+                    {user?.userRole ?? "Admin"}
+                  </Typography>
+                  <Typography noWrap sx={{ fontSize: "0.6875rem", color: sidebarTokens.textInactive }}>
+                    FRESH Ecommerce
+                  </Typography>
+                </Box>
+                <Tooltip title="Logout">
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      removeToken();
+                      navigate("/");
+                      window.location.reload();
+                    }}
+                    sx={{ color: sidebarTokens.textInactive }}
+                  >
+                    <LogoutRounded fontSize="small" />
+                  </IconButton>
+                </Tooltip>
+              </>
+            )}
+          </Box>
+
+          {!isMobile && (
+            <IconButton
+              onClick={() => setOpenDrawer(!openDrawer)}
+              sx={{
+                mt: 1.5,
+                width: "100%",
+                borderRadius: 2.5,
+                color: sidebarTokens.textInactive,
+                "&:hover": { background: sidebarTokens.hover },
+              }}
+            >
+              {openDrawer ? <ChevronLeft fontSize="small" /> : <ChevronRight fontSize="small" />}
+            </IconButton>
+          )}
+        </Box>
       </Drawer>
 
       {/* ================= MAIN ================= */}
