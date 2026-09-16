@@ -18,12 +18,12 @@ export function RelatedProducts({
 }) {
   const { data, isLoading } = useProducts({
     productCategoryId: categoryId,
-    size: RECOMMENDATION_COUNT + 1,
+    size: RECOMMENDATION_COUNT,
   });
 
-  const items = (data?.items ?? [])
-    .filter((product) => String(product.productId) !== String(excludeProductId))
-    .slice(0, RECOMMENDATION_COUNT);
+  const items = (data?.items ?? []).filter(
+    (product) => String(product.productId) !== String(excludeProductId),
+  );
 
   if (!isLoading && items.length === 0) return null;
 
