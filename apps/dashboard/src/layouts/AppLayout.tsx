@@ -537,7 +537,7 @@ export default function AppLayout() {
                       const active = isLeafActive(child.link);
 
                       return (
-                        <ListItem key={child.link} disablePadding sx={{ mb: 0.5 }}>
+                        <ListItem key={child.link} disablePadding sx={{ mb: 0.1 }}>
                           <ListItemButton
                             component={Link}
                             to={child.link}
@@ -548,7 +548,7 @@ export default function AppLayout() {
                               borderRadius: 2.5,
                               pl: 4.5,
                               pr: 2,
-                              py: 0.9,
+                              py: 0.6,
                               background: active
                                 ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
                                 : "transparent",
