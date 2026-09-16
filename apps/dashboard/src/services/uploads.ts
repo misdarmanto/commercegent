@@ -1,4 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import type { AxiosProgressEvent } from "axios";
 import { fileUploadClient } from "./fileUploadClient";
 import { buildTableQueryString, TableParams } from "./queryParams";
 import type { IUpload } from "../interfaces/Upload";
@@ -10,7 +11,10 @@ export const uploadKeys = {
   list: (params: TableParams) => [...uploadKeys.lists(), params] as const,
 };
 
-export function useUploads(params: TableParams) {
+export function useUploads(
+  params: TableParams,
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: uploadKeys.list(params),
     queryFn: async () => {
@@ -18,6 +22,7 @@ export function useUploads(params: TableParams) {
       const { data } = await fileUploadClient.get(`/${query}`);
       return data.data as PaginatedResult<IUpload>;
     },
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -31,13 +36,21 @@ export function useRemoveUpload() {
   });
 }
 
+export interface UploadImageVariables {
+  file: File;
+  onUploadProgress?: (progressEvent: AxiosProgressEvent) => void;
+}
+
 export function useUploadImage() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: async ({ file, onUploadProgress }: UploadImageVariables) => {
       const formData = new FormData();
       formData.append("file", file);
-      return fileUploadClient.post("/", formData);
+      const { data } = await fileUploadClient.post("/", formData, {
+        onUploadProgress,
+      });
+      return data as { url: string };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: uploadKeys.lists() });
@@ -48,10 +61,11 @@ export function useUploadImage() {
 export function useUploadZip() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (file: File) => {
+    mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      return fileUploadClient.post("/zip", formData);
+      const { data } = await fileUploadClient.post("/zip", formData);
+      return data as { fileName?: string };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: uploadKeys.lists() });

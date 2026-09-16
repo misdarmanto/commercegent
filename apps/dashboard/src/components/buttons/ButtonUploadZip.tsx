@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { Box, Button, LinearProgress, Typography } from '@mui/material';
-import { useHttpFileUpload } from '../../hooks/http';
+import { useUploadZip } from '../../services/uploads';
 
 interface ButtonUploadZipProps {
     onUploaded?: (fileName: string) => void;
 }
 
 export default function ButtonUploadZip({ onUploaded }: ButtonUploadZipProps) {
-    const { handleUploadZipFile } = useHttpFileUpload();
+    const uploadZip = useUploadZip();
 
     const [uploading, setUploading] = useState(false);
     const [progress, setProgress] = useState(0);
@@ -34,7 +34,7 @@ export default function ButtonUploadZip({ onUploaded }: ButtonUploadZipProps) {
                 setProgress((prev) => (prev < 90 ? prev + 10 : prev));
             }, 300);
 
-            const result = await handleUploadZipFile(file);
+            const result = await uploadZip.mutateAsync(file);
 
             clearInterval(fakeProgress);
             setProgress(100);
