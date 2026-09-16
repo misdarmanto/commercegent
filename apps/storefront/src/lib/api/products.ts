@@ -10,16 +10,17 @@ export interface IProductFilters {
   page?: number;
   size?: number;
   search?: string;
+  productCategoryId?: number;
 }
 
 export function useProducts(filters: IProductFilters = {}) {
-  const { page = 1, size = 12, search } = filters;
+  const { page = 1, size = 12, search, productCategoryId } = filters;
 
   return useQuery({
-    queryKey: ["products", { page, size, search }],
+    queryKey: ["products", { page, size, search, productCategoryId }],
     queryFn: async () => {
       const { data } = await apiClient.get("/products", {
-        params: { page, size, pagination: true, search },
+        params: { page, size, pagination: true, search, productCategoryId },
       });
       return data.data as IPaginatedResult<IProductListItem>;
     },

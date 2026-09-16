@@ -8,13 +8,25 @@ import TextField from "@mui/material/TextField";
 import InputAdornment from "@mui/material/InputAdornment";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
 import SearchIcon from "@mui/icons-material/Search";
 import { useProducts } from "@/lib/api/products";
+import { useCategories } from "@/lib/api/categories";
 import { ProductCard } from "@/components/product/ProductCard";
+import { IPaginatedResult, ICategory } from "@/interfaces/Product";
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
-  const { data, isLoading } = useProducts({ search: search || undefined });
+  const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
+  const { data: categoriesData } = useCategories();
+  const categories = Array.isArray(categoriesData)
+    ? categoriesData
+    : (categoriesData as IPaginatedResult<ICategory> | undefined)?.items ?? [];
+  const { data, isLoading } = useProducts({
+    search: search || undefined,
+    productCategoryId: categoryId,
+  });
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -38,6 +50,28 @@ export default function HomePage() {
           },
         }}
       />
+
+      {categories.length > 0 && (
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ mb: 3, overflowX: "auto", pb: 1 }}
+        >
+          <Chip
+            label="Semua"
+            color={categoryId === undefined ? "primary" : "default"}
+            onClick={() => setCategoryId(undefined)}
+          />
+          {categories.map((category) => (
+            <Chip
+              key={category.categoryId}
+              label={category.categoryName}
+              color={categoryId === category.categoryId ? "primary" : "default"}
+              onClick={() => setCategoryId(category.categoryId)}
+            />
+          ))}
+        </Stack>
+      )}
 
       {isLoading ? (
         <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
