@@ -10,6 +10,7 @@ import {
 } from "@mui/x-data-grid";
 import { MoreOutlined } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useOrders } from "../../services/orders";
 import { Button, Chip, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -19,6 +20,7 @@ import { convertTime } from "../../utilities/convertTime";
 import { convertNumberToCurrency } from "../../utilities/convertNumberToCurrency";
 
 export default function ListOrderView() {
+  const { t } = useTranslation();
   const navigation = useNavigate();
   const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
@@ -38,26 +40,26 @@ export default function ListOrderView() {
     {
       field: "orderReferenceId",
       flex: 1,
-      renderHeader: () => <strong>{"ID"}</strong>,
+      renderHeader: () => <strong>{t("order.column.id")}</strong>,
       editable: true,
     },
     {
       field: "userName",
       flex: 1,
-      renderHeader: () => <strong>{"Pembeli"}</strong>,
+      renderHeader: () => <strong>{t("order.column.buyer")}</strong>,
       editable: true,
     },
     {
       field: "orderGrandTotal",
       flex: 1,
-      renderHeader: () => <strong>{"Harga"}</strong>,
+      renderHeader: () => <strong>{t("order.column.price")}</strong>,
       editable: true,
       valueFormatter: (item) => `Rp ${convertNumberToCurrency(item.value)}`,
     },
     {
       field: "orderStatus",
       flex: 1,
-      renderHeader: () => <strong>{"Status"}</strong>,
+      renderHeader: () => <strong>{t("order.column.status")}</strong>,
       editable: false,
       renderCell: (params) => {
         const status = params.value;
@@ -74,27 +76,27 @@ export default function ListOrderView() {
         switch (status) {
           case "waiting":
             color = "warning";
-            label = "Menunggu";
+            label = t("order.status.waiting");
             break;
           case "process":
             color = "info";
-            label = "Konfirmasi";
+            label = t("order.status.process");
             break;
           case "delivery":
             color = "primary";
-            label = "Dikirim";
+            label = t("order.status.delivery");
             break;
           case "draft":
             color = "warning";
-            label = "Dikemas";
+            label = t("order.status.draft");
             break;
           case "done":
             color = "success";
-            label = "Selesai";
+            label = t("order.status.done");
             break;
           case "cancel":
             color = "error";
-            label = "Dibatalkan";
+            label = t("order.status.cancel");
             break;
           default:
             color = "default";
@@ -109,21 +111,21 @@ export default function ListOrderView() {
     {
       field: "createdAt",
       flex: 1,
-      renderHeader: () => <strong>{"Dipesan pada"}</strong>,
+      renderHeader: () => <strong>{t("order.column.orderedAt")}</strong>,
       editable: true,
       valueFormatter: (item) => convertTime(item.value),
     },
     {
       field: "actions",
       type: "actions",
-      renderHeader: () => <strong>{"Aksi"}</strong>,
+      renderHeader: () => <strong>{t("order.column.actions")}</strong>,
       flex: 1,
       cellClassName: "actions",
       getActions: ({ row }) => {
         return [
           <GridActionsCellItem
             icon={<MoreOutlined color="info" />}
-            label="Detail"
+            label={t("common.detail")}
             onClick={() => navigation("/orders/detail/" + row.orderId)}
             color="inherit"
           />,
@@ -142,12 +144,12 @@ export default function ListOrderView() {
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="search..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Search
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -159,7 +161,7 @@ export default function ListOrderView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Orders",
+            label: t("order.title"),
             link: "/orders",
             icon: <IconMenus.orders fontSize="small" />,
           },

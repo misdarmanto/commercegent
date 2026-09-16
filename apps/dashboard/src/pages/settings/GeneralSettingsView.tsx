@@ -13,6 +13,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import {
@@ -23,8 +24,16 @@ import {
 } from "../../services/settings";
 
 export default function GeneralSettingsView() {
+  const { t } = useTranslation();
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">("success");
   const [openSnackbar, setOpenSnackbar] = useState(false);
+
+  const notify = (message: string, severity: "success" | "error") => {
+    setSnackbarMessage(message);
+    setSnackbarSeverity(severity);
+    setOpenSnackbar(true);
+  };
 
   const { data: settings, isLoading: loading } = useSettings();
   const whatsappNumber = settings?.whatsappNumber || "";
@@ -42,12 +51,10 @@ export default function GeneralSettingsView() {
   const saveWhatsappNumber = async (number: string) => {
     try {
       await saveSettings.mutateAsync({ whatsappNumber: number });
-      setSnackbarMessage("Berhasil disimpan!");
-      setOpenSnackbar(true);
+      notify(t("settings.generalPanel.savedSuccess"), "success");
     } catch (error: unknown) {
       console.log(error);
-      setSnackbarMessage("Terjadi kesalahan saat menyimpan data.");
-      setOpenSnackbar(true);
+      notify(t("settings.generalPanel.errorSaving"), "error");
     }
   };
 
@@ -61,8 +68,7 @@ export default function GeneralSettingsView() {
   const handleRequestOtp = async () => {
     const sanitizedWhatsapp = draftWhatsappNumber.trim();
     if (!sanitizedWhatsapp) {
-      setSnackbarMessage("Nomor WhatsApp wajib diisi.");
-      setOpenSnackbar(true);
+      notify(t("settings.generalPanel.whatsappRequiredAlert"), "error");
       return;
     }
     try {
@@ -71,12 +77,10 @@ export default function GeneralSettingsView() {
         otpType: "register",
       });
       setOtpRequested(true);
-      setSnackbarMessage("Kode OTP berhasil dikirim.");
-      setOpenSnackbar(true);
+      notify(t("settings.generalPanel.otpSent"), "success");
     } catch (error) {
       console.log(error);
-      setSnackbarMessage("Gagal mengirim OTP.");
-      setOpenSnackbar(true);
+      notify(t("settings.generalPanel.otpSendFailed"), "error");
     }
   };
 
@@ -84,8 +88,7 @@ export default function GeneralSettingsView() {
     const sanitizedWhatsapp = draftWhatsappNumber.trim();
     const sanitizedOtp = otpCode.trim();
     if (!sanitizedWhatsapp || !sanitizedOtp) {
-      setSnackbarMessage("Nomor WhatsApp dan kode OTP wajib diisi.");
-      setOpenSnackbar(true);
+      notify(t("settings.generalPanel.whatsappAndOtpRequired"), "error");
       return;
     }
     try {
@@ -99,24 +102,23 @@ export default function GeneralSettingsView() {
       setOtpCode("");
     } catch (error) {
       console.log(error);
-      setSnackbarMessage("OTP tidak valid atau verifikasi gagal.");
-      setOpenSnackbar(true);
+      notify(t("settings.generalPanel.otpInvalid"), "error");
     }
   };
 
-  if (loading) return "loading...";
+  if (loading) return t("settings.generalPanel.loading");
 
   return (
     <Box>
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Settings",
+            label: t("settings.title"),
             link: "/settings",
             icon: <IconMenus.settings fontSize="small" />,
           },
           {
-            label: "General",
+            label: t("settings.general"),
             link: "/settings",
           },
         ]}
@@ -126,7 +128,7 @@ export default function GeneralSettingsView() {
           <Grid item xs={12}>
             {!whatsappNumber ? (
               <Button variant="outlined" onClick={openVerificationModal}>
-                Add WhatsApp Number
+                {t("settings.generalPanel.addWhatsapp")}
               </Button>
             ) : (
               <Box
@@ -139,10 +141,10 @@ export default function GeneralSettingsView() {
                 }}
               >
                 <Typography variant="body1">
-                  Nomor WhatsApp: <strong>{whatsappNumber}</strong>
+                  {t("settings.generalPanel.whatsappLabel")}: <strong>{whatsappNumber}</strong>
                 </Typography>
                 <Button variant="outlined" onClick={openVerificationModal}>
-                  Edit
+                  {t("settings.generalPanel.edit")}
                 </Button>
               </Box>
             )}
@@ -164,11 +166,11 @@ export default function GeneralSettingsView() {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Verifikasi Nomor WhatsApp</DialogTitle>
+        <DialogTitle>{t("settings.generalPanel.verifyTitle")}</DialogTitle>
         <DialogContent>
           <Box sx={{ mt: 1, display: "grid", gap: 2 }}>
             <TextField
-              label="Nomor WhatsApp"
+              label={t("settings.generalPanel.whatsappLabel")}
               value={draftWhatsappNumber}
               onChange={(e) => setDraftWhatsappNumber(e.target.value ?? "")}
               fullWidth
@@ -176,7 +178,7 @@ export default function GeneralSettingsView() {
             />
             {otpRequested && (
               <TextField
-                label="Kode OTP"
+                label={t("settings.generalPanel.otpCode")}
                 value={otpCode}
                 onChange={(e) => setOtpCode(e.target.value ?? "")}
                 fullWidth
@@ -193,7 +195,7 @@ export default function GeneralSettingsView() {
             }}
             disabled={requestingOtp || verifyingOtp}
           >
-            Batal
+            {t("settings.generalPanel.cancel")}
           </Button>
           {!otpRequested ? (
             <Button
@@ -201,7 +203,7 @@ export default function GeneralSettingsView() {
               onClick={handleRequestOtp}
               disabled={requestingOtp}
             >
-              {requestingOtp ? "Mengirim..." : "Kirim OTP"}
+              {requestingOtp ? t("settings.generalPanel.sending") : t("settings.generalPanel.sendOtp")}
             </Button>
           ) : (
             <Button
@@ -209,7 +211,7 @@ export default function GeneralSettingsView() {
               onClick={handleVerifyOtp}
               disabled={verifyingOtp}
             >
-              {verifyingOtp ? "Memverifikasi..." : "Verifikasi OTP"}
+              {verifyingOtp ? t("settings.generalPanel.verifying") : t("settings.generalPanel.verifyOtp")}
             </Button>
           )}
         </DialogActions>
@@ -223,7 +225,7 @@ export default function GeneralSettingsView() {
       >
         <Alert
           onClose={() => setOpenSnackbar(false)}
-          severity={snackbarMessage.includes("kesalahan") ? "error" : "success"}
+          severity={snackbarSeverity}
           sx={{ width: "100%" }}
         >
           {snackbarMessage}

@@ -7,6 +7,7 @@ import {
   GridToolbarExport,
 } from "@mui/x-data-grid";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useTransactions } from "../../services/transactions";
 import { Button, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -15,6 +16,7 @@ import { convertTime } from "../../utilities/convertTime";
 import { convertNumberToCurrency } from "../../utilities/convertNumberToCurrency";
 
 export default function ListTransactionView() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 25,
@@ -32,25 +34,25 @@ export default function ListTransactionView() {
   const columns: GridColDef[] = [
     {
       field: "transactionOrderId",
-      renderHeader: () => <strong>{"ID"}</strong>,
+      renderHeader: () => <strong>{t("transaction.column.id")}</strong>,
       editable: true,
     },
     {
       field: "transactionProvider",
       flex: 1,
-      renderHeader: () => <strong>{"Provider"}</strong>,
+      renderHeader: () => <strong>{t("transaction.column.provider")}</strong>,
       editable: true,
     },
     {
       field: "transactionPaymentType",
       flex: 1,
-      renderHeader: () => <strong>{"Type"}</strong>,
+      renderHeader: () => <strong>{t("transaction.column.type")}</strong>,
       editable: true,
     },
     {
       field: "transactionAmount",
       flex: 1,
-      renderHeader: () => <strong>{"Total"}</strong>,
+      renderHeader: () => <strong>{t("transaction.column.total")}</strong>,
       editable: true,
       renderCell: (item) => {
         return "Rp" + convertNumberToCurrency(item.row.transactionAmount);
@@ -59,7 +61,7 @@ export default function ListTransactionView() {
     {
       field: "transactionStatus",
       flex: 1,
-      renderHeader: () => <strong>{"Status"}</strong>,
+      renderHeader: () => <strong>{t("transaction.column.status")}</strong>,
       editable: true,
       renderCell: (item) => {
         return <strong>{item.row.transactionStatus}</strong>;
@@ -68,7 +70,7 @@ export default function ListTransactionView() {
     {
       field: "createdAt",
       flex: 1,
-      renderHeader: () => <strong>{"Dipesan pada"}</strong>,
+      renderHeader: () => <strong>{t("transaction.column.orderedAt")}</strong>,
       editable: true,
       valueFormatter: (item) => convertTime(item.value),
     },
@@ -84,12 +86,12 @@ export default function ListTransactionView() {
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="search..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Search
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -101,7 +103,7 @@ export default function ListTransactionView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Riwayat Transaksi",
+            label: t("transaction.title"),
             link: "/transactions",
             icon: <IconMenus.transaction fontSize="small" />,
           },

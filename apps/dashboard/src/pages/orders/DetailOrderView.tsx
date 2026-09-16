@@ -6,6 +6,7 @@ import {
   useConfirmShippingDraft,
 } from "../../services/orders";
 import { ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Box,
   Button,
@@ -34,36 +35,24 @@ import WhatsAppIcon from "@mui/icons-material/WhatsApp";
 import Inventory2Icon from "@mui/icons-material/Inventory2";
 import PaidIcon from "@mui/icons-material/Paid";
 import TimelineIcon from "@mui/icons-material/Timeline";
+import i18n from "../../i18n";
 
 const getOrderStatus = (status: string) => {
-  let label = "";
-
   switch (status) {
     case "waiting":
-      label = "Menunggu Pembayaran";
-      break;
     case "process":
-      label = "Menunggu Konfirmasi";
-      break;
     case "delivery":
-      label = "Sedang Dikirim";
-      break;
     case "draft":
-      label = "Sedang Dikemas";
-      break;
     case "done":
-      label = "Selesai";
-      break;
     case "cancel":
-      label = "Dibatalkan";
-      break;
+      return i18n.t(`order.longStatus.${status}`);
     default:
-      label = status || "-";
+      return status || "-";
   }
-  return label;
 };
 
 export default function DetailOrderView() {
+  const { t } = useTranslation();
   const { orderId } = useParams();
   const navigate = useNavigate();
 
@@ -108,12 +97,12 @@ export default function DetailOrderView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Orders",
+            label: t("order.title"),
             link: "/orders",
             icon: <IconMenus.orders fontSize="small" />,
           },
           {
-            label: "Detail",
+            label: t("common.detail"),
             link: "/orders/detail/" + orderId,
           },
         ]}
@@ -128,7 +117,7 @@ export default function DetailOrderView() {
       >
         <Box sx={{ mb: 2 }}>
           <Button variant="outlined" onClick={() => navigate(-1)}>
-            Kembali
+            {t("order.detail.back")}
           </Button>
         </Box>
         <Grid container spacing={4}>
@@ -165,19 +154,19 @@ export default function DetailOrderView() {
             <Stack spacing={2}>
               <Typography variant="h6" fontWeight={700}>
                 <Inventory2Icon sx={{ mr: 1 }} />
-                Detail Pesanan
+                {t("order.detail.title")}
               </Typography>
 
               <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                 <Stack spacing={1}>
                   <Info
-                    label="ID Pesanan"
+                    label={t("order.detail.orderId")}
                     value={detailOrder.orderReferenceId}
                   />
                   <Info
                     label={
                       <>
-                        <PersonIcon fontSize="small" /> Pembeli
+                        <PersonIcon fontSize="small" /> {t("order.detail.buyer")}
                       </>
                     }
                     value={detailOrder.user?.userName}
@@ -185,13 +174,13 @@ export default function DetailOrderView() {
                   <Info
                     label={
                       <>
-                        <WhatsAppIcon fontSize="small" /> WhatsApp
+                        <WhatsAppIcon fontSize="small" /> {t("order.detail.whatsapp")}
                       </>
                     }
                     value={detailOrder.user?.userWhatsAppNumber}
                   />
                   <Info
-                    label="Status"
+                    label={t("order.detail.status")}
                     value={
                       <Chip
                         label={getOrderStatus(detailOrder.orderStatus)}
@@ -205,7 +194,7 @@ export default function DetailOrderView() {
 
               <Card variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
                 <Typography fontWeight={600} gutterBottom>
-                  Item Pesanan
+                  {t("order.detail.orderItems")}
                 </Typography>
 
                 {detailOrder.orderItems.map((item) => (
@@ -237,13 +226,13 @@ export default function DetailOrderView() {
               >
                 <Stack spacing={1}>
                   <Info
-                    label="Subtotal"
+                    label={t("order.detail.subtotal")}
                     value={`Rp ${convertNumberToCurrency(
                       Number(detailOrder.orderSubtotal),
                     )}`}
                   />
                   <Info
-                    label="Ongkir"
+                    label={t("order.detail.shippingFee")}
                     value={`Rp ${convertNumberToCurrency(
                       Number(detailOrder.orderShippingFee),
                     )}`}
@@ -251,7 +240,7 @@ export default function DetailOrderView() {
                   <Info
                     label={
                       <>
-                        <PaidIcon fontSize="small" /> Total
+                        <PaidIcon fontSize="small" /> {t("order.detail.total")}
                       </>
                     }
                     value={`Rp ${convertNumberToCurrency(
@@ -269,20 +258,20 @@ export default function DetailOrderView() {
         <Divider sx={{ my: 4 }} />
         <Typography variant="h6" fontWeight={700}>
           <LocationOnIcon sx={{ mr: 1 }} />
-          Alamat Pengiriman
+          {t("order.detail.shippingAddress")}
         </Typography>
 
         <Card variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 2 }}>
           <Stack spacing={1}>
-            <Info label="Nama" value={detailOrder.address?.addressUserName} />
-            <Info label="Kontak" value={detailOrder.address?.addressKontak} />
-            <Info label="Alamat" value={detailOrder.address?.addressDetail} />
+            <Info label={t("order.detail.name")} value={detailOrder.address?.addressUserName} />
+            <Info label={t("order.detail.contact")} value={detailOrder.address?.addressKontak} />
+            <Info label={t("order.detail.address")} value={detailOrder.address?.addressDetail} />
             <Info
-              label="Wilayah"
+              label={t("order.detail.region")}
               value={`${detailOrder.address?.addressKecamatanName}, ${detailOrder.address?.addressKabupatenName}, ${detailOrder.address?.addressProvinsiName}`}
             />
             <Info
-              label="Kode Pos"
+              label={t("order.detail.postalCode")}
               value={detailOrder.address?.addressPostalCode}
             />
           </Stack>
@@ -290,12 +279,12 @@ export default function DetailOrderView() {
 
         <Card variant="outlined" sx={{ p: 3, mt: 2, borderRadius: 2 }}>
           <Stack spacing={1}>
-            <Info label="Status" value={detailOrder.orderStatus} bold />
+            <Info label={t("order.detail.status")} value={detailOrder.orderStatus} bold />
             <Info
-              label="Kurir"
+              label={t("order.detail.courier")}
               value={`${detailOrder.orderCourierCompany} - ${detailOrder.orderCourierType}`}
             />
-            <Info label="Layanan" value={detailOrder.orderShippingProvider} />
+            <Info label={t("order.detail.service")} value={detailOrder.orderShippingProvider} />
           </Stack>
         </Card>
 
@@ -305,17 +294,17 @@ export default function DetailOrderView() {
             <Divider sx={{ my: 4 }} />
             <Typography variant="h6" fontWeight={700}>
               <LocalShippingIcon sx={{ mr: 1 }} />
-              Status Pengiriman
+              {t("order.detail.shippingStatus")}
             </Typography>
 
             <Grid container spacing={3} sx={{ mt: 1 }}>
               <Grid item xs={12} md={5}>
                 <Card variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
                   <Stack spacing={1}>
-                    <Info label="Status" value={shipping.status} bold />
-                    <Info label="Kurir" value={shipping.courier?.company} />
-                    <Info label="Resi" value={shipping.waybill_id} />
-                    <Info label="Berat" value={`${shipping.weight} gram`} />
+                    <Info label={t("order.detail.status")} value={shipping.status} bold />
+                    <Info label={t("order.detail.courier")} value={shipping.courier?.company} />
+                    <Info label={t("order.detail.waybill")} value={shipping.waybill_id} />
+                    <Info label={t("order.detail.weight")} value={`${shipping.weight} gram`} />
                   </Stack>
                 </Card>
               </Grid>
@@ -323,7 +312,7 @@ export default function DetailOrderView() {
               <Grid item xs={12} md={7}>
                 <Typography fontWeight={600} gutterBottom>
                   <TimelineIcon sx={{ mr: 1 }} />
-                  Riwayat Pengiriman
+                  {t("order.detail.shippingHistory")}
                 </Typography>
 
                 <Stack spacing={2}>
@@ -354,7 +343,7 @@ export default function DetailOrderView() {
         {detailOrder.orderStatus === "process" && (
           <Stack direction="row" justifyContent="flex-end" sx={{ mt: 5 }}>
             <Button variant="contained" onClick={() => setOpenDraftModal(true)}>
-              Buat Draft Pengiriman
+              {t("order.detail.createDraft")}
             </Button>
           </Stack>
         )}
@@ -365,7 +354,7 @@ export default function DetailOrderView() {
               variant="contained"
               onClick={() => setOpenConfirmModal(true)}
             >
-              Kirim Pesanan
+              {t("order.detail.sendOrder")}
             </Button>
           </Stack>
         )}
@@ -373,16 +362,16 @@ export default function DetailOrderView() {
 
       {/* ===== MODAL DRAFT ===== */}
       <Dialog open={openDraftModal} onClose={() => setOpenDraftModal(false)}>
-        <DialogTitle>Konfirmasi</DialogTitle>
+        <DialogTitle>{t("order.detail.confirm")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Apakah kamu yakin ingin membuat draft pengiriman untuk pesanan ini?
+            {t("order.detail.confirmDraftMessage")}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDraftModal(false)}>Batal</Button>
+          <Button onClick={() => setOpenDraftModal(false)}>{t("order.detail.cancel")}</Button>
           <Button variant="contained" onClick={handleUpdateOrderToDraft}>
-            Ya, Buat Draft
+            {t("order.detail.yesCreateDraft")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -392,20 +381,20 @@ export default function DetailOrderView() {
         open={openConfirmModal}
         onClose={() => setOpenConfirmModal(false)}
       >
-        <DialogTitle>Konfirmasi Pengiriman</DialogTitle>
+        <DialogTitle>{t("order.detail.confirmSendShipping")}</DialogTitle>
         <DialogContent>
           <DialogContentText>
-            Pesanan akan dikirim ke kurir. Pastikan data sudah benar.
+            {t("order.detail.confirmSendMessage")}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenConfirmModal(false)}>Batal</Button>
+          <Button onClick={() => setOpenConfirmModal(false)}>{t("order.detail.cancel")}</Button>
           <Button
             variant="contained"
             color="success"
             onClick={handleUpdateOrderToDelivered}
           >
-            Kirim Pesanan
+            {t("order.detail.sendOrder")}
           </Button>
         </DialogActions>
       </Dialog>
