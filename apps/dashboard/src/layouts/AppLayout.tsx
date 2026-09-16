@@ -57,6 +57,9 @@ function getSidebarTokens(theme: Theme) {
         border: theme.palette.divider,
         textActive: theme.palette.text.primary,
         textInactive: theme.palette.text.secondary,
+        // Text/icon color on top of the solid active-item pill — always
+        // white since that pill is a solid primary-color fill in both modes.
+        onActiveItem: "#FFFFFF",
         hover: theme.palette.grey[100],
       }
     : {
@@ -65,6 +68,7 @@ function getSidebarTokens(theme: Theme) {
         border: "rgba(148,163,184,0.12)",
         textActive: "#FFFFFF",
         textInactive: "rgba(226,232,240,0.6)",
+        onActiveItem: "#FFFFFF",
         hover: "rgba(255,255,255,0.06)",
       };
 }
@@ -390,7 +394,7 @@ export default function AppLayout() {
                       sx={{
                         minWidth: isMobile || openDrawer ? 36 : "auto",
                         color: active
-                          ? sidebarTokens.textActive
+                          ? sidebarTokens.onActiveItem
                           : sidebarTokens.textInactive,
                       }}
                     >
@@ -405,7 +409,7 @@ export default function AppLayout() {
                             fontWeight: active ? 700 : 500,
                             fontSize: "0.875rem",
                             color: active
-                              ? sidebarTokens.textActive
+                              ? sidebarTokens.onActiveItem
                               : sidebarTokens.textInactive,
                           },
                         }}
