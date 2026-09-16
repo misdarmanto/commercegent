@@ -37,10 +37,10 @@ coverage/
 *.sln
 *.sw?
 
-# Misc
-tmp/
-uploads/
-public/*
+# Misc (scoped to the api's runtime dirs — dashboard has its own tracked public/ and pages/uploads)
+apps/api/tmp/
+apps/api/uploads/
+apps/api/public/*
 *.local
 
 # Firebase
