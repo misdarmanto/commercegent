@@ -53,7 +53,7 @@ export function Header() {
             flexGrow: 1,
           }}
         >
-          FRESH
+          {t("app.name")}
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>

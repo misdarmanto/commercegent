@@ -1,8 +1,8 @@
 export const id = {
   translation: {
     app: {
-      name: "FRESH",
-      copyright: "© {{year}} FRESH Ecommerce. Seluruh hak cipta dilindungi.",
+      name: "Commercegent",
+      copyright: "© {{year}} Commercegent. Seluruh hak cipta dilindungi.",
     },
     language: {
       label: "Bahasa",

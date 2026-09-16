@@ -1,8 +1,8 @@
 export const en = {
   translation: {
     app: {
-      name: "FRESH",
-      copyright: "© {{year}} FRESH Ecommerce. All rights reserved.",
+      name: "Commercegent",
+      copyright: "© {{year}} Commercegent. All rights reserved.",
     },
     language: {
       label: "Language",
