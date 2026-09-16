@@ -42,35 +42,21 @@ import { IconMenusSidebar } from "../components/icon";
 
 import logo from "../assets/logo.jpg";
 
-const drawerWidth = 200;
-const miniDrawerWidth = 64;
+const drawerWidth = 220;
+const miniDrawerWidth = 72;
 
-const primaryBlue = "#1F6F5F";
-const glowBlue = "#2FA084";
+function getLayoutTokens(theme: Theme) {
+  const isLight = theme.palette.mode === "light";
 
-const tokens = {
-  dark: {
-    appBg:
-      "radial-gradient(1200px 600px at 10% -10%, rgba(56,189,248,0.06), transparent 45%), #020617",
-    sidebar: "linear-gradient(180deg, #020617 0%, #020617 60%, #020617 100%)",
-    surface:
-      "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(15,23,42,0.96))",
-    border: "rgba(148,163,184,0.28)",
-    hover: "rgba(15,23,42,0.9)",
-    textPrimary: "#FFFFFF",
-    textSecondary: "#FFFFFF",
-  },
-
-  light: {
-    appBg: "#F5F7FB",
-    sidebar: "linear-gradient(180deg, #FFFFFF, #F1F5F9)",
-    surface: "#FFFFFF",
-    border: "rgba(0,0,0,0.08)",
-    hover: "rgba(0,0,0,0.04)",
-    textPrimary: "#0F172A",
-    textSecondary: "#475569",
-  },
-};
+  return {
+    appBg: theme.palette.background.default,
+    sidebar: theme.palette.background.paper,
+    border: theme.palette.divider,
+    hover: isLight ? theme.palette.grey[100] : "rgba(255,255,255,0.06)",
+    textPrimary: theme.palette.text.primary,
+    textSecondary: theme.palette.text.secondary,
+  };
+}
 
 /* ============================================================
    DRAWER MIXINS
@@ -120,7 +106,7 @@ const AppBar = styled(MuiAppBar, {
 });
 
 const Drawer = styled(MuiDrawer)<{ open?: boolean }>(({ theme, open }) => {
-  const t = tokens[theme.palette.mode];
+  const t = getLayoutTokens(theme);
 
   return {
     width: drawerWidth,
@@ -130,6 +116,7 @@ const Drawer = styled(MuiDrawer)<{ open?: boolean }>(({ theme, open }) => {
 
     "& .MuiDrawer-paper": {
       background: t.sidebar,
+      borderRight: `1px solid ${t.border}`,
       color: t.textSecondary,
       ...(open ? openedMixin(theme) : closedMixin(theme)),
     },
@@ -220,7 +207,7 @@ export default function AppLayout() {
     if (saved) setActiveLink(saved);
   }, []);
 
-  const t = tokens[theme.palette.mode];
+  const t = getLayoutTokens(theme);
 
   return (
     <Box
@@ -257,7 +244,8 @@ export default function AppLayout() {
                 sx={{
                   fontWeight: 800,
                   letterSpacing: ".12em",
-                  background: `linear-gradient(90deg, ${primaryBlue}, ${glowBlue})`,
+                  background: (t) =>
+                    `linear-gradient(90deg, ${t.palette.primary.dark}, ${t.palette.primary.main})`,
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                   fontSize: { xs: 14, sm: 16 },
@@ -279,8 +267,8 @@ export default function AppLayout() {
                   sx={{
                     width: 34,
                     height: 34,
-                    bgcolor: primaryBlue,
-                    boxShadow: `0 0 0 4px rgba(59,130,246,0.25)`,
+                    bgcolor: "primary.main",
+                    boxShadow: (t) => `0 0 0 4px ${t.palette.primary.lighter}`,
                   }}
                 />
               </IconButton>
@@ -342,11 +330,22 @@ export default function AppLayout() {
                 key={item.link}
                 disablePadding
                 sx={{
-                  mb: 0.2,
+                  mb: 0.4,
                   borderRadius: 2.5,
-                  background: active ? "rgba(59,130,246,0.12)" : "transparent",
+                  position: "relative",
+                  background: active ? "primary.lighter" : "transparent",
                   "&:hover": {
-                    background: active ? "rgba(59,130,246,0.16)" : t.hover,
+                    background: active ? "primary.lighter" : t.hover,
+                  },
+                  "&::before": {
+                    content: '""',
+                    position: "absolute",
+                    left: -8,
+                    top: "20%",
+                    height: "60%",
+                    width: 3,
+                    borderRadius: 4,
+                    bgcolor: active ? "primary.main" : "transparent",
                   },
                 }}
                 onClick={() => {
@@ -355,11 +354,18 @@ export default function AppLayout() {
                   if (isMobile) setMobileDrawerOpen(!mobileDrawerOpen);
                 }}
               >
-                <ListItemButton component={Link} to={item.link}>
+                <ListItemButton
+                  component={Link}
+                  to={item.link}
+                  sx={{
+                    justifyContent: isMobile || openDrawer ? "flex-start" : "center",
+                    px: isMobile || openDrawer ? 2 : 1.5,
+                  }}
+                >
                   <ListItemIcon
                     sx={{
-                      minWidth: 38,
-                      color: active ? primaryBlue : t.textSecondary,
+                      minWidth: isMobile || openDrawer ? 38 : "auto",
+                      color: active ? "primary.main" : t.textSecondary,
                     }}
                   >
                     {(() => {
@@ -369,13 +375,16 @@ export default function AppLayout() {
                       return <Icon />;
                     })()}
                   </ListItemIcon>
-                  <ListItemText
-                    primary={item.title}
-                    sx={{
-                      fontWeight: active ? 900 : 700,
-                      color: active ? t.textPrimary : t.textSecondary,
-                    }}
-                  />
+                  {(isMobile || openDrawer) && (
+                    <ListItemText
+                      primary={item.title}
+                      sx={{
+                        whiteSpace: "nowrap",
+                        fontWeight: active ? 700 : 500,
+                        color: active ? t.textPrimary : t.textSecondary,
+                      }}
+                    />
+                  )}
                 </ListItemButton>
               </ListItem>
             );
