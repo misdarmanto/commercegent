@@ -13,6 +13,7 @@
     "dev": "turbo run dev",
     "dev:api": "turbo run dev --filter=@fresh-ecommerce/api",
     "dev:dashboard": "turbo run dev --filter=@fresh-ecommerce/dashboard",
+    "dev:storefront": "turbo run dev --filter=@fresh-ecommerce/storefront",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
@@ -36,6 +37,9 @@
     ],
     "apps/dashboard/**/*.{ts,tsx}": [
       "sh -c 'cd apps/dashboard && npx eslint --fix'"
+    ],
+    "apps/storefront/**/*.{ts,tsx}": [
+      "sh -c 'cd apps/storefront && npx eslint --fix'"
     ]
   }
 }
