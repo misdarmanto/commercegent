@@ -55,7 +55,7 @@ export function Header() {
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           {loggedIn ? (
-            <IconButton component={Link} href="/orders">
+            <IconButton component={Link} href="/profile">
               <PersonOutlineIcon />
             </IconButton>
           ) : (
