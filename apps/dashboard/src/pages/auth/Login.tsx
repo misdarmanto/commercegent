@@ -12,12 +12,12 @@ import { IconMenus } from "../../components/icon";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useHttp } from "../../hooks/http";
+import { useLoginAdmin } from "../../services/auth";
 import { useToken } from "../../hooks/token";
 import { ILoginAdmin, loginAdminSchema } from "../../validations/AuthSchema";
 
 export default function LoginView() {
-  const { handlePostRequest } = useHttp();
+  const loginAdmin = useLoginAdmin();
   const { setToken } = useToken();
   const navigate = useNavigate();
 
@@ -35,13 +35,10 @@ export default function LoginView() {
 
   const onSubmit = async (formData: ILoginAdmin) => {
     try {
-      const result = await handlePostRequest({
-        path: "/auth/admins/login",
-        body: formData,
-      });
+      const result = await loginAdmin.mutateAsync(formData);
 
       if (result !== null) {
-        setToken(result.data.token);
+        setToken(result.token);
         navigate("/");
         window.location.reload();
       }
