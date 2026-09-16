@@ -11,8 +11,10 @@ import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { useMyProfile } from "../../services/myProfile";
 import { convertTime } from "../../utilities/convertTime";
+import { useTranslation } from "react-i18next";
 
 const ProfileView = () => {
+  const { t } = useTranslation();
   const { data: detailProfile } = useMyProfile();
 
   return (
@@ -20,7 +22,7 @@ const ProfileView = () => {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Profile",
+            label: t("myProfile.title"),
             link: "/profile",
             icon: <IconMenus.profile fontSize="small" />,
           },
@@ -51,13 +53,13 @@ const ProfileView = () => {
           </Avatar>
           <Box>
             <Typography variant="h4" fontWeight="bold">
-              {detailProfile?.userName || "User"}
+              {detailProfile?.userName || t("myProfile.unknownUser")}
             </Typography>
             <Typography color="text.secondary" fontSize={18}>
-              {detailProfile?.userRole || "Role tidak diketahui"}
+              {detailProfile?.userRole || t("myProfile.unknownRole")}
             </Typography>
             <Typography color="text.disabled" fontSize={14} mt={1}>
-              Bergabung sejak{" "}
+              {t("myProfile.joinedSince")}{" "}
               {detailProfile?.createdAt
                 ? convertTime(detailProfile.createdAt)
                 : "-"}
@@ -71,7 +73,7 @@ const ProfileView = () => {
           <Grid item xs={12} sm={6}>
             <Box>
               <Typography color="text.secondary" fontSize={14} mb={0.5}>
-                Username
+                {t("myProfile.username")}
               </Typography>
               <Typography fontWeight={500} fontSize={16}>
                 {detailProfile?.userName || "-"}
@@ -81,7 +83,7 @@ const ProfileView = () => {
           <Grid item xs={12} sm={6}>
             <Box>
               <Typography color="text.secondary" fontSize={14} mb={0.5}>
-                Role
+                {t("myProfile.role")}
               </Typography>
               <Typography
                 fontWeight={600}
@@ -96,7 +98,7 @@ const ProfileView = () => {
           <Grid item xs={12} sm={6}>
             <Box>
               <Typography color="text.secondary" fontSize={14} mb={0.5}>
-                Dibuat Pada
+                {t("myProfile.createdAt")}
               </Typography>
               <Typography fontWeight={500} fontSize={16}>
                 {detailProfile?.createdAt

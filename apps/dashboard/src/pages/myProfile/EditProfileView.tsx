@@ -7,8 +7,10 @@ import {
 } from "../../services/myProfile";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
+import { useTranslation } from "react-i18next";
 
 export default function EditProfileView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { userId } = useParams();
 
@@ -45,12 +47,12 @@ export default function EditProfileView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Profile",
+            label: t("myProfile.title"),
             link: "/profile",
             icon: <IconMenus.profile fontSize="small" />,
           },
           {
-            label: "Edit",
+            label: t("common.edit"),
             link: "/profile/" + userId,
           },
         ]}
@@ -67,7 +69,7 @@ export default function EditProfileView() {
           color="primary"
           fontWeight={"bold"}
         >
-          Edit My Profile
+          {t("myProfile.editTitle")}
         </Typography>
         <Box
           component="form"
@@ -78,7 +80,7 @@ export default function EditProfileView() {
           }}
         >
           <TextField
-            label="User Name"
+            label={t("myProfile.userName")}
             id="outlined-start-adornment"
             sx={{ m: 1 }}
             value={user?.userName}
@@ -91,7 +93,7 @@ export default function EditProfileView() {
             }}
           />
           <TextField
-            label="password"
+            label={t("myProfile.password")}
             id="outlined-start-adornment"
             sx={{ m: 1 }}
             value={user?.userPassword}
@@ -116,7 +118,7 @@ export default function EditProfileView() {
               variant={"contained"}
               onClick={handleSubmit}
             >
-              Submit
+              {t("myProfile.submit")}
             </Button>
           </Stack>
         </Box>
