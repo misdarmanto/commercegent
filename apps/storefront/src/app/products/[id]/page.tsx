@@ -18,6 +18,7 @@ import { useAddToCart } from "@/lib/api/cart";
 import { getImageUrl } from "@/lib/utils/getImageUrl";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { isLoggedIn } from "@/lib/auth/token";
+import { RelatedProducts } from "@/components/product/RelatedProducts";
 
 export default function ProductDetailPage({
   params,
@@ -178,6 +179,11 @@ export default function ProductDetailPage({
           </Button>
         </Grid>
       </Grid>
+
+      <RelatedProducts
+        categoryId={product.productCategoryId}
+        excludeProductId={product.productId}
+      />
     </Container>
   );
 }
