@@ -47,17 +47,27 @@ import logo from "../assets/logo.jpg";
 const drawerWidth = 248;
 const miniDrawerWidth = 80;
 
-// The sidebar keeps a fixed dark treatment regardless of the app's
-// light/dark toggle (a deliberate brand anchor, like Vercel/Linear/Notion),
-// while the topbar and content area still follow the theme mode.
-const sidebarTokens = {
-  bg: "#0B1120",
-  bgElevated: "#111A2E",
-  border: "rgba(148,163,184,0.12)",
-  textActive: "#FFFFFF",
-  textInactive: "rgba(226,232,240,0.6)",
-  hover: "rgba(255,255,255,0.06)",
-};
+function getSidebarTokens(theme: Theme) {
+  const isLight = theme.palette.mode === "light";
+
+  return isLight
+    ? {
+        bg: theme.palette.background.paper,
+        bgElevated: theme.palette.background.paper,
+        border: theme.palette.divider,
+        textActive: theme.palette.text.primary,
+        textInactive: theme.palette.text.secondary,
+        hover: theme.palette.grey[100],
+      }
+    : {
+        bg: "#0B1120",
+        bgElevated: "#111A2E",
+        border: "rgba(148,163,184,0.12)",
+        textActive: "#FFFFFF",
+        textInactive: "rgba(226,232,240,0.6)",
+        hover: "rgba(255,255,255,0.06)",
+      };
+}
 
 function getLayoutTokens(theme: Theme) {
   const isLight = theme.palette.mode === "light";
@@ -119,6 +129,8 @@ const AppBar = styled(MuiAppBar, {
 });
 
 const Drawer = styled(MuiDrawer)<{ open?: boolean }>(({ theme, open }) => {
+  const t = getSidebarTokens(theme);
+
   return {
     width: drawerWidth,
     flexShrink: 0,
@@ -126,9 +138,9 @@ const Drawer = styled(MuiDrawer)<{ open?: boolean }>(({ theme, open }) => {
     ...(open ? openedMixin(theme) : closedMixin(theme)),
 
     "& .MuiDrawer-paper": {
-      background: `linear-gradient(180deg, ${sidebarTokens.bgElevated} 0%, ${sidebarTokens.bg} 100%)`,
-      borderRight: `1px solid ${sidebarTokens.border}`,
-      color: sidebarTokens.textInactive,
+      background: `linear-gradient(180deg, ${t.bgElevated} 0%, ${t.bg} 100%)`,
+      borderRight: `1px solid ${t.border}`,
+      color: t.textInactive,
       display: "flex",
       flexDirection: "column",
       ...(open ? openedMixin(theme) : closedMixin(theme)),
@@ -221,6 +233,7 @@ export default function AppLayout() {
   }, []);
 
   const t = getLayoutTokens(theme);
+  const sidebarTokens = getSidebarTokens(theme);
 
   return (
     <Box
