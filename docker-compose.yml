@@ -1,0 +1,82 @@
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-fresh_ecommerce}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:-root}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - ./apps/api/.env
+    environment:
+      # Override the app's own .env so it talks to the compose services
+      # instead of localhost, regardless of what's in apps/api/.env.
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER_NAME: root
+      DB_PASSWORD: ${DB_PASSWORD:-root}
+      DB_NAME: ${DB_NAME:-fresh_ecommerce}
+      DB_DIALECT: mysql
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      APP_PORT: 8000
+    ports:
+      - "${API_PORT:-8000}:8000"
+    volumes:
+      - api-uploads:/app/uploads
+      - api-logs:/app/logs
+
+  dashboard:
+    build:
+      context: .
+      dockerfile: apps/dashboard/Dockerfile
+      args:
+        VITE_APP_STAGE: ${VITE_APP_STAGE:-production}
+        VITE_BASE_URL: ${VITE_BASE_URL:-http://localhost:8000}
+        VITE_LOCAL_STORAGE_KEY: ${VITE_LOCAL_STORAGE_KEY:-fresh_dashboard_token}
+        VITE_UPLOAD_FILE_URL: ${VITE_UPLOAD_FILE_URL:-}
+        VITE_TOKEN_KEY_LOCAL_STORAGE: ${VITE_TOKEN_KEY_LOCAL_STORAGE:-fresh_dashboard_token}
+        VITE_TOKEN_SECRET: ${VITE_TOKEN_SECRET:-}
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "${DASHBOARD_PORT:-5173}:80"
+
+volumes:
+  mysql-data:
+  redis-data:
+  api-uploads:
+  api-logs:

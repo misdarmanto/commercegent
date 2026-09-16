@@ -18,7 +18,10 @@
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",

@@ -51,6 +51,36 @@ Run from the repo root (powered by [Turborepo](https://turbo.build)):
 
 You can also target a single workspace directly, e.g. `pnpm --filter @fresh-ecommerce/api run migrate:up`.
 
+## Running with Docker
+
+Spins up MySQL, Redis, the API, and the dashboard together — no local Node/MySQL/Redis install required.
+
+```bash
+cp .env.example .env
+cp apps/api/.env.example apps/api/.env   # fill in real secrets (Wablas, Midtrans, BiteShip, tokens, ...)
+
+docker compose up -d --build
+```
+
+- Dashboard: http://localhost:5173
+- API: http://localhost:8000
+
+`docker-compose.yml` overrides `DB_HOST`/`REDIS_HOST` in `apps/api/.env` so the API talks to the `mysql`/`redis` containers — everything else in that file (API keys, tokens) is used as-is via `env_file`.
+
+Run migrations/seeders against the containerized database:
+
+```bash
+docker compose exec api npx sequelize-cli db:migrate
+docker compose exec api npx sequelize-cli db:seed:all
+```
+
+The dashboard's `VITE_*` variables are baked in at build time (see root `.env`), so change them there and re-run `docker compose up -d --build dashboard` rather than editing anything post-build.
+
+```bash
+docker compose logs -f api      # tail one service
+docker compose down             # stop (add -v to also wipe DB/Redis volumes)
+```
+
 ## Contributing
 
 - Commits follow [Conventional Commits](https://www.conventionalcommits.org) (enforced by commitlint).
