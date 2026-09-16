@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
-import { useHttp } from "../../hooks/http";
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useProduct } from "../../services/products";
+import { useMemo, type ReactNode } from "react";
 import { ArrowBack } from "@mui/icons-material";
 import {
   Box,
@@ -24,7 +24,6 @@ import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { convertNumberToCurrency } from "../../utilities/convertNumberToCurrency";
 import { getImageUrl } from "../../utilities/getImageUrl";
-import type { IProduct } from "../../interfaces/Product";
 import {
   getVariantsFromProduct,
   parseVariantPrice,
@@ -36,10 +35,9 @@ function formatRp(value: number | string | undefined | null) {
 }
 
 export default function DetailProductView() {
-  const { handleGetRequest } = useHttp();
   const navigate = useNavigate();
   const { productId } = useParams();
-  const [productDetail, setProductDetail] = useState<IProduct | null>(null);
+  const { data: productDetail } = useProduct(productId);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -48,21 +46,6 @@ export default function DetailProductView() {
     }
     navigate("/products");
   };
-
-  const getDetailProduct = async () => {
-    const result = (await handleGetRequest({
-      path: "/products/detail/" + productId,
-    })) as IProduct | undefined;
-
-    console.log("result", result);
-    if (result) {
-      setProductDetail(result);
-    }
-  };
-
-  useEffect(() => {
-    getDetailProduct();
-  }, [productId]);
 
   const sortedVariants = useMemo(() => {
     if (!productDetail) return [];

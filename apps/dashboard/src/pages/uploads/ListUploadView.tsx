@@ -8,7 +8,7 @@ import {
   GridRowsProp,
 } from "@mui/x-data-grid";
 import { Add, GridView, TableRows } from "@mui/icons-material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Stack,
@@ -36,16 +36,10 @@ import { convertTime } from "../../utilities/convertTime";
 import { getImageUrl } from "../../utilities/getImageUrl";
 import { IUpload } from "../../interfaces/Upload";
 import ButtonUploadFile from "../../components/buttons/ButtonUploadFile";
-import { useHttpFileUpload } from "../../hooks/http";
+import { useUploads, useRemoveUpload } from "../../services/uploads";
 import ButtonUploadZip from "../../components/buttons/ButtonUploadZip";
 
 export default function ListUploadView() {
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const { handleGetFileUploadRequest, handleRemoveFileRequest } =
-    useHttpFileUpload();
-
-  const [loading, setLoading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 12,
     page: 1,
@@ -61,65 +55,45 @@ export default function ListUploadView() {
   // Delete dialog
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<IUpload | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
 
   // Search & Snackbar
   const [searchValue, setSearchValue] = useState("");
+  const [committedSearch, setCommittedSearch] = useState("");
   const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({
     open: false,
     message: "",
   });
 
   // === Fetch data ===
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetFileUploadRequest({
-        path: "/",
-        page: paginationModel.page,
-        size: paginationModel.pageSize,
-        filter: { search },
-      });
+  const { data, isLoading: loading } = useUploads({
+    page: paginationModel.page,
+    size: paginationModel.pageSize,
+    filters: { search: committedSearch },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
 
-      if (result) {
-        setTableData(result.items || []);
-        setRowCount(result.total_items ?? 0);
-      }
-    } catch (err) {
-      console.error("fetch uploads error", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getTableData({ search: searchValue });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [paginationModel]);
+  const removeUpload = useRemoveUpload();
 
   // === Delete file ===
   const handleDelete = async (fileId: string) => {
     try {
-      setActionLoading(true);
-      await handleRemoveFileRequest({ path: `/${fileId}` });
+      await removeUpload.mutateAsync(fileId);
       setOpenDeleteDialog(false);
       setDeleteTarget(null);
-      await getTableData({ search: searchValue });
       setSnackbar({ open: true, message: "File berhasil dihapus." });
     } catch (err) {
       console.error("delete error", err);
       setSnackbar({ open: true, message: "Gagal menghapus file." });
-    } finally {
-      setActionLoading(false);
     }
   };
+  const actionLoading = removeUpload.isPending;
 
   // === Upload callback ===
   const handleUploaded = async (fileKeyOrName: string) => {
     setUploadedImage(fileKeyOrName);
-    setTimeout(async () => {
+    setTimeout(() => {
       setOpenUploadDialog(false);
-      await getTableData({ search: searchValue });
       setUploadedImage("");
       setSnackbar({ open: true, message: "File berhasil diunggah." });
     }, 500);
@@ -177,7 +151,7 @@ export default function ListUploadView() {
             variant="outlined"
             onClick={() => {
               setPaginationModel((p) => ({ ...p, page: 0 }));
-              getTableData({ search: searchValue });
+              setCommittedSearch(searchValue);
             }}
           >
             Cari
@@ -391,13 +365,12 @@ export default function ListUploadView() {
           {/* Upload ZIP */}
           <Box sx={{ mt: 2 }}>
             <ButtonUploadZip
-              onUploaded={async (uploadedName) => {
+              onUploaded={(uploadedName) => {
                 setSnackbar({
                   open: true,
                   message: `ZIP berhasil diunggah: ${uploadedName}`,
                 });
                 setOpenUploadDialog(false);
-                await getTableData({ search: searchValue });
               }}
             />
           </Box>
@@ -407,10 +380,7 @@ export default function ListUploadView() {
           <Button onClick={() => setOpenUploadDialog(false)}>Batal</Button>
           <Button
             variant="contained"
-            onClick={async () => {
-              setOpenUploadDialog(false);
-              await getTableData({ search: searchValue });
-            }}
+            onClick={() => setOpenUploadDialog(false)}
           >
             Selesai
           </Button>

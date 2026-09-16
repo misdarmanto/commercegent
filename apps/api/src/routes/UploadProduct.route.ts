@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { MiddleWares } from '../middlewares'
 import { handleProductExcelUpload } from '../middlewares/productExcelUpload'
 import { UploadProductController } from '../controllers/uploadProduct'
-import { uploadHistoriesQuerySchema } from '../schemas/ProductSchema'
+import { uploadHistoriesQuerySchema } from '../schemas/productSchema'
 
 const UploadProductRoute = Router()
 

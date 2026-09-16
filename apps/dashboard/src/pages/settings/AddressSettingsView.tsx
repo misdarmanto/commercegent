@@ -14,11 +14,19 @@ import {
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useHttp } from "../../hooks/http";
+import {
+  useAdminAddress,
+  useSaveAdminAddress,
+} from "../../services/settings";
+import {
+  useProvinces,
+  fetchRegencies,
+  fetchDistricts,
+  fetchVillages,
+} from "../../services/regions";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { AddressFormType, AddressSchema } from "../../validations/addresSchema";
-import { IAddress } from "../../interfaces/Address";
 
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import L from "leaflet";
@@ -82,15 +90,15 @@ const findNameById = (
 };
 
 export default function AddressSettingsView() {
-  const { handleGetRequest, handlePostRequest } = useHttp();
+  const { data: provinces = [], isLoading: loadingProvinces } =
+    useProvinces();
+  const { data: address, isLoading: loadingAddress } = useAdminAddress();
+  const saveAdminAddress = useSaveAdminAddress();
+  const loading = loadingProvinces || loadingAddress;
 
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [loading, setLoading] = useState(true);
 
-  const [provinces, setProvinces] = useState<{ id: string; name: string }[]>(
-    [],
-  );
   const [regencies, setRegencies] = useState<{ id: string; name: string }[]>(
     [],
   );
@@ -140,16 +148,8 @@ export default function AddressSettingsView() {
   };
 
   const loadInitialData = async () => {
-    setLoading(true);
     try {
-      const provRes = await handleGetRequest({ path: "/regions/provinces" });
-      if (provRes) {
-        setProvinces(provRes);
-      }
-
-      const d: IAddress | undefined = await handleGetRequest({
-        path: "/addresses/admins",
-      });
+      const d = address;
       if (!d) {
         return;
       }
@@ -171,7 +171,7 @@ export default function AddressSettingsView() {
         setPosition([Number(d.addressLatitude), Number(d.addressLongitude)]);
       }
 
-      const provList = provRes ?? [];
+      const provList = provinces;
 
       let pId = "";
       if (d.addressProvinsiId) {
@@ -191,10 +191,8 @@ export default function AddressSettingsView() {
       setProvinceId(pId);
       if (!pId) return;
 
-      const reg = await handleGetRequest({
-        path: `/regions/regencies/${pId}`,
-      });
-      if (reg) setRegencies(reg);
+      const reg = await fetchRegencies(pId);
+      setRegencies(reg);
 
       let rId = "";
       if (d.addressKabupatenId) {
@@ -214,10 +212,8 @@ export default function AddressSettingsView() {
       setRegencyId(rId);
       if (!rId) return;
 
-      const dist = await handleGetRequest({
-        path: `/regions/districts/${rId}`,
-      });
-      if (dist) setDistricts(dist);
+      const dist = await fetchDistricts(rId);
+      setDistricts(dist);
 
       let distId = "";
       if (d.addressKecamatanId) {
@@ -237,10 +233,8 @@ export default function AddressSettingsView() {
       setDistrictId(distId);
       if (!distId) return;
 
-      const vill = await handleGetRequest({
-        path: `/regions/villages/${distId}`,
-      });
-      if (vill) setVillages(vill);
+      const vill = await fetchVillages(distId);
+      setVillages(vill);
 
       let vId = "";
       if (d.addressDesaId) {
@@ -260,8 +254,6 @@ export default function AddressSettingsView() {
       setVillageId(vId);
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -284,8 +276,8 @@ export default function AddressSettingsView() {
     setValue("addressDesaId", "");
     setValue("addressDesaName", "");
 
-    const res = await handleGetRequest({ path: `/regions/regencies/${id}` });
-    if (res) setRegencies(res);
+    const res = await fetchRegencies(id);
+    setRegencies(res);
   };
 
   const handleRegencyChange = async (id: string) => {
@@ -303,8 +295,8 @@ export default function AddressSettingsView() {
     setValue("addressDesaId", "");
     setValue("addressDesaName", "");
 
-    const res = await handleGetRequest({ path: `/regions/districts/${id}` });
-    if (res) setDistricts(res);
+    const res = await fetchDistricts(id);
+    setDistricts(res);
   };
 
   const handleDistrictChange = async (id: string) => {
@@ -318,8 +310,8 @@ export default function AddressSettingsView() {
     setValue("addressDesaId", "");
     setValue("addressDesaName", "");
 
-    const res = await handleGetRequest({ path: `/regions/villages/${id}` });
-    if (res) setVillages(res);
+    const res = await fetchVillages(id);
+    setVillages(res);
   };
 
   const handleVillageChange = (id: string) => {
@@ -337,7 +329,7 @@ export default function AddressSettingsView() {
 
   const onSubmit = async (data: AddressFormType) => {
     try {
-      const body = {
+      await saveAdminAddress.mutateAsync({
         addressUserName: data.addressUserName,
         addressKontak: data.addressKontak,
         addressDetail: data.addressDetail,
@@ -352,11 +344,6 @@ export default function AddressSettingsView() {
         addressDesaName: data.addressDesaName,
         addressLatitude: data.addressLatitude,
         addressLongitude: data.addressLongitude,
-      };
-
-      await handlePostRequest({
-        path: "/addresses/admins",
-        body,
       });
       setSnackbarMessage("Alamat berhasil disimpan!");
       setOpenSnackbar(true);
@@ -367,8 +354,11 @@ export default function AddressSettingsView() {
   };
 
   useEffect(() => {
-    loadInitialData();
-  }, []);
+    if (address && provinces.length > 0) {
+      void loadInitialData();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, provinces]);
 
   if (loading) return "loading...";
 

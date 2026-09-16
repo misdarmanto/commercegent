@@ -19,62 +19,42 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { useHttp } from "../../hooks/http";
+import {
+  useLocalShippings,
+  useCreateLocalShipping,
+  useRemoveLocalShipping,
+  type LocalShippingListItem,
+} from "../../services/settings";
+import {
+  useProvinces,
+  fetchRegencies,
+  type RegionOption,
+} from "../../services/regions";
 import {
   LocalShippingFormInputType,
   LocalShippingFormType,
   LocalShippingSchema,
 } from "../../validations/settingsSchema";
 
-type RegionOption = { id: string; name: string };
-
-interface LocalShippingListItem {
-  localShippingId: number;
-  localShippingCompanyName: string;
-  localShippingProvinceId: string;
-  localShippingKabupatenId?: string;
-  localShippingKabupatenName?: string;
-  localShippingPricePerKg: number;
-  localShippingDuration: string;
-  deleted: boolean;
-}
-
-interface LocalShippingListResponse {
-  totalItems: number;
-  items: LocalShippingListItem[];
-  totalPages: number;
-  currentPage: number;
-}
-
-const normalizeRegions = (raw: unknown): RegionOption[] => {
-  if (!Array.isArray(raw)) return [];
-  return raw.map((p: { id: string | number; name: string }) => ({
-    id: String(p.id),
-    name: p.name,
-  }));
-};
-
 export default function ShipmentSettingsView() {
-  const { handleGetRequest, handlePostRequest, handleRemoveRequest } =
-    useHttp();
-
-  const [provinces, setProvinces] = useState<RegionOption[]>([]);
+  const { data: provinces = [] } = useProvinces();
   const [regencies, setRegencies] = useState<RegionOption[]>([]);
-  const [rows, setRows] = useState<LocalShippingListItem[]>([]);
-  const [loadingList, setLoadingList] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const { data: rows = [], isLoading: loadingList } = useLocalShippings();
+  const createLocalShipping = useCreateLocalShipping();
+  const removeLocalShipping = useRemoveLocalShipping();
+  const saving = createLocalShipping.isPending;
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedRow, setSelectedRow] = useState<LocalShippingListItem | null>(
     null,
   );
-  const [deleting, setDeleting] = useState(false);
+  const deleting = removeLocalShipping.isPending;
 
   const {
     register,
@@ -97,38 +77,6 @@ export default function ShipmentSettingsView() {
   const provinceId = watch("localShippingProvinceId");
   const kabupatenId = watch("localShippingKabupatenId");
 
-  const loadProvinces = async () => {
-    const res = await handleGetRequest({ path: "/regions/provinces" });
-    if (res) {
-      setProvinces(normalizeRegions(res));
-    }
-  };
-
-  const loadShippings = async () => {
-    setLoadingList(true);
-    try {
-      const result: LocalShippingListResponse = await handleGetRequest({
-        path: "/local-shippings",
-      });
-      if (result?.items) {
-        setRows(result.items.filter((r) => !r.deleted));
-      } else {
-        setRows([]);
-      }
-    } catch (e) {
-      console.error(e);
-      setSnackbarMessage("Gagal memuat data pengiriman lokal.");
-      setOpenSnackbar(true);
-    } finally {
-      setLoadingList(false);
-    }
-  };
-
-  useEffect(() => {
-    void loadProvinces();
-    void loadShippings();
-  }, []);
-
   const onProvinceSelect = async (id: string) => {
     const p = provinces.find((x) => x.id === id);
     setValue("localShippingProvinceId", id, { shouldValidate: true });
@@ -141,10 +89,8 @@ export default function ShipmentSettingsView() {
 
     if (!id) return;
 
-    const res = await handleGetRequest({ path: `/regions/regencies/${id}` });
-    if (res) {
-      setRegencies(normalizeRegions(res));
-    }
+    const res = await fetchRegencies(id);
+    setRegencies(res);
   };
 
   const onKabupatenSelect = (id: string) => {
@@ -157,18 +103,14 @@ export default function ShipmentSettingsView() {
 
   const onSubmit = async (data: LocalShippingFormType) => {
     try {
-      setSaving(true);
-      await handlePostRequest({
-        path: "/local-shippings",
-        body: {
-          localShippingCompanyName: data.localShippingCompanyName,
-          localShippingProvinceName: data.localShippingProvinceName,
-          localShippingProvinceId: data.localShippingProvinceId,
-          localShippingKabupatenName: data.localShippingKabupatenName,
-          localShippingKabupatenId: data.localShippingKabupatenId,
-          localShippingPricePerKg: data.localShippingPricePerKg,
-          localShippingDuration: data.localShippingDuration,
-        },
+      await createLocalShipping.mutateAsync({
+        localShippingCompanyName: data.localShippingCompanyName,
+        localShippingProvinceName: data.localShippingProvinceName,
+        localShippingProvinceId: data.localShippingProvinceId,
+        localShippingKabupatenName: data.localShippingKabupatenName,
+        localShippingKabupatenId: data.localShippingKabupatenId,
+        localShippingPricePerKg: data.localShippingPricePerKg,
+        localShippingDuration: data.localShippingDuration,
       });
       setSnackbarMessage("Pengiriman lokal berhasil disimpan.");
       setOpenSnackbar(true);
@@ -182,13 +124,10 @@ export default function ShipmentSettingsView() {
         localShippingPricePerKg: 0,
         localShippingDuration: "",
       });
-      await loadShippings();
     } catch (e) {
       console.error(e);
       setSnackbarMessage("Gagal menyimpan data pengiriman lokal.");
       setOpenSnackbar(true);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -203,21 +142,15 @@ export default function ShipmentSettingsView() {
   const handleConfirmDelete = async () => {
     if (selectedRow == null) return;
     try {
-      setDeleting(true);
-      await handleRemoveRequest({
-        path: `/local-shippings/${selectedRow.localShippingId}`,
-      });
+      await removeLocalShipping.mutateAsync(selectedRow.localShippingId);
       setSnackbarMessage("Pengiriman lokal berhasil dihapus.");
       setOpenSnackbar(true);
       setOpenDeleteDialog(false);
       setSelectedRow(null);
-      await loadShippings();
     } catch (e) {
       console.error(e);
       setSnackbarMessage("Gagal menghapus data pengiriman lokal.");
       setOpenSnackbar(true);
-    } finally {
-      setDeleting(false);
     }
   };
 

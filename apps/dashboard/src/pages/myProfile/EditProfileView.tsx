@@ -1,43 +1,44 @@
 import { useEffect, useState } from "react";
 import { Button, Card, Typography, Box, TextField, Stack } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { useHttp } from "../../hooks/http";
+import {
+  useMyProfileForEdit,
+  useUpdateMyProfile,
+} from "../../services/myProfile";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 
 export default function EditProfileView() {
-  const { handleGetRequest, handleUpdateRequest } = useHttp();
   const navigate = useNavigate();
   const { userId } = useParams();
 
-  const [user, setUser] = useState<any>({
+  const { data: profile } = useMyProfileForEdit();
+  const updateProfile = useUpdateMyProfile();
+
+  const [user, setUser] = useState({
     userId: userId!,
     userName: "",
     userPassword: "",
   });
 
+  useEffect(() => {
+    if (profile) {
+      setUser((prev) => ({
+        ...prev,
+        userName: profile.userName ?? prev.userName,
+        userPassword: profile.userPassword ?? prev.userPassword,
+      }));
+    }
+  }, [profile]);
+
   const handleSubmit = async () => {
     try {
-      await handleUpdateRequest({
-        path: "/my-profiles",
-        body: user,
-      });
+      await updateProfile.mutateAsync(user);
       navigate("/my-profile");
     } catch (error: unknown) {
       console.log(error);
     }
   };
-
-  const getMyProfile = async () => {
-    const result = await handleGetRequest({
-      path: "/my-profile",
-    });
-    setUser(result);
-  };
-
-  useEffect(() => {
-    getMyProfile();
-  }, []);
 
   return (
     <>

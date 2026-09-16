@@ -10,8 +10,8 @@ import {
   GridToolbarExport,
 } from "@mui/x-data-grid";
 import { Add, MoreOutlined } from "@mui/icons-material";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
+import { useCategories, useRemoveCategory } from "../../services/categories";
 import { Button, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
@@ -23,59 +23,36 @@ import CategoryFormView from "./CategoryFormView";
 
 export default function ListCategoryView() {
   const navigation = useNavigate();
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const { handleGetTableDataRequest, handleRemoveRequest } = useHttp();
   const [modalDeleteData, setModalDeleteData] = useState<ICategory>();
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>();
 
-  const [loading, setLoading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 10,
     page: 0,
   });
 
-  const handleDeleteCategory = async (categoryId: string) => {
-    await handleRemoveRequest({
-      path: "/categories?categoryId=" + categoryId,
-    });
-    await getTableData({ search: "" });
+  const { data, isLoading } = useCategories({
+    page: paginationModel.page + 1,
+    size: paginationModel.pageSize,
+    categoryType: "parent",
+    filters: { search },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
+
+  const removeCategory = useRemoveCategory();
+
+  const handleDeleteCategory = (categoryId: string) => {
+    removeCategory.mutate(categoryId);
   };
 
   const handleOpenModalDelete = (data: ICategory) => {
     setModalDeleteData(data);
     setOpenModalDelete(!openModalDelete);
   };
-
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/categories",
-        page: paginationModel.page + 1,
-        size: paginationModel.pageSize,
-        filter: {
-          search,
-          categoryType: "parent",
-        },
-      });
-
-      if (result) {
-        setTableData(result.items);
-        setRowCount(result.totalItems);
-      }
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getTableData({ search: "" });
-  }, [paginationModel]);
 
   const columns: GridColDef[] = [
     {
@@ -141,7 +118,7 @@ export default function ListCategoryView() {
   ];
 
   function CustomToolbar() {
-    const [search, setSearch] = useState<string>("");
+    const [searchInput, setSearchInput] = useState<string>(search);
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={2}>
@@ -161,10 +138,10 @@ export default function ListCategoryView() {
           <TextField
             size="small"
             placeholder="cari..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button variant="outlined" onClick={() => getTableData({ search })}>
+          <Button variant="outlined" onClick={() => setSearch(searchInput)}>
             Cari
           </Button>
         </Stack>
@@ -212,7 +189,7 @@ export default function ListCategoryView() {
           }}
           rowCount={rowCount}
           paginationMode="server"
-          loading={loading}
+          loading={isLoading}
         />
       </Box>
 
@@ -233,7 +210,6 @@ export default function ListCategoryView() {
         open={openCategoryModal}
         categoryId={selectedCategoryId}
         onClose={() => setOpenCategoryModal(false)}
-        onSuccess={() => getTableData({ search: "" })}
       />
     </>
   );

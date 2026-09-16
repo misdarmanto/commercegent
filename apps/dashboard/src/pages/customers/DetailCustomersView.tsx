@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useHttp } from "../../hooks/http";
+import { useCustomer, useUpdateCustomerCoin } from "../../services/customers";
 import { useEffect, useState } from "react";
 import {
   Button,
@@ -16,13 +16,12 @@ import {
 import { convertTime } from "../../utilities/convertTime";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { IUser } from "../../interfaces/User";
 
 export default function DetailCustomersView() {
-  const { handleGetRequest, handleUpdateRequest } = useHttp();
   const { customerId } = useParams();
 
-  const [detailCustomer, setDetailCustomer] = useState<IUser>();
+  const { data: detailCustomer } = useCustomer(customerId);
+  const updateCoin = useUpdateCustomerCoin();
   const [openModalUpdateCoin, setOpenModalUpdateCoin] = useState(false);
   const [coinSelected, setCoinSelected] = useState(0);
 
@@ -30,38 +29,24 @@ export default function DetailCustomersView() {
     setOpenModalUpdateCoin(!openModalUpdateCoin);
   };
 
-  const getDetailUser = async () => {
-    const result = await handleGetRequest({
-      path: "/users/detail/" + customerId,
-    });
-    if (result) {
-      setDetailCustomer(result);
-      setCoinSelected(result?.userCoin);
+  useEffect(() => {
+    if (detailCustomer) {
+      setCoinSelected(detailCustomer.userCoin);
     }
-  };
+  }, [detailCustomer]);
 
   const handleUpdateCoin = async () => {
     try {
-      const payload = {
+      await updateCoin.mutateAsync({
         userCoin: coinSelected,
         userId: detailCustomer?.userId + "",
-      };
-
-      await handleUpdateRequest({
-        path: "/users/update-coin",
-        body: payload,
       });
 
-      getDetailUser();
       setOpenModalUpdateCoin(false);
     } catch (error: unknown) {
       console.log(error);
     }
   };
-
-  useEffect(() => {
-    getDetailUser();
-  }, []);
 
   return (
     <>

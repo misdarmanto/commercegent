@@ -7,7 +7,7 @@ import {
 } from "@mui/x-data-grid";
 import { ArrowBack, UploadFile } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Button,
   Stack,
@@ -21,13 +21,14 @@ import {
 } from "@mui/material";
 import BreadCrumberStyle from "../../../components/breadcrumb/Index";
 import { IconMenus } from "../../../components/icon";
-import { useHttp } from "../../../hooks/http";
+import {
+  useUploadHistories,
+  useUploadProductsExcelHistory,
+} from "../../../services/uploadHistory";
 import { convertTime } from "../../../utilities/convertTime";
 
 export default function ListUploadHistoryView() {
   const navigate = useNavigate();
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const { handleGetTableDataRequest, handlePostRequest } = useHttp();
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -39,59 +40,34 @@ export default function ListUploadHistoryView() {
 
   const [openUploadDialog, setOpenUploadDialog] = useState(false);
   const [uploadFile, setUploadFile] = useState<File | null>(null);
-  const [uploadLoading, setUploadLoading] = useState(false);
 
-  const [loading, setLoading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 25,
     page: 0,
   });
 
-  const handleUploadExcel = async () => {
+  const { data, isLoading: loading } = useUploadHistories({
+    page: paginationModel.page,
+    size: paginationModel.pageSize,
+    filters: { search },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
+
+  const uploadExcel = useUploadProductsExcelHistory();
+  const uploadLoading = uploadExcel.isPending;
+
+  const handleUploadExcel = () => {
     if (!uploadFile) return alert("Pilih file Excel terlebih dahulu!");
-    try {
-      setUploadLoading(true);
-      const formData = new FormData();
-      formData.append("file", uploadFile);
 
-      await handlePostRequest({
-        path: "/upload-products",
-        body: formData,
-      });
-
-      setOpenUploadDialog(false);
-      setUploadFile(null);
-      await getTableData({ search: "" });
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setUploadLoading(false);
-    }
+    uploadExcel.mutate(uploadFile, {
+      onSuccess: () => {
+        setOpenUploadDialog(false);
+        setUploadFile(null);
+      },
+    });
   };
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/upload-products/histories",
-        page: paginationModel.page ?? 0,
-        size: paginationModel.pageSize ?? 10,
-        filter: { search },
-      });
-      if (result) {
-        setTableData(result.items);
-        setRowCount(result.total_items);
-      }
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    getTableData({ search: "" });
-  }, [paginationModel]);
 
   const columns: GridColDef[] = [
     {
@@ -161,7 +137,7 @@ export default function ListUploadHistoryView() {
   ];
 
   function CustomToolbar() {
-    const [search, setSearch] = useState<string>("");
+    const [searchInput, setSearchInput] = useState<string>(search);
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={2}>
@@ -185,10 +161,10 @@ export default function ListUploadHistoryView() {
           <TextField
             size="small"
             placeholder="search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button variant="outlined" onClick={() => getTableData({ search })}>
+          <Button variant="outlined" onClick={() => setSearch(searchInput)}>
             Search
           </Button>
         </Stack>

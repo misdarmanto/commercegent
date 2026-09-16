@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Box from "@mui/material/Box";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/DeleteOutlined";
@@ -11,8 +10,8 @@ import {
   GridToolbarExport,
 } from "@mui/x-data-grid";
 import { Add } from "@mui/icons-material";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
+import { useAdmins, useRemoveAdmin } from "../../services/admins";
 import { Button, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
@@ -21,56 +20,35 @@ import ModalStyle from "../../components/modal";
 import { IUser } from "../../interfaces/User";
 
 export default function ListAdminView() {
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const { handleGetTableDataRequest, handleRemoveRequest } = useHttp();
   const navigation = useNavigate();
 
   const [modalDeleteData, setModalDeleteData] = useState<IUser>();
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
 
-  const [loading, setLoading] = useState(false);
-  const [rowCount, setRowCount] = useState(0);
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 25,
     page: 0,
   });
 
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/admins",
-        page: paginationModel.page ?? 0,
-        size: paginationModel.pageSize ?? 10,
-        filter: { search },
-      });
+  const { data, isLoading: loading } = useAdmins({
+    page: paginationModel.page,
+    size: paginationModel.pageSize,
+    filters: { search },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
 
-      if (result) {
-        setTableData(result.items);
-        setRowCount(result.total_items);
-      }
-    } catch (error: any) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const removeAdmin = useRemoveAdmin();
 
-  const handleDeleteAdmin = async (userId: number) => {
-    await handleRemoveRequest({
-      path: `/users?userId=${userId}`,
-    });
-    getTableData({ search: "" });
+  const handleDeleteAdmin = (userId: number) => {
+    removeAdmin.mutate(userId);
   };
 
   const handleOpenModalDelete = (data: IUser) => {
     setModalDeleteData(data);
     setOpenModalDelete(!openModalDelete);
   };
-
-  useEffect(() => {
-    getTableData({ search: "" });
-  }, [paginationModel]);
 
   const columns: GridColDef[] = [
     {
@@ -126,7 +104,7 @@ export default function ListAdminView() {
   ];
 
   function CustomToolbar() {
-    const [search, setSearch] = useState<string>("");
+    const [searchInput, setSearchInput] = useState<string>(search);
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
         <Stack direction="row" spacing={2}>
@@ -143,10 +121,10 @@ export default function ListAdminView() {
           <TextField
             size="small"
             placeholder="search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button variant="outlined" onClick={() => getTableData({ search })}>
+          <Button variant="outlined" onClick={() => setSearch(searchInput)}>
             Search
           </Button>
         </Stack>

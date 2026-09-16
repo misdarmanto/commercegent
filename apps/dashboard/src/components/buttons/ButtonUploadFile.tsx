@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState } from "react";
-import axios from "axios";
-import { CONFIGS } from "../../configs";
+import { useUploadImage } from "../../services/uploads";
 import { Button, Typography, Box, LinearProgress } from "@mui/material";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
@@ -17,6 +16,8 @@ export default function ButtonUploadFile({ onUpload }: ButtonUploadFileTypes) {
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState<boolean>(false);
   const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+
+  const uploadImage = useUploadImage();
 
   const handleFileUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
@@ -45,18 +46,12 @@ export default function ButtonUploadFile({ onUpload }: ButtonUploadFileTypes) {
     setUploadSuccess(false);
     setSelectedFileName(selectedFile.name);
 
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
     try {
-      const result = await axios.post(CONFIGS.uploadFileUrl, formData, {
-        headers: {
-          "x-api-key": CONFIGS.uploadFileApiKey,
-          "Content-Type": "multipart/form-data",
-        },
+      const result = await uploadImage.mutateAsync({
+        file: selectedFile,
         onUploadProgress: (progressEvent) => {
           const progress = Math.round(
-            (progressEvent.loaded * 100) / progressEvent.total!
+            (progressEvent.loaded * 100) / (progressEvent.total ?? 1)
           );
           setUploadProgress(progress);
         },
@@ -64,9 +59,7 @@ export default function ButtonUploadFile({ onUpload }: ButtonUploadFileTypes) {
 
       setUploadProgress(null);
       setUploadSuccess(true);
-
-      console.log(result.data);
-      onUpload(result.data.url);
+      onUpload(result.url);
     } catch (error: any) {
       console.error("Error uploading file:", error);
       setUploadProgress(null);

@@ -10,7 +10,7 @@ import { sequelizeInit } from '../configs/database'
 import logger from '../utilities/logger'
 import { StatusCodes } from 'http-status-codes'
 import { AppError } from '../utilities/appError'
-import { IConfirmDraftOrder } from '../schemas/OrderSchema'
+import { IConfirmDraftOrder } from '../schemas/orderSchema'
 import {
   ICreateShippingDraft,
   IGetShippingRates,

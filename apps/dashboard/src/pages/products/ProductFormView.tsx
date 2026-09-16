@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import {
   Button,
   Card,
@@ -19,7 +19,12 @@ import { useNavigate, useParams } from "react-router-dom";
 import { ArrowBack, Add as AddIcon, DeleteOutline } from "@mui/icons-material";
 import { useFieldArray, useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useHttp } from "../../hooks/http";
+import {
+  useProduct,
+  useCreateProduct,
+  useUpdateProduct,
+} from "../../services/products";
+import { useCategoryOptions } from "../../services/categories";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { getImageUrl } from "../../utilities/getImageUrl";
@@ -40,7 +45,6 @@ import {
 } from "../../utilities/productVariants";
 import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
 import { Checkbox, FormControlLabel } from "@mui/material";
-import { ICategory } from "../../interfaces/Category";
 
 const emptyVariant = (): ProductFormValues["productVariants"][number] => ({
   productVariantId: undefined,
@@ -55,14 +59,15 @@ const emptyVariant = (): ProductFormValues["productVariants"][number] => ({
 export default function ProductFormView() {
   const { productId } = useParams();
   const navigate = useNavigate();
-  const { handlePostRequest, handleUpdateRequest, handleGetRequest } =
-    useHttp();
-
-  const [listCategory, setListCategory] = useState<ICategory[]>([]);
-  const [listSubCategory, setListSubCategory] = useState<ICategory[]>([]);
-  const [loading, setLoading] = useState(false);
 
   const isEdit = Boolean(productId);
+
+  const { data: productDetail, isFetching: isLoadingProduct } =
+    useProduct(productId);
+  const createProduct = useCreateProduct();
+  const updateProduct = useUpdateProduct();
+  const loading =
+    isLoadingProduct || createProduct.isPending || updateProduct.isPending;
 
   const resolver = useMemo(
     () =>
@@ -107,28 +112,6 @@ export default function ProductFormView() {
     navigate("/products");
   };
 
-  const getCategories = async () => {
-    try {
-      const res = await handleGetRequest({
-        path: "/categories?categoryType=parent",
-      });
-      setListCategory(res?.items || []);
-    } catch (err) {
-      console.error("fetch categories error", err);
-    }
-  };
-
-  const getSubCategories = async (categoryReference: number) => {
-    try {
-      const res = await handleGetRequest({
-        path: `/categories?categoryType=child&categoryReference=${categoryReference}`,
-      });
-      setListSubCategory(res?.items || []);
-    } catch (err) {
-      console.error("fetch subcategories error", err);
-    }
-  };
-
   const mapApiToFormVariants = (
     res: IProduct,
   ): ProductFormValues["productVariants"] => {
@@ -156,61 +139,40 @@ export default function ProductFormView() {
     ];
   };
 
-  const getDetailProducts = async () => {
-    try {
-      setLoading(true);
-      const res: IProduct = await handleGetRequest({
-        path: `/products/detail/${productId}`,
-      });
-
-      if (res) {
-        if (res.productCategoryId) {
-          await getSubCategories(Number(res.productCategoryId));
-        }
-
-        reset({
-          productName: res.productName,
-          productDescription: res.productDescription ?? "",
-          productCategoryId: Number(res.productCategoryId ?? 0),
-          productSubCategoryId: res.productSubCategoryId
-            ? Number(res.productSubCategoryId)
-            : 0,
-          productCode: res.productCode ?? "",
-          productBarcode: res.productBarcode ?? "",
-          productUnit: res.productUnit ?? "pcs",
-          productIsVisible: res.productIsVisible ?? true,
-          productVariants: mapApiToFormVariants(res),
-        });
-      }
-    } catch (err) {
-      console.error("fetch product error", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    getCategories();
-  }, []);
+    if (!productDetail) return;
 
-  useEffect(() => {
-    if (!productId) return;
-    getDetailProducts();
-  }, [productId, reset]);
+    reset({
+      productName: productDetail.productName,
+      productDescription: productDetail.productDescription ?? "",
+      productCategoryId: Number(productDetail.productCategoryId ?? 0),
+      productSubCategoryId: productDetail.productSubCategoryId
+        ? Number(productDetail.productSubCategoryId)
+        : 0,
+      productCode: productDetail.productCode ?? "",
+      productBarcode: productDetail.productBarcode ?? "",
+      productUnit: productDetail.productUnit ?? "pcs",
+      productIsVisible: productDetail.productIsVisible ?? true,
+      productVariants: mapApiToFormVariants(productDetail),
+    });
+  }, [productDetail, reset]);
 
   const selectedCategoryId = watch("productCategoryId");
+  const { data: listCategory = [] } = useCategoryOptions({
+    categoryType: "parent",
+  });
+  const { data: listSubCategory = [] } = useCategoryOptions({
+    categoryType: "child",
+    categoryReference: selectedCategoryId || undefined,
+  });
+
   useEffect(() => {
     if (!selectedCategoryId || selectedCategoryId === 0) {
-      setListSubCategory([]);
       setValue("productSubCategoryId", 0);
-      return;
     }
-
-    getSubCategories(Number(selectedCategoryId));
   }, [selectedCategoryId, setValue]);
 
   const onSubmit = async (data: ProductFormValues) => {
-    setLoading(true);
     try {
       if (productId) {
         const payload: IProductUpdate = {
@@ -246,7 +208,7 @@ export default function ProductFormView() {
           }),
         };
 
-        await handleUpdateRequest({ path: "/products", body: payload });
+        await updateProduct.mutateAsync(payload);
       } else {
         const payload: IProductCreate = {
           productName: data.productName,
@@ -267,14 +229,12 @@ export default function ProductFormView() {
           })),
         };
 
-        await handlePostRequest({ path: "/products", body: payload });
+        await createProduct.mutateAsync(payload);
       }
 
       navigate("/products");
     } catch (error) {
       console.error("submit product error", error);
-    } finally {
-      setLoading(false);
     }
   };
 

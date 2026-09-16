@@ -5,7 +5,7 @@ import {
   createProductPublicSchema,
   findAllOrderPublicQuerySchema,
   updateProductPublicSchema
-} from '../schemas/PublicApiSchema'
+} from '../schemas/publicApiSchema'
 
 const PublicRouter = Router()
 

@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { ProductService } from '../../services/Product.service'
-import { type IFindAllProducts } from '../../schemas/ProductSchema'
+import { type IFindAllProducts } from '../../schemas/productSchema'
 
 export const findAllProducts = async (req: Request, res: Response): Promise<Response> => {
   try {

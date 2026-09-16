@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { UploadProductService } from '../../services/UploadProduct.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUploadHistories } from '../../schemas/ProductSchema'
+import { type IUploadHistories } from '../../schemas/productSchema'
 
 export const uploadHistories = async (
   req: IAuthenticatedRequest,

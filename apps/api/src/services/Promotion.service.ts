@@ -10,7 +10,7 @@ import type {
   IFindAllPromotion,
   IRemovePromotion,
   IUpdatePromotion
-} from '../schemas/PromotionSchema'
+} from '../schemas/promotionSchema'
 import { ProductVariantModel } from '../models/ProductVariantModel'
 
 export class PromotionService {

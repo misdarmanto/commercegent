@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { PromotionService } from '../../services/Promotion.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdatePromotion } from '../../schemas/PromotionSchema'
+import { type IUpdatePromotion } from '../../schemas/promotionSchema'
 
 export const updatePromotion = async (
   req: IAuthenticatedRequest,

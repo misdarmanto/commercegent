@@ -7,8 +7,13 @@ import {
   GridToolbarContainer,
 } from "@mui/x-data-grid";
 import { Add } from "@mui/icons-material";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
+import {
+  usePromotions,
+  useHighlightCandidates,
+  useRemovePromotion,
+  useSetHighlightedProducts,
+} from "../../services/promotions";
 import {
   Button,
   Stack,
@@ -25,16 +30,8 @@ import { getImageUrl } from "../../utilities/getImageUrl";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 
 export default function ListProductPromotionView() {
-  const {
-    handleGetTableDataRequest,
-    handleRemoveRequest,
-    handleUpdateRequest,
-  } = useHttp();
-
   /** ================== STATE ================== */
-  const [tableData, setTableData] = useState<GridRowsProp[]>([]);
-  const [rowCount, setRowCount] = useState(0);
-  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 25,
     page: 0,
@@ -42,105 +39,58 @@ export default function ListProductPromotionView() {
 
   // highlight modal
   const [openHighlightModal, setOpenHighlightModal] = useState(false);
-  const [productHighlightRows, setProductHighlightRows] = useState<
-    GridRowsProp[]
-  >([]);
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
-  const [highlightLoading, setHighlightLoading] = useState(false);
   const [highlightPaginationModel, setHighlightPaginationModel] = useState({
     page: 0,
     pageSize: 10,
   });
-  const [highlightRowCount, setHighlightRowCount] = useState(0);
 
   /** ================== API ================== */
-  const getTableData = async ({ search }: { search: string }) => {
-    try {
-      setLoading(true);
-      const result = await handleGetTableDataRequest({
-        path: "/promotions",
-        page: paginationModel.page,
-        size: paginationModel.pageSize,
-        filter: { search },
-      });
+  const { data, isLoading: loading } = usePromotions({
+    page: paginationModel.page,
+    size: paginationModel.pageSize,
+    filters: { search },
+  });
+  const tableData: GridRowsProp = data?.items ?? [];
+  const rowCount = data?.totalItems ?? 0;
 
-      if (result) {
-        setTableData(result.items);
-        setRowCount(result.total_items);
-      }
-    } finally {
-      setLoading(false);
-    }
+  const { data: highlightData, isLoading: highlightLoading } =
+    useHighlightCandidates(
+      {
+        page: highlightPaginationModel.page + 1,
+        size: highlightPaginationModel.pageSize,
+      },
+      { enabled: openHighlightModal },
+    );
+  const productHighlightRows: GridRowsProp = highlightData?.items ?? [];
+  const highlightRowCount = highlightData?.totalItems ?? 0;
+
+  const removePromotion = useRemovePromotion();
+  const setHighlighted = useSetHighlightedProducts();
+
+  const handleRemovePromotion = (productId: number) => {
+    removePromotion.mutate(productId);
   };
 
-  const handleRemovePromotion = async (productId: number) => {
-    try {
-      await handleRemoveRequest({
-        path: "/promotions?productId=" + productId,
-      });
-
-      await getTableData({ search: "" });
-    } catch (error) {
-      console.error(error);
-    }
-  };
-
-  const handleSaveHighlight = async () => {
+  const handleSaveHighlight = () => {
     if (selectedProductIds.length === 0) {
       alert("Pilih minimal 1 produk");
       return;
     }
 
-    try {
-      setHighlightLoading(true);
-
-      await handleUpdateRequest({
-        path: "/promotions",
-        body: {
-          products: selectedProductIds.map((id) => ({
-            productId: id,
-            productIsHighlight: true,
-          })),
+    setHighlighted.mutate(
+      selectedProductIds.map((id) => ({
+        productId: id,
+        productIsHighlight: true,
+      })),
+      {
+        onSuccess: () => {
+          setOpenHighlightModal(false);
+          setSelectedProductIds([]);
         },
-      });
-
-      setOpenHighlightModal(false);
-      setSelectedProductIds([]);
-      await getTableData({ search: "" });
-    } finally {
-      setHighlightLoading(false);
-    }
+      },
+    );
   };
-
-  /** ================== EFFECT ================== */
-  useEffect(() => {
-    getTableData({ search: "" });
-  }, [paginationModel]);
-
-  useEffect(() => {
-    if (!openHighlightModal) return;
-
-    const load = async () => {
-      try {
-        setHighlightLoading(true);
-        const result = await handleGetTableDataRequest({
-          path: "/products",
-          page: highlightPaginationModel.page + 1,
-          size: highlightPaginationModel.pageSize,
-          filter: { productIsHighlight: false },
-        });
-
-        if (result) {
-          setProductHighlightRows(result.items);
-          setHighlightRowCount(result.totalItems ?? result.total_items ?? 0);
-        }
-      } finally {
-        setHighlightLoading(false);
-      }
-    };
-
-    void load();
-  }, [openHighlightModal, highlightPaginationModel]);
 
   /** ================== COLUMNS ================== */
   const columns: GridColDef[] = [
@@ -273,7 +223,7 @@ export default function ListProductPromotionView() {
   ];
 
   function CustomToolbar() {
-    const [search, setSearch] = useState("");
+    const [searchInput, setSearchInput] = useState(search);
     return (
       <GridToolbarContainer sx={{ justifyContent: "space-between", mb: 2 }}>
         <Button
@@ -291,10 +241,10 @@ export default function ListProductPromotionView() {
           <TextField
             size="small"
             placeholder="search..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button onClick={() => getTableData({ search })}>Search</Button>
+          <Button onClick={() => setSearch(searchInput)}>Search</Button>
         </Stack>
       </GridToolbarContainer>
     );

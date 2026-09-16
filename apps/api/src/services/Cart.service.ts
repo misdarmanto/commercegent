@@ -10,7 +10,7 @@ import {
   IFindAllCarts,
   IRemoveCart,
   IUpdateCart
-} from '../schemas/CartSchema'
+} from '../schemas/cartSchema'
 import { ProductVariantModel } from '../models/ProductVariantModel'
 
 export class CartService {

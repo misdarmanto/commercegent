@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { PublicApiService } from '../../services/PublicApi.service'
-import { type IFindAllOrderPublic } from '../../schemas/PublicApiSchema'
+import { type IFindAllOrderPublic } from '../../schemas/publicApiSchema'
 
 export const findAllOrderPublic = async (
   req: Request,

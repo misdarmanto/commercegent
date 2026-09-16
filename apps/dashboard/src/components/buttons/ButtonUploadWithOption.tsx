@@ -1,5 +1,4 @@
-import { useRef, useState, useEffect } from 'react';
-import axios from 'axios';
+import { useRef, useState } from 'react';
 import {
     Button,
     Typography,
@@ -23,22 +22,13 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FolderIcon from '@mui/icons-material/Folder';
 import { CONFIGS } from '../../configs';
-import { useHttpFileUpload } from '../../hooks/http';
+import { useUploads, useUploadImage } from '../../services/uploads';
 
 interface ButtonUploadFileTypes {
     onUpload: (urlOrName: string) => void;
 }
 
-interface FileItem {
-    id: number;
-    name: string;
-    createdAt?: string;
-    updatedAt?: string;
-}
-
 export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTypes) {
-    const { handleGetFileUploadRequest } = useHttpFileUpload();
-
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -50,40 +40,16 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
     const [activeTab, setActiveTab] = useState(0);
 
     // Gallery data
-    const [tableData, setTableData] = useState<FileItem[]>([]);
-    const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
 
-    // === Function to get gallery data ===
-    const getTableData = async (pageNumber: number) => {
-        try {
-            setLoading(true);
-            const result = await handleGetFileUploadRequest({
-                path: '/',
-                page: pageNumber - 1,
-                size: 6, // tampilkan 9 item per halaman (3x3 grid)
-                filter: { search: '' },
-            });
+    const { data: galleryData, isLoading: loading } = useUploads(
+        { page: page - 1, size: 6, filters: { search: '' } },
+        { enabled: openModal && activeTab === 1 },
+    );
+    const tableData = galleryData?.items ?? [];
+    const totalPages = galleryData?.totalPages || 1;
 
-            const data = result?.data || result; // antisipasi struktur API
-
-            if (data?.items) {
-                setTableData(data.items);
-                setTotalPages(data.total_pages || 1);
-            }
-        } catch (err) {
-            console.error('fetch uploads error', err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        if (openModal && activeTab === 1) {
-            getTableData(page);
-        }
-    }, [openModal, activeTab, page]);
+    const uploadImage = useUploadImage();
 
     // === Handle File Upload ===
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -111,18 +77,12 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
         setUploadSuccess(false);
         setSelectedFileName(selectedFile.name);
 
-        const formData = new FormData();
-        formData.append('file', selectedFile);
-
         try {
-            const result = await axios.post(CONFIGS.uploadFileUrl, formData, {
-                headers: {
-                    'x-api-key': CONFIGS.uploadFileApiKey,
-                    'Content-Type': 'multipart/form-data',
-                },
+            const result = await uploadImage.mutateAsync({
+                file: selectedFile,
                 onUploadProgress: (progressEvent) => {
                     const progress = Math.round(
-                        (progressEvent.loaded * 100) / progressEvent.total!
+                        (progressEvent.loaded * 100) / (progressEvent.total ?? 1)
                     );
                     setUploadProgress(progress);
                 },
@@ -130,7 +90,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
 
             setUploadProgress(null);
             setUploadSuccess(true);
-            onUpload(result.data.url);
+            onUpload(result.url);
             setOpenModal(false);
         } catch (error: any) {
             console.error('Error uploading file:', error);

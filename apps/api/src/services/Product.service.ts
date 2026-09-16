@@ -20,7 +20,7 @@ import type {
   IFindProductByBarcode,
   IRemoveProduct,
   IUpdateProduct
-} from '../schemas/ProductSchema'
+} from '../schemas/productSchema'
 import { ProductVariantModel } from '../models/ProductVariantModel'
 import type { ICreateProductVariant } from '../schemas/ProductVariantSchema'
 

@@ -17,6 +17,7 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
     "prepare": "husky"
   },
   "devDependencies": {

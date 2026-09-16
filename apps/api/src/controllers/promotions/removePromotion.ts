@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { PromotionService } from '../../services/Promotion.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IRemovePromotion } from '../../schemas/PromotionSchema'
+import { type IRemovePromotion } from '../../schemas/promotionSchema'
 
 export const removePromotion = async (
   req: IAuthenticatedRequest,

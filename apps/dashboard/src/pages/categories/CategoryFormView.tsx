@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
 import {
+  useCategory,
+  useCreateCategory,
+  useUpdateCategory,
+} from "../../services/categories";
+import {
   Button,
   Card,
   Typography,
@@ -14,7 +19,6 @@ import {
 import { useNavigate, useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useHttp } from "../../hooks/http";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { getImageUrl } from "../../utilities/getImageUrl";
@@ -24,28 +28,30 @@ import {
   CategoryFormValues,
 } from "../../validations/categorySchema";
 import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
+import type { ICategoryCreate } from "../../interfaces/Category";
 
 interface CategoryFormViewProps {
   open?: boolean;
   categoryId?: string;
   onClose?: () => void;
-  onSuccess?: () => Promise<void> | void;
 }
 
 export default function CategoryFormView({
   open,
   categoryId: propsCategoryId,
   onClose,
-  onSuccess,
 }: CategoryFormViewProps = {}) {
   const { categoryId: paramsCategoryId } = useParams<{ categoryId: string }>();
   const isModalMode = typeof open === "boolean";
   const categoryId = propsCategoryId ?? paramsCategoryId;
-  const { handlePostRequest, handleGetRequest, handleUpdateRequest } =
-    useHttp();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
   const [categoryIcon, setCategoryIcon] = useState<string>("");
+
+  const shouldFetch = categoryId != null && (!isModalMode || open === true);
+  const { data: category } = useCategory(shouldFetch ? categoryId : undefined);
+  const createCategory = useCreateCategory();
+  const updateCategory = useUpdateCategory();
+  const loading = createCategory.isPending || updateCategory.isPending;
 
   const {
     control,
@@ -62,24 +68,6 @@ export default function CategoryFormView({
     },
   });
 
-  const getCategory = async () => {
-    try {
-      const res = await handleGetRequest({
-        path: `/categories/detail/${categoryId}`,
-      });
-      if (res) {
-        reset({
-          categoryName: res.categoryName,
-          categoryIcon: res.categoryIcon,
-          categoryType: "parent",
-        });
-        setCategoryIcon(res.categoryIcon || "");
-      }
-    } catch (err) {
-      console.error("Error fetching category:", err);
-    }
-  };
-
   useEffect(() => {
     if (isModalMode && !open) return;
 
@@ -93,38 +81,38 @@ export default function CategoryFormView({
       return;
     }
 
-    getCategory();
-  }, [categoryId, isModalMode, open, reset]);
+    if (category) {
+      reset({
+        categoryName: category.categoryName,
+        categoryIcon: category.categoryIcon,
+        categoryType: "parent",
+      });
+      setCategoryIcon(category.categoryIcon || "");
+    }
+  }, [category, categoryId, isModalMode, open, reset]);
 
   useEffect(() => {
     setValue("categoryIcon", categoryIcon);
   }, [categoryIcon, setValue]);
 
   const onSubmit = async (data: CategoryFormValues) => {
-    setLoading(true);
     try {
       if (categoryId) {
-        await handleUpdateRequest({
-          path: `/categories`,
-          body: { ...data, categoryId },
-        });
+        await updateCategory.mutateAsync({
+          ...data,
+          categoryId,
+        } as Partial<ICategoryCreate> & { categoryId: string });
       } else {
-        await handlePostRequest({
-          path: "/categories",
-          body: data,
-        });
+        await createCategory.mutateAsync(data as ICategoryCreate);
       }
 
       if (isModalMode) {
-        await onSuccess?.();
         onClose?.();
       } else {
         navigate("/categories");
       }
     } catch (error) {
       console.error("Submit error:", error);
-    } finally {
-      setLoading(false);
     }
   };
 

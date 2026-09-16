@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { ProductService } from '../../services/Product.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type ICreateProduct } from '../../schemas/ProductSchema'
+import { type ICreateProduct } from '../../schemas/productSchema'
 
 export const createProduct = async (
   req: IAuthenticatedRequest,

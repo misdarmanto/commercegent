@@ -14,7 +14,10 @@
     "seed": "npx sequelize-cli db:seed:all",
     "download-product-images": "node scripts/download-product-images.js",
     "lint:fix": "eslint --fix ./*.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "keywords": [
     "express js"
@@ -61,6 +64,7 @@
     "@types/cookie-parser": "^1.4.2",
     "@types/cors": "^2.8.12",
     "@types/express": "^4.17.13",
+    "@types/jest": "^29.5.12",
     "@types/jsonwebtoken": "^9.0.2",
     "@types/midtrans-client": "^1.4.0",
     "@types/morgan": "^1.9.10",
@@ -77,8 +81,10 @@
     "eslint-plugin-n": "^16.0.2",
     "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-promise": "^6.1.1",
+    "jest": "^29.7.0",
     "nodemon": "^2.0.12",
     "prettier": "^3.0.3",
+    "ts-jest": "^29.1.2",
     "typescript": "^5.2.2"
   }
 }

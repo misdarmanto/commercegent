@@ -14,7 +14,7 @@ import type {
   IFindAllOrder,
   IFindDetailOrder,
   IUpdateOrder
-} from '../schemas/OrderSchema'
+} from '../schemas/orderSchema'
 import { MidtransAPIService } from './external/Midtrans.service'
 import { sequelizeInit } from '../configs/database'
 import { ProductVariantModel } from '../models/ProductVariantModel'

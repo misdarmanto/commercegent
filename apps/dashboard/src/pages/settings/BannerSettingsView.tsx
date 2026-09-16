@@ -13,64 +13,31 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import ButtonDeleteFile from "../../components/buttons/ButtonDeleteFile";
 import ButtonUploadWithOption from "../../components/buttons/ButtonUploadWithOption";
 import { IconMenus } from "../../components/icon";
-import { useHttp } from "../../hooks/http";
+import {
+  useBanners,
+  useCreateBanner,
+  useRemoveBanner,
+  type BannerItem,
+} from "../../services/settings";
 import { getImageUrl } from "../../utilities/getImageUrl";
 
-interface BannerCreateRequest {
-  bannerImage: string;
-  bannerOrder: number;
-}
-
-interface BannerItem {
-  bannerId: number;
-  bannerImage: string;
-  bannerOrder: number;
-}
-
-interface BannerListResponse {
-  totalItems: number;
-  items: BannerItem[];
-}
-
 export default function BannerSettingsView() {
-  const { handlePostRequest, handleGetRequest, handleRemoveRequest } =
-    useHttp();
   const [bannerImage, setBannerImage] = useState("");
   const [bannerOrder, setBannerOrder] = useState<number>(1);
   const [openSnackbar, setOpenSnackbar] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [saving, setSaving] = useState(false);
-  const [banners, setBanners] = useState<BannerItem[]>([]);
-  const [loadingBanners, setLoadingBanners] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
   const [selectedBanner, setSelectedBanner] = useState<BannerItem | null>(null);
 
-  const getBanners = async () => {
-    try {
-      setLoadingBanners(true);
-      const result: BannerListResponse = await handleGetRequest({
-        path: "/banners",
-      });
-
-      if (result?.items) {
-        const sorted = [...result.items].sort(
-          (a, b) => a.bannerOrder - b.bannerOrder,
-        );
-        setBanners(sorted);
-      }
-    } catch (error) {
-      console.error(error);
-      setSnackbarMessage("Gagal mengambil daftar banner.");
-      setOpenSnackbar(true);
-    } finally {
-      setLoadingBanners(false);
-    }
-  };
+  const { data: banners = [], isLoading: loadingBanners } = useBanners();
+  const createBanner = useCreateBanner();
+  const removeBanner = useRemoveBanner();
+  const saving = createBanner.isPending;
 
   const handleSubmit = async () => {
     if (!bannerImage) {
@@ -80,27 +47,19 @@ export default function BannerSettingsView() {
     }
 
     try {
-      setSaving(true);
-      const payload: BannerCreateRequest = {
+      await createBanner.mutateAsync({
         bannerImage,
         bannerOrder: Number(bannerOrder),
-      };
-      await handlePostRequest({
-        path: "/banners",
-        body: payload,
       });
 
       setSnackbarMessage("Banner berhasil disimpan.");
       setOpenSnackbar(true);
       setBannerImage("");
       setBannerOrder(1);
-      await getBanners();
     } catch (error) {
       console.error(error);
       setSnackbarMessage("Terjadi kesalahan saat menyimpan banner.");
       setOpenSnackbar(true);
-    } finally {
-      setSaving(false);
     }
   };
 
@@ -113,24 +72,17 @@ export default function BannerSettingsView() {
     if (!selectedBanner) return;
 
     try {
-      await handleRemoveRequest({
-        path: `/banners/${selectedBanner.bannerId}`,
-      });
+      await removeBanner.mutateAsync(selectedBanner.bannerId);
       setSnackbarMessage("Banner berhasil dihapus.");
       setOpenSnackbar(true);
       setOpenDeleteDialog(false);
       setSelectedBanner(null);
-      await getBanners();
     } catch (error) {
       console.error(error);
       setSnackbarMessage("Terjadi kesalahan saat menghapus banner.");
       setOpenSnackbar(true);
     }
   };
-
-  useEffect(() => {
-    getBanners();
-  }, []);
 
   return (
     <Box>

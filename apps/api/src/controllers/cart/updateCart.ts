@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { CartService } from '../../services/Cart.service'
-import { type IUpdateCart } from '../../schemas/CartSchema'
+import { type IUpdateCart } from '../../schemas/cartSchema'
 import { AppError } from '../../utilities/appError'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
 

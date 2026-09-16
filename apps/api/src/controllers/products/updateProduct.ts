@@ -4,7 +4,7 @@ import { ResponseData } from '../../utilities/response'
 import { handleError } from '../../utilities/requestHandler'
 import { ProductService } from '../../services/Product.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
-import { type IUpdateProduct } from '../../schemas/ProductSchema'
+import { type IUpdateProduct } from '../../schemas/productSchema'
 
 export const updateProduct = async (
   req: IAuthenticatedRequest,

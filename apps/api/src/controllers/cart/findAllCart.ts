@@ -5,7 +5,7 @@ import { handleError } from '../../utilities/requestHandler'
 import { CartService } from '../../services/Cart.service'
 import { type IAuthenticatedRequest } from '../../interfaces/shared'
 import { AppError } from '../../utilities/appError'
-import { type IFindAllCarts } from '../../schemas/CartSchema'
+import { type IFindAllCarts } from '../../schemas/cartSchema'
 
 export const findAllCart = async (
   req: IAuthenticatedRequest,

@@ -6,7 +6,7 @@ import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import { addProductFileToQueue } from '../queues/productFileQueue'
-import type { IUploadHistories } from '../schemas/ProductSchema'
+import type { IUploadHistories } from '../schemas/productSchema'
 
 export class UploadProductService {
   static async recordExcelUpload(file: { path: string; originalname: string }) {

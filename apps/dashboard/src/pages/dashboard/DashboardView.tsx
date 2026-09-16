@@ -14,60 +14,24 @@ import {
 import ReactApexChart from "react-apexcharts";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
+import { useStatisticTotal, useVisitorStatistic } from "../../services/dashboard";
 import { useNavigate } from "react-router-dom";
 import ListOrderView from "../orders/ListOrderView";
-import { IStatisticTotal } from "../../interfaces/Stats";
 
 const DashboardView = () => {
-  const { handleGetRequest } = useHttp();
   const navigation = useNavigate();
   const theme = useTheme();
 
-  const [statisticTotal, setStatisticTotal] = useState<IStatisticTotal>();
+  const { data: statisticTotal } = useStatisticTotal();
   const [visitorRange, setVisitorRange] = useState("1d");
   const [visitorInterval, setVisitorInterval] = useState("1h");
-  const [visitorSeries, setVisitorSeries] = useState<number[]>([]);
-  const [visitorCategories, setVisitorCategories] = useState<string[]>([]);
-
-  const getStatistic = async () => {
-    const result: IStatisticTotal = await handleGetRequest({
-      path: "/statistic/total",
-    });
-    setStatisticTotal(result);
-  };
-
-  const getVisitorStatistic = async (range: string, interval: string) => {
-    try {
-      const result = await handleGetRequest({
-        path: `/statistic/visitor?range=${range}&interval=${interval}`,
-      });
-
-      const rows = Array.isArray(result)
-        ? result
-        : Array.isArray(result?.data)
-          ? result.data
-          : [];
-
-      setVisitorCategories(rows.map((item: { date: string }) => item.date));
-      setVisitorSeries(
-        rows.map((item: { total: number | string }) => Number(item.total ?? 0)),
-      );
-    } catch (error) {
-      console.log(error);
-      setVisitorCategories([]);
-      setVisitorSeries([]);
-    }
-  };
-
-  useEffect(() => {
-    getStatistic();
-  }, []);
-
-  useEffect(() => {
-    getVisitorStatistic(visitorRange, visitorInterval);
-  }, [visitorRange, visitorInterval]);
+  const { data: visitorData } = useVisitorStatistic(
+    visitorRange,
+    visitorInterval,
+  );
+  const visitorSeries = visitorData?.series ?? [];
+  const visitorCategories = visitorData?.categories ?? [];
 
   const summaryCards = [
     {

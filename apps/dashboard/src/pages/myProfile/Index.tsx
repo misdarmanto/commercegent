@@ -9,23 +9,11 @@ import {
 } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { useHttp } from "../../hooks/http";
-import { useEffect, useState } from "react";
+import { useMyProfile } from "../../services/myProfile";
 import { convertTime } from "../../utilities/convertTime";
-import { IUser } from "../../interfaces/User";
 
 const ProfileView = () => {
-  const { handleGetRequest } = useHttp();
-  const [detailProfile, setDetailProfile] = useState<IUser>();
-
-  const getMyProfile = async () => {
-    const result = await handleGetRequest({ path: "/my-profiles" });
-    setDetailProfile(result);
-  };
-
-  useEffect(() => {
-    getMyProfile();
-  }, []);
+  const { data: detailProfile } = useMyProfile();
 
   return (
     <Box>
