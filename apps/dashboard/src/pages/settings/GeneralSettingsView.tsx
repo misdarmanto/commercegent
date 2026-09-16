@@ -12,55 +12,36 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useEffect, useState } from "react";
-import { useHttp } from "../../hooks/http";
+import { useState } from "react";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
-import { ISetting, ISettingCreateRequest } from "../../interfaces/Setting";
+import {
+  useSettings,
+  useSaveSettings,
+  useRequestOtp,
+  useVerifyOtp,
+} from "../../services/settings";
 
 export default function GeneralSettingsView() {
-  const { handleGetRequest, handlePostRequest } = useHttp();
-
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [openSnackbar, setOpenSnackbar] = useState(false);
 
-  const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [loading, setLoading] = useState(true);
+  const { data: settings, isLoading: loading } = useSettings();
+  const whatsappNumber = settings?.whatsappNumber || "";
+  const saveSettings = useSaveSettings();
+  const requestOtpMutation = useRequestOtp();
+  const verifyOtpMutation = useVerifyOtp();
+  const requestingOtp = requestOtpMutation.isPending;
+  const verifyingOtp = verifyOtpMutation.isPending;
+
   const [openModal, setOpenModal] = useState(false);
   const [draftWhatsappNumber, setDraftWhatsappNumber] = useState("");
   const [otpCode, setOtpCode] = useState("");
   const [otpRequested, setOtpRequested] = useState(false);
-  const [requestingOtp, setRequestingOtp] = useState(false);
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-
-  const getDetailSettings = async () => {
-    try {
-      const result: ISetting = await handleGetRequest({
-        path: "/settings",
-      });
-
-      if (result) {
-        const whatsapp = result.whatsappNumber || "";
-        setWhatsappNumber(whatsapp);
-      }
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const saveWhatsappNumber = async (number: string) => {
     try {
-      const payload: ISettingCreateRequest = {
-        whatsappNumber: number,
-      };
-      await handlePostRequest({
-        path: "/settings",
-        body: payload,
-      });
-      setWhatsappNumber(number);
-      await getDetailSettings();
+      await saveSettings.mutateAsync({ whatsappNumber: number });
       setSnackbarMessage("Berhasil disimpan!");
       setOpenSnackbar(true);
     } catch (error: unknown) {
@@ -85,13 +66,9 @@ export default function GeneralSettingsView() {
       return;
     }
     try {
-      setRequestingOtp(true);
-      await handlePostRequest({
-        path: "/otp/request",
-        body: {
-          whatsappNumber: sanitizedWhatsapp,
-          otpType: "register",
-        },
+      await requestOtpMutation.mutateAsync({
+        whatsappNumber: sanitizedWhatsapp,
+        otpType: "register",
       });
       setOtpRequested(true);
       setSnackbarMessage("Kode OTP berhasil dikirim.");
@@ -100,8 +77,6 @@ export default function GeneralSettingsView() {
       console.log(error);
       setSnackbarMessage("Gagal mengirim OTP.");
       setOpenSnackbar(true);
-    } finally {
-      setRequestingOtp(false);
     }
   };
 
@@ -114,13 +89,9 @@ export default function GeneralSettingsView() {
       return;
     }
     try {
-      setVerifyingOtp(true);
-      await handlePostRequest({
-        path: "/otp/verify",
-        body: {
-          whatsappNumber: sanitizedWhatsapp,
-          otpCode: sanitizedOtp,
-        },
+      await verifyOtpMutation.mutateAsync({
+        whatsappNumber: sanitizedWhatsapp,
+        otpCode: sanitizedOtp,
       });
       await saveWhatsappNumber(sanitizedWhatsapp);
       setOpenModal(false);
@@ -130,14 +101,8 @@ export default function GeneralSettingsView() {
       console.log(error);
       setSnackbarMessage("OTP tidak valid atau verifikasi gagal.");
       setOpenSnackbar(true);
-    } finally {
-      setVerifyingOtp(false);
     }
   };
-
-  useEffect(() => {
-    getDetailSettings();
-  }, []);
 
   if (loading) return "loading...";
 
