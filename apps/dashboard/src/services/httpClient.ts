@@ -14,7 +14,13 @@ httpClient.interceptors.request.use((config) => {
 httpClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const hadToken = Boolean(localStorage.getItem(CONFIGS.localStorageKey));
+
+    // Only force a logout/redirect when a 401 invalidates an *existing*
+    // session. A 401 with no token yet (e.g. a failed login attempt) just
+    // means "invalid credentials" and must not wipe the error message by
+    // reloading the page before it can be shown.
+    if (error.response?.status === 401 && hadToken) {
       localStorage.removeItem(CONFIGS.localStorageKey);
       window.location.pathname = "/";
     }

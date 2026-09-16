@@ -13,11 +13,9 @@ fileUploadClient.interceptors.request.use((config) => {
 fileUploadClient.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem(CONFIGS.localStorageKey);
-      window.location.pathname = "/";
-    }
-
+    // Unlike httpClient, this service authenticates with a static x-api-key
+    // (not the admin's JWT), so a 401 here is a misconfigured upload API key
+    // — it must not clear the unrelated main-app login token or redirect.
     const message =
       error.response?.data?.error_message ||
       error.response?.data?.message ||

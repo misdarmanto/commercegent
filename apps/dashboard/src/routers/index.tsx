@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { RouterProvider, createBrowserRouter } from "react-router-dom";
 import AppLayout from "../layouts/AppLayout";
 import ErrorPage from "../pages/error-page";
@@ -172,27 +173,32 @@ const authRouters: { path: string; element: JSX.Element }[] = [
 
 export default function AppRouters() {
   const { getDecodeJwtToken } = useToken();
-  const user = getDecodeJwtToken();
+  // jwtDecode returns a brand-new object every call, so derive a stable
+  // primitive (the role, or null) to key the memoized router below on —
+  // otherwise createBrowserRouter would re-run (and remount the whole
+  // routed tree) on every unrelated re-render, e.g. an error alert being
+  // dispatched mid-request.
+  const role = getDecodeJwtToken()?.userRole?.toLocaleUpperCase() ?? null;
 
-  const routers: { path: string; element: JSX.Element }[] = [];
+  const appRouters = useMemo(() => {
+    const routers: { path: string; element: JSX.Element }[] = [];
 
-  if (user) {
-    const protectedRouters = getProtectedRouters(
-      user.userRole?.toLocaleUpperCase(),
-    );
-    routers.push(...protectedRouters);
-  } else {
-    routers.push(...authRouters);
-  }
+    if (role) {
+      routers.push(...getProtectedRouters(role));
+    } else {
+      routers.push(...authRouters);
+    }
 
-  const appRouters = createBrowserRouter([
-    {
-      path: "/",
-      element: user ? <AppLayout /> : <AuthLayout />,
-      errorElement: <ErrorPage />,
-      children: routers,
-    },
-  ]);
+    return createBrowserRouter([
+      {
+        path: "/",
+        element: role ? <AppLayout /> : <AuthLayout />,
+        errorElement: <ErrorPage />,
+        children: routers,
+      },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role]);
 
   return <RouterProvider router={appRouters} />;
 }
