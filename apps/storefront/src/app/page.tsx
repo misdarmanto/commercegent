@@ -14,6 +14,8 @@ import SearchIcon from "@mui/icons-material/Search";
 import { useProducts } from "@/lib/api/products";
 import { useCategories } from "@/lib/api/categories";
 import { ProductCard } from "@/components/product/ProductCard";
+import { BannerCarousel } from "@/components/home/BannerCarousel";
+import { HighlightedProducts } from "@/components/home/HighlightedProducts";
 import { IPaginatedResult, ICategory } from "@/interfaces/Product";
 
 export default function HomePage() {
@@ -30,6 +32,10 @@ export default function HomePage() {
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
+      <BannerCarousel />
+
+      <HighlightedProducts />
+
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
         Produk Segar Pilihan
       </Typography>
