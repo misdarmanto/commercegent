@@ -12,12 +12,16 @@ export function getToken(): string | null {
   return window.localStorage.getItem(CONFIG.tokenStorageKey);
 }
 
+export const AUTH_CHANGED_EVENT = "auth-changed";
+
 export function setToken(token: string): void {
   window.localStorage.setItem(CONFIG.tokenStorageKey, token);
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
 
 export function removeToken(): void {
   window.localStorage.removeItem(CONFIG.tokenStorageKey);
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT));
 }
 
 export function getDecodedToken(): IJwtPayload | null {

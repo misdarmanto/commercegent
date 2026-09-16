@@ -12,7 +12,7 @@ import Button from "@mui/material/Button";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
 import { useCartTotal } from "@/lib/api/cart";
-import { isLoggedIn } from "@/lib/auth/token";
+import { AUTH_CHANGED_EVENT, isLoggedIn } from "@/lib/auth/token";
 
 export function Header() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -21,6 +21,14 @@ export function Header() {
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads localStorage, unavailable during SSR
     setLoggedIn(isLoggedIn());
+
+    const handleAuthChange = () => setLoggedIn(isLoggedIn());
+    window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
+    return () => {
+      window.removeEventListener(AUTH_CHANGED_EVENT, handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
+    };
   }, []);
 
   return (
