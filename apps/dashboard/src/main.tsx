@@ -7,6 +7,7 @@ import { AppProvider } from "./context/app.context";
 import { queryClient } from "./services/queryClient";
 import QueryErrorBridge from "./components/QueryErrorBridge";
 import "leaflet/dist/leaflet.css";
+import "./i18n";
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>

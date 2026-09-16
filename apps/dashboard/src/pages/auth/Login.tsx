@@ -17,12 +17,15 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useTranslation } from "react-i18next";
 import { useLoginAdmin } from "../../services/auth";
 import { useToken } from "../../hooks/token";
 import { ILoginAdmin, loginAdminSchema } from "../../validations/AuthSchema";
 import logo from "../../assets/logo.jpg";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 export default function LoginView() {
+  const { t } = useTranslation();
   const loginAdmin = useLoginAdmin();
   const { setToken } = useToken();
   const navigate = useNavigate();
@@ -60,8 +63,13 @@ export default function LoginView() {
         minHeight: "100vh",
         display: "flex",
         bgcolor: "background.default",
+        position: "relative",
       }}
     >
+      <Box sx={{ position: "absolute", top: 16, right: 16, zIndex: 1 }}>
+        <LanguageSwitcher />
+      </Box>
+
       {/* ================= BRAND PANEL ================= */}
       <Box
         sx={{
@@ -102,16 +110,15 @@ export default function LoginView() {
 
         <Box sx={{ position: "relative" }}>
           <Typography variant="h3" fontWeight={800} sx={{ mb: 2, maxWidth: 380 }}>
-            Kelola toko Anda dengan lebih mudah.
+            {t("app.tagline")}
           </Typography>
           <Typography sx={{ opacity: 0.85, maxWidth: 380 }}>
-            Satu dashboard untuk produk, pesanan, pelanggan, dan seluruh
-            operasional bisnis FRESH Anda.
+            {t("app.description")}
           </Typography>
         </Box>
 
         <Typography variant="body2" sx={{ position: "relative", opacity: 0.65 }}>
-          © {new Date().getFullYear()} FRESH Ecommerce
+          {t("app.copyright", { year: new Date().getFullYear() })}
         </Typography>
       </Box>
 
@@ -159,15 +166,15 @@ export default function LoginView() {
           </Box>
 
           <Typography variant="h4" fontWeight={800} sx={{ mb: 0.75 }}>
-            Selamat datang kembali
+            {t("auth.welcomeBack")}
           </Typography>
           <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-            Masuk dengan nomor WhatsApp dan password admin Anda.
+            {t("auth.loginSubtitle")}
           </Typography>
 
           {(errors.adminWhatsAppNumber || errors.adminPassword) && (
             <Alert severity="error" sx={{ mb: 2.5 }}>
-              Periksa kembali form login Anda.
+              {t("auth.formError")}
             </Alert>
           )}
 
@@ -178,7 +185,7 @@ export default function LoginView() {
             sx={{ display: "grid", gap: 2.5 }}
           >
             <TextField
-              label="Nomor WhatsApp"
+              label={t("auth.whatsappNumber")}
               type="text"
               autoComplete="username"
               fullWidth
@@ -196,7 +203,7 @@ export default function LoginView() {
             />
 
             <TextField
-              label="Password"
+              label={t("auth.password")}
               type={showPassword ? "text" : "password"}
               autoComplete="current-password"
               fullWidth
@@ -238,10 +245,10 @@ export default function LoginView() {
               {isSubmitting ? (
                 <>
                   <CircularProgress size={18} color="inherit" sx={{ mr: 1.5 }} />
-                  Memproses...
+                  {t("auth.submitting")}
                 </>
               ) : (
-                "Masuk"
+                t("auth.submit")
               )}
             </Button>
           </Box>

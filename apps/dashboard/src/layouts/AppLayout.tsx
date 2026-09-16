@@ -39,11 +39,13 @@ import {
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { useAppContext } from "../context/app.context";
 import { useToken } from "../hooks/token";
 import { ColorModeContext } from "../context/colorMode.context";
 import { IconMenusSidebar } from "../components/icon";
+import LanguageSwitcher from "../components/LanguageSwitcher";
 
 import logo from "../assets/logo.jpg";
 
@@ -194,6 +196,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 ============================================================ */
 export default function AppLayout() {
   const theme = useTheme();
+  const { t: translate } = useTranslation();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const navigate = useNavigate();
 
@@ -213,40 +216,40 @@ export default function AppLayout() {
   const catalogGroup: MenuGroup = {
     kind: "group",
     key: "catalog",
-    title: "Katalog",
+    title: translate("sidebar.catalog"),
     iconKey: "products",
     children: [
-      leaf("Produk", "/products", "products"),
-      leaf("Kategori", "/categories", "category"),
-      leaf("Promo", "/promotions", "promotion"),
-      leaf("Galeri", "/uploads", "upload"),
+      leaf(translate("sidebar.product"), "/products", "products"),
+      leaf(translate("sidebar.category"), "/categories", "category"),
+      leaf(translate("sidebar.promotion"), "/promotions", "promotion"),
+      leaf(translate("sidebar.gallery"), "/uploads", "upload"),
     ],
   };
 
   const salesGroup: MenuGroup = {
     kind: "group",
     key: "sales",
-    title: "Penjualan",
+    title: translate("sidebar.sales"),
     iconKey: "orders",
     children: [
-      leaf("Pesanan", "/orders", "orders"),
-      leaf("Transaksi", "/transactions", "transaction"),
-      leaf("Pelanggan", "/customers", "customers"),
+      leaf(translate("sidebar.order"), "/orders", "orders"),
+      leaf(translate("sidebar.transaction"), "/transactions", "transaction"),
+      leaf(translate("sidebar.customer"), "/customers", "customers"),
     ],
   };
 
   const managementGroup: MenuGroup = {
     kind: "group",
     key: "management",
-    title: "Manajemen",
+    title: translate("sidebar.management"),
     iconKey: "admin",
     children: [
-      leaf("Admin", "/admins", "admin"),
-      leaf("Pengaturan", "/settings", "settings"),
+      leaf(translate("sidebar.admin"), "/admins", "admin"),
+      leaf(translate("sidebar.settings"), "/settings", "settings"),
     ],
   };
 
-  const menuItems: MenuEntry[] = [leaf("Beranda", "/", "dashboard")];
+  const menuItems: MenuEntry[] = [leaf(translate("sidebar.home"), "/", "dashboard")];
 
   const role = user?.userRole?.toUpperCase();
   if (role === "ADMIN" || role === "SUPERADMIN") {
@@ -256,7 +259,7 @@ export default function AppLayout() {
     menuItems.push(managementGroup);
   }
 
-  menuItems.push(leaf("Profil", "/my-profile", "profile"));
+  menuItems.push(leaf(translate("sidebar.profile"), "/my-profile", "profile"));
 
   const isLeafActive = (link: string) => pathname === link;
   const isGroupActive = (group: MenuGroup) =>
@@ -307,11 +310,13 @@ export default function AppLayout() {
 
             <Box sx={{ flexGrow: 1 }} />
 
+            <LanguageSwitcher />
+
             <IconButton onClick={toggleColorMode}>
               {theme.palette.mode === "dark" ? <LightMode /> : <DarkMode />}
             </IconButton>
 
-            <Tooltip title="Account">
+            <Tooltip title={translate("topbar.account")}>
               <IconButton onClick={(e) => setAnchorElUser(e.currentTarget)}>
                 <Avatar
                   sx={{
@@ -330,7 +335,7 @@ export default function AppLayout() {
               onClose={() => setAnchorElUser(null)}
             >
               <MenuItem onClick={() => navigate("/my-profile")}>
-                Profile
+                {translate("topbar.profile")}
               </MenuItem>
               <MenuItem
                 onClick={() => {
@@ -339,7 +344,7 @@ export default function AppLayout() {
                   window.location.reload();
                 }}
               >
-                Logout
+                {translate("topbar.logout")}
               </MenuItem>
             </Menu>
           </Toolbar>
@@ -620,7 +625,7 @@ export default function AppLayout() {
                     FRESH Ecommerce
                   </Typography>
                 </Box>
-                <Tooltip title="Logout">
+                <Tooltip title={translate("topbar.logout")}>
                   <IconButton
                     size="small"
                     onClick={() => {
