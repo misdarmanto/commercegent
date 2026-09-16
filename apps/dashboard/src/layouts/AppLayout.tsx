@@ -418,9 +418,6 @@ export default function AppLayout() {
                         background: active
                           ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
                           : "transparent",
-                        boxShadow: active
-                          ? `0 6px 16px -4px ${theme.palette.primary.main}66`
-                          : "none",
                         "&:hover": {
                           background: active
                             ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
@@ -555,9 +552,6 @@ export default function AppLayout() {
                               background: active
                                 ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
                                 : "transparent",
-                              boxShadow: active
-                                ? `0 6px 16px -4px ${theme.palette.primary.main}66`
-                                : "none",
                               "&:hover": {
                                 background: active
                                   ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
