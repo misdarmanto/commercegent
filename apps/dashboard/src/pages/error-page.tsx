@@ -1,8 +1,10 @@
 import { Box, Button, Container, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export default function ErrorPage() {
+  const { t } = useTranslation();
   const navigation = useNavigate();
   return (
     <Box
@@ -18,10 +20,10 @@ export default function ErrorPage() {
           <Grid xs={6}>
             <Typography variant="h1">404</Typography>
             <Typography variant="h6">
-              The page you’re looking for doesn’t exist.
+              {t("errorPage.notFoundMessage")}
             </Typography>
             <Button variant="contained" onClick={() => navigation("/")}>
-              Back Home
+              {t("errorPage.backHome")}
             </Button>
           </Grid>
           <Grid xs={6}>

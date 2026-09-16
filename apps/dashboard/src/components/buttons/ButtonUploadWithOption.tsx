@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
     Button,
     Typography,
@@ -29,6 +30,7 @@ interface ButtonUploadFileTypes {
 }
 
 export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTypes) {
+    const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -57,7 +59,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
         const MAX_FILE_SIZE = 2048; // 2MB
 
         if (!selectedFile) {
-            setUploadError('Silahkan pilih file terlebih dahulu');
+            setUploadError(t('uploadButton.selectFileFirst'));
             setUploadProgress(null);
             setUploadSuccess(false);
             setSelectedFileName(null);
@@ -65,7 +67,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
         }
 
         if (selectedFile.size / 1024 > MAX_FILE_SIZE) {
-            setUploadError('Ukuran file maksimum adalah 2MB');
+            setUploadError(t('uploadButton.maxFileSize'));
             setUploadProgress(null);
             setUploadSuccess(false);
             setSelectedFileName(selectedFile.name);
@@ -97,7 +99,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
             setUploadProgress(null);
             setUploadSuccess(false);
             const errorMessage =
-                'Tidak dapat mengunggah file' +
+                t('uploadButton.uploadFailed') +
                 (error.response?.data?.errorMessage ? `: ${error.response.data.errorMessage}` : '');
             setUploadError(errorMessage);
         } finally {
@@ -125,7 +127,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                 startIcon={<CloudUploadIcon />}
                 onClick={() => setOpenModal(true)}
             >
-                Upload File
+                {t('uploadButton.uploadFile')}
             </Button>
 
             {/* Modal Pilihan Upload */}
@@ -151,8 +153,8 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                         centered
                         sx={{ mb: 2 }}
                     >
-                        <Tab label="Upload dari Komputer" icon={<CloudUploadIcon />} />
-                        <Tab label="Pilih dari Galeri" icon={<FolderIcon />} />
+                        <Tab label={t('uploadButton.uploadFromComputer')} icon={<CloudUploadIcon />} />
+                        <Tab label={t('uploadButton.chooseFromGallery')} icon={<FolderIcon />} />
                     </Tabs>
 
                     {/* === TAB 1: Upload === */}
@@ -172,12 +174,12 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                                 startIcon={<CloudUploadIcon />}
                                 disabled={uploadProgress !== null}
                             >
-                                Pilih File
+                                {t('uploadButton.chooseFile')}
                             </Button>
 
                             {selectedFileName && !uploadSuccess && !uploadError && (
                                 <Typography variant="caption" mt={1} display="block">
-                                    Memilih: {selectedFileName}
+                                    {t('uploadButton.selecting', { name: selectedFileName })}
                                 </Typography>
                             )}
                             {uploadProgress !== null && (
@@ -209,7 +211,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                                     }}
                                 >
                                     <CheckCircleOutlineIcon sx={{ mr: 0.5 }} />
-                                    <Typography variant="caption">Berhasil diunggah!</Typography>
+                                    <Typography variant="caption">{t('uploadButton.uploadSuccess')}</Typography>
                                 </Box>
                             )}
                         </Box>
@@ -219,7 +221,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                     {activeTab === 1 && (
                         <Box>
                             {loading ? (
-                                <Typography textAlign="center">Memuat galeri...</Typography>
+                                <Typography textAlign="center">{t('uploadButton.loadingGallery')}</Typography>
                             ) : (
                                 <>
                                     <Grid container spacing={2}>
@@ -259,7 +261,7 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                                                         >
                                                             {file.name}
                                                         </Typography>
-                                                        <Tooltip title="Salin nama file">
+                                                        <Tooltip title={t('uploadButton.copyFileName')}>
                                                             <IconButton
                                                                 size="small"
                                                                 onClick={() =>
