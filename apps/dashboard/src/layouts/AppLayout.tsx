@@ -2,6 +2,7 @@ import { useEffect, useState, useContext } from "react";
 import { styled, useTheme, Theme, CSSObject } from "@mui/material/styles";
 import {
   Box,
+  Collapse,
   Drawer as MuiDrawer,
   AppBar as MuiAppBar,
   AppBarProps as MuiAppBarProps,
@@ -30,12 +31,14 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  ExpandLess,
+  ExpandMore,
   DarkMode,
   LightMode,
   LogoutRounded,
 } from "@mui/icons-material";
 import MenuIcon from "@mui/icons-material/Menu";
-import { Link, Outlet, useNavigate } from "react-router-dom";
+import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 
 import { useAppContext } from "../context/app.context";
 import { useToken } from "../hooks/token";
@@ -43,6 +46,32 @@ import { ColorModeContext } from "../context/colorMode.context";
 import { IconMenusSidebar } from "../components/icon";
 
 import logo from "../assets/logo.jpg";
+
+type IconKey = keyof typeof IconMenusSidebar;
+
+interface MenuLeaf {
+  kind: "leaf";
+  title: string;
+  link: string;
+  iconKey: IconKey;
+}
+
+interface MenuGroup {
+  kind: "group";
+  key: string;
+  title: string;
+  iconKey: IconKey;
+  children: MenuLeaf[];
+}
+
+type MenuEntry = MenuLeaf | MenuGroup;
+
+const leaf = (title: string, link: string, iconKey: IconKey): MenuLeaf => ({
+  kind: "leaf",
+  title,
+  link,
+  iconKey,
+});
 
 const drawerWidth = 248;
 const miniDrawerWidth = 80;
@@ -175,66 +204,78 @@ export default function AppLayout() {
   const [openDrawer, setOpenDrawer] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
-  const [activeLink, setActiveLink] = useState("/");
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  const menuItems = [];
-
-  const adminMenus = [
-    { title: "Beranda", link: "/", iconKey: "dashboard" as const },
-    { title: "Produk", link: "/products", iconKey: "products" as const },
-    {
-      title: "Promo",
-      link: "/promotions",
-      iconKey: "promotion" as const,
-    },
-    { title: "Kategori", link: "/categories", iconKey: "category" as const },
-    { title: "Galeri", link: "/uploads", iconKey: "upload" as const },
-    { title: "Pelanggan", link: "/customers", iconKey: "customers" as const },
-    { title: "Pesanan", link: "/orders", iconKey: "orders" as const },
-    {
-      title: "Transaksi",
-      link: "/transactions",
-      iconKey: "transaction" as const,
-    },
-  ];
-
-  const superAdminMenus = [
-    ...adminMenus,
-    {
-      title: "Admin",
-      link: "/admins",
-      iconKey: "admin" as const,
-    },
-    { title: "Pengaturan", link: "/settings", iconKey: "settings" as const },
-  ];
-
+  const { pathname } = useLocation();
   const { getDecodeJwtToken } = useToken();
-
   const user = getDecodeJwtToken();
 
-  if (user !== null) {
-    switch (user?.userRole.toUpperCase()) {
-      case "ADMIN":
-        menuItems.push(...adminMenus);
-        break;
-      case "SUPERADMIN":
-        menuItems.push(...superAdminMenus);
-        break;
-      default:
-        break;
-    }
+  const catalogGroup: MenuGroup = {
+    kind: "group",
+    key: "catalog",
+    title: "Katalog",
+    iconKey: "products",
+    children: [
+      leaf("Produk", "/products", "products"),
+      leaf("Kategori", "/categories", "category"),
+      leaf("Promo", "/promotions", "promotion"),
+      leaf("Galeri", "/uploads", "upload"),
+    ],
+  };
+
+  const salesGroup: MenuGroup = {
+    kind: "group",
+    key: "sales",
+    title: "Penjualan",
+    iconKey: "orders",
+    children: [
+      leaf("Pesanan", "/orders", "orders"),
+      leaf("Transaksi", "/transactions", "transaction"),
+      leaf("Pelanggan", "/customers", "customers"),
+    ],
+  };
+
+  const managementGroup: MenuGroup = {
+    kind: "group",
+    key: "management",
+    title: "Manajemen",
+    iconKey: "admin",
+    children: [
+      leaf("Admin", "/admins", "admin"),
+      leaf("Pengaturan", "/settings", "settings"),
+    ],
+  };
+
+  const menuItems: MenuEntry[] = [leaf("Beranda", "/", "dashboard")];
+
+  const role = user?.userRole?.toUpperCase();
+  if (role === "ADMIN" || role === "SUPERADMIN") {
+    menuItems.push(catalogGroup, salesGroup);
+  }
+  if (role === "SUPERADMIN") {
+    menuItems.push(managementGroup);
   }
 
-  menuItems.push({
-    title: "Profil",
-    link: "/my-profile",
-    iconKey: "profile" as const,
-  });
+  menuItems.push(leaf("Profil", "/my-profile", "profile"));
 
+  const isLeafActive = (link: string) => pathname === link;
+  const isGroupActive = (group: MenuGroup) =>
+    group.children.some((child) => isLeafActive(child.link));
+
+  // Auto-expand whichever group contains the current route (e.g. on direct
+  // navigation or a page refresh, not just when the user clicks it open).
   useEffect(() => {
-    const saved = localStorage.getItem("activeSidebarLink");
-    if (saved) setActiveLink(saved);
-  }, []);
+    setOpenGroups((prev) => {
+      const next = { ...prev };
+      for (const item of menuItems) {
+        if (item.kind === "group" && isGroupActive(item)) {
+          next[item.key] = true;
+        }
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const t = getLayoutTokens(theme);
   const sidebarTokens = getSidebarTokens(theme);
@@ -352,72 +393,211 @@ export default function AppLayout() {
 
         <List sx={{ px: 1.5, py: 2, flex: 1 }}>
           {menuItems.map((item) => {
-            const active = activeLink === item.link;
-            const { outline: OutlineIcon, fill: FillIcon } =
-              IconMenusSidebar[item.iconKey];
-            const Icon = active ? FillIcon : OutlineIcon;
+            const showLabel = isMobile || openDrawer;
 
-            return (
-              <ListItem key={item.link} disablePadding sx={{ mb: 0.5 }}>
-                <Tooltip
-                  title={!isMobile && !openDrawer ? item.title : ""}
-                  placement="right"
-                >
-                  <ListItemButton
-                    component={Link}
-                    to={item.link}
-                    onClick={() => {
-                      setActiveLink(item.link);
-                      localStorage.setItem("activeSidebarLink", item.link);
-                      if (isMobile) setMobileDrawerOpen(!mobileDrawerOpen);
-                    }}
-                    sx={{
-                      borderRadius: 2.5,
-                      justifyContent:
-                        isMobile || openDrawer ? "flex-start" : "center",
-                      px: isMobile || openDrawer ? 2 : 1.5,
-                      py: 1.1,
-                      background: active
-                        ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
-                        : "transparent",
-                      boxShadow: active
-                        ? `0 6px 16px -4px ${theme.palette.primary.main}66`
-                        : "none",
-                      "&:hover": {
+            if (item.kind === "leaf") {
+              const active = isLeafActive(item.link);
+              const { outline: OutlineIcon, fill: FillIcon } =
+                IconMenusSidebar[item.iconKey];
+              const Icon = active ? FillIcon : OutlineIcon;
+
+              return (
+                <ListItem key={item.link} disablePadding sx={{ mb: 0.5 }}>
+                  <Tooltip title={!showLabel ? item.title : ""} placement="right">
+                    <ListItemButton
+                      component={Link}
+                      to={item.link}
+                      onClick={() => {
+                        if (isMobile) setMobileDrawerOpen(false);
+                      }}
+                      sx={{
+                        borderRadius: 2.5,
+                        justifyContent: showLabel ? "flex-start" : "center",
+                        px: showLabel ? 2 : 1.5,
+                        py: 1.1,
                         background: active
                           ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
-                          : sidebarTokens.hover,
-                      },
-                    }}
-                  >
-                    <ListItemIcon
-                      sx={{
-                        minWidth: isMobile || openDrawer ? 36 : "auto",
-                        color: active
-                          ? sidebarTokens.onActiveItem
-                          : sidebarTokens.textInactive,
+                          : "transparent",
+                        boxShadow: active
+                          ? `0 6px 16px -4px ${theme.palette.primary.main}66`
+                          : "none",
+                        "&:hover": {
+                          background: active
+                            ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
+                            : sidebarTokens.hover,
+                        },
                       }}
                     >
-                      <Icon fontSize="small" />
-                    </ListItemIcon>
-                    {(isMobile || openDrawer) && (
-                      <ListItemText
-                        primary={item.title}
+                      <ListItemIcon
                         sx={{
-                          whiteSpace: "nowrap",
-                          "& .MuiListItemText-primary": {
-                            fontWeight: active ? 700 : 500,
-                            fontSize: "0.875rem",
-                            color: active
-                              ? sidebarTokens.onActiveItem
-                              : sidebarTokens.textInactive,
-                          },
+                          minWidth: showLabel ? 36 : "auto",
+                          color: active
+                            ? sidebarTokens.onActiveItem
+                            : sidebarTokens.textInactive,
                         }}
-                      />
-                    )}
-                  </ListItemButton>
-                </Tooltip>
-              </ListItem>
+                      >
+                        <Icon fontSize="small" />
+                      </ListItemIcon>
+                      {showLabel && (
+                        <ListItemText
+                          primary={item.title}
+                          sx={{
+                            whiteSpace: "nowrap",
+                            "& .MuiListItemText-primary": {
+                              fontWeight: active ? 700 : 500,
+                              fontSize: "0.875rem",
+                              color: active
+                                ? sidebarTokens.onActiveItem
+                                : sidebarTokens.textInactive,
+                            },
+                          }}
+                        />
+                      )}
+                    </ListItemButton>
+                  </Tooltip>
+                </ListItem>
+              );
+            }
+
+            // Group entry: a header that expands/collapses its children.
+            const group = item;
+            const groupActive = isGroupActive(group);
+            const isOpen = Boolean(openGroups[group.key]);
+            const { outline: OutlineIcon, fill: FillIcon } =
+              IconMenusSidebar[group.iconKey];
+            const GroupIcon = groupActive ? FillIcon : OutlineIcon;
+
+            return (
+              <Box key={group.key} sx={{ mb: 0.5 }}>
+                <ListItem disablePadding>
+                  <Tooltip title={!showLabel ? group.title : ""} placement="right">
+                    <ListItemButton
+                      onClick={() => {
+                        if (!showLabel) {
+                          // Collapsed rail: expand the sidebar and open the
+                          // group at once, since there's no room for a flyout.
+                          setOpenDrawer(true);
+                        }
+                        setOpenGroups((prev) => ({
+                          ...prev,
+                          [group.key]: !prev[group.key],
+                        }));
+                      }}
+                      sx={{
+                        borderRadius: 2.5,
+                        justifyContent: showLabel ? "flex-start" : "center",
+                        px: showLabel ? 2 : 1.5,
+                        py: 1.1,
+                        background: groupActive && !isOpen ? sidebarTokens.hover : "transparent",
+                        "&:hover": { background: sidebarTokens.hover },
+                      }}
+                    >
+                      <ListItemIcon
+                        sx={{
+                          minWidth: showLabel ? 36 : "auto",
+                          color: groupActive
+                            ? theme.palette.primary.main
+                            : sidebarTokens.textInactive,
+                        }}
+                      >
+                        <GroupIcon fontSize="small" />
+                      </ListItemIcon>
+                      {showLabel && (
+                        <>
+                          <ListItemText
+                            primary={group.title}
+                            sx={{
+                              whiteSpace: "nowrap",
+                              "& .MuiListItemText-primary": {
+                                fontWeight: groupActive ? 700 : 500,
+                                fontSize: "0.875rem",
+                                color: groupActive
+                                  ? sidebarTokens.textActive
+                                  : sidebarTokens.textInactive,
+                              },
+                            }}
+                          />
+                          {isOpen ? (
+                            <ExpandLess
+                              fontSize="small"
+                              sx={{ color: sidebarTokens.textInactive }}
+                            />
+                          ) : (
+                            <ExpandMore
+                              fontSize="small"
+                              sx={{ color: sidebarTokens.textInactive }}
+                            />
+                          )}
+                        </>
+                      )}
+                    </ListItemButton>
+                  </Tooltip>
+                </ListItem>
+
+                <Collapse in={showLabel && isOpen} timeout="auto" unmountOnExit>
+                  <List disablePadding sx={{ mt: 0.5 }}>
+                    {group.children.map((child) => {
+                      const active = isLeafActive(child.link);
+                      const { outline: OutlineIcon, fill: FillIcon } =
+                        IconMenusSidebar[child.iconKey];
+                      const Icon = active ? FillIcon : OutlineIcon;
+
+                      return (
+                        <ListItem key={child.link} disablePadding sx={{ mb: 0.5 }}>
+                          <ListItemButton
+                            component={Link}
+                            to={child.link}
+                            onClick={() => {
+                              if (isMobile) setMobileDrawerOpen(false);
+                            }}
+                            sx={{
+                              borderRadius: 2.5,
+                              pl: 4.5,
+                              pr: 2,
+                              py: 0.9,
+                              background: active
+                                ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
+                                : "transparent",
+                              boxShadow: active
+                                ? `0 6px 16px -4px ${theme.palette.primary.main}66`
+                                : "none",
+                              "&:hover": {
+                                background: active
+                                  ? `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.primary.dark})`
+                                  : sidebarTokens.hover,
+                              },
+                            }}
+                          >
+                            <ListItemIcon
+                              sx={{
+                                minWidth: 32,
+                                color: active
+                                  ? sidebarTokens.onActiveItem
+                                  : sidebarTokens.textInactive,
+                              }}
+                            >
+                              <Icon fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={child.title}
+                              sx={{
+                                whiteSpace: "nowrap",
+                                "& .MuiListItemText-primary": {
+                                  fontWeight: active ? 700 : 500,
+                                  fontSize: "0.8125rem",
+                                  color: active
+                                    ? sidebarTokens.onActiveItem
+                                    : sidebarTokens.textInactive,
+                                },
+                              }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              </Box>
             );
           })}
         </List>
