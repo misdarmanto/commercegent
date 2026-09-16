@@ -13,6 +13,7 @@ import IconButton from "@mui/material/IconButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
+import { useTranslation } from "react-i18next";
 import { useProduct } from "@/lib/api/products";
 import { useAddToCart } from "@/lib/api/cart";
 import { getImageUrl } from "@/lib/utils/getImageUrl";
@@ -27,6 +28,7 @@ export default function ProductDetailPage({
 }) {
   const { id } = use(params);
   const router = useRouter();
+  const { t } = useTranslation();
   const { data: product, isLoading } = useProduct(id);
   const addToCart = useAddToCart();
 
@@ -53,7 +55,7 @@ export default function ProductDetailPage({
   if (!product) {
     return (
       <Container sx={{ py: 8 }}>
-        <Typography align="center">Produk tidak ditemukan.</Typography>
+        <Typography align="center">{t("product.notFound")}</Typography>
       </Container>
     );
   }
@@ -161,7 +163,7 @@ export default function ProductDetailPage({
             </Stack>
 
             <Typography variant="body2" color="text.secondary">
-              Stok: {selectedVariant?.productVariantStock ?? 0}
+              {t("product.stock")}: {selectedVariant?.productVariantStock ?? 0}
             </Typography>
           </Stack>
 
@@ -175,7 +177,7 @@ export default function ProductDetailPage({
             }
             onClick={handleAddToCart}
           >
-            {addToCart.isPending ? "Menambahkan..." : "Tambah ke Keranjang"}
+            {addToCart.isPending ? t("product.adding") : t("product.addToCart")}
           </Button>
         </Grid>
       </Grid>

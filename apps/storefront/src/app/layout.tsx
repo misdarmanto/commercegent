@@ -6,14 +6,14 @@ import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "FRESH Ecommerce",
-  description: "Belanja kebutuhan segar Anda dengan mudah",
+  description: "Shop your fresh groceries with ease",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id">
+    <html lang="en">
       <body>
         <Providers>
           <Header />

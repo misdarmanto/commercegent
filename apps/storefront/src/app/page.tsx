@@ -12,6 +12,7 @@ import Chip from "@mui/material/Chip";
 import Stack from "@mui/material/Stack";
 import Pagination from "@mui/material/Pagination";
 import SearchIcon from "@mui/icons-material/Search";
+import { useTranslation } from "react-i18next";
 import { useProducts } from "@/lib/api/products";
 import { useCategories } from "@/lib/api/categories";
 import { ProductCard } from "@/components/product/ProductCard";
@@ -22,6 +23,7 @@ import { IPaginatedResult, ICategory } from "@/interfaces/Product";
 const PRODUCTS_PER_PAGE = 10;
 
 export default function HomePage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [page, setPage] = useState(1);
@@ -53,12 +55,12 @@ export default function HomePage() {
       <HighlightedProducts />
 
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        Produk Segar Pilihan
+        {t("home.title")}
       </Typography>
 
       <TextField
         fullWidth
-        placeholder="Cari produk..."
+        placeholder={t("home.searchPlaceholder")}
         value={search}
         onChange={(e) => handleSearchChange(e.target.value)}
         sx={{ mb: 3, maxWidth: 480 }}
@@ -80,7 +82,7 @@ export default function HomePage() {
           sx={{ mb: 3, overflowX: "auto", pb: 1 }}
         >
           <Chip
-            label="Semua"
+            label={t("home.allCategories")}
             color={categoryId === undefined ? "primary" : "default"}
             onClick={() => handleCategoryChange(undefined)}
           />
@@ -109,7 +111,7 @@ export default function HomePage() {
           {data?.items.length === 0 && (
             <Grid size={12}>
               <Typography color="text.secondary" align="center" sx={{ py: 6 }}>
-                Produk tidak ditemukan.
+                {t("home.noProducts")}
               </Typography>
             </Grid>
           )}

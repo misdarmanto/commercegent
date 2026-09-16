@@ -5,10 +5,12 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import CircularProgress from "@mui/material/CircularProgress";
 import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartmentOutlined";
+import { useTranslation } from "react-i18next";
 import { useHighlightedProducts } from "@/lib/api/products";
 import { ProductCard } from "@/components/product/ProductCard";
 
 export function HighlightedProducts() {
+  const { t } = useTranslation();
   const { data, isLoading } = useHighlightedProducts();
   const items = data?.items ?? [];
 
@@ -19,7 +21,7 @@ export function HighlightedProducts() {
       <Stack direction="row" spacing={1} sx={{ alignItems: "center", mb: 2 }}>
         <LocalFireDepartmentIcon color="primary" />
         <Typography variant="h5" sx={{ fontWeight: 800 }}>
-          Promo & Pilihan Terbaik
+          {t("home.highlightTitle")}
         </Typography>
       </Stack>
 

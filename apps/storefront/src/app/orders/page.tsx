@@ -8,22 +8,15 @@ import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useTranslation } from "react-i18next";
 import { useOrders } from "@/lib/api/orders";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { isLoggedIn } from "@/lib/auth/token";
-import { IOrder, OrderStatus } from "@/interfaces/Order";
-
-const statusLabel: Record<OrderStatus, string> = {
-  waiting: "Menunggu Pembayaran",
-  process: "Diproses",
-  draft: "Draft",
-  delivery: "Dikirim",
-  done: "Selesai",
-  cancel: "Dibatalkan",
-};
+import { IOrder } from "@/interfaces/Order";
 
 export default function OrdersPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const { data, isLoading } = useOrders();
 
@@ -52,12 +45,12 @@ export default function OrdersPage() {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        Pesanan Saya
+        {t("orders.title")}
       </Typography>
 
       {orders.length === 0 ? (
         <Typography color="text.secondary" align="center" sx={{ py: 6 }}>
-          Belum ada pesanan.
+          {t("orders.empty")}
         </Typography>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
@@ -72,11 +65,11 @@ export default function OrdersPage() {
                     {order.orderReferenceId ?? `Order #${order.orderId}`}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {order.orderTotalItem} item
+                    {t("orders.itemCount", { count: order.orderTotalItem })}
                   </Typography>
                 </Stack>
                 <Stack sx={{ alignItems: "flex-end" }}>
-                  <Chip label={statusLabel[order.orderStatus]} size="small" />
+                  <Chip label={t(`orders.status.${order.orderStatus}`)} size="small" />
                   <Typography sx={{ fontWeight: 700, color: "primary.main", mt: 0.5 }}>
                     {formatCurrency(order.orderGrandTotal)}
                   </Typography>

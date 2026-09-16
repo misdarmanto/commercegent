@@ -4,6 +4,7 @@ import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useTranslation } from "react-i18next";
 import { useProducts } from "@/lib/api/products";
 import { ProductCard } from "@/components/product/ProductCard";
 
@@ -16,6 +17,7 @@ export function RelatedProducts({
   categoryId?: number;
   excludeProductId: number | string;
 }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useProducts({
     productCategoryId: categoryId,
     size: RECOMMENDATION_COUNT,
@@ -30,7 +32,7 @@ export function RelatedProducts({
   return (
     <Box sx={{ mt: 6 }}>
       <Typography variant="h5" gutterBottom sx={{ fontWeight: 800, mb: 2 }}>
-        Rekomendasi Produk Lain
+        {t("product.relatedTitle")}
       </Typography>
 
       {isLoading ? (

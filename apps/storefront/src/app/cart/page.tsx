@@ -14,6 +14,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import { useTranslation } from "react-i18next";
 import { useCart, useRemoveCart, useUpdateCart } from "@/lib/api/cart";
 import { getImageUrl } from "@/lib/utils/getImageUrl";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
@@ -22,6 +23,7 @@ import { ICartItem } from "@/interfaces/Cart";
 
 export default function CartPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const { data, isLoading } = useCart();
   const updateCart = useUpdateCart();
@@ -57,12 +59,12 @@ export default function CartPage() {
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        Keranjang Belanja
+        {t("cart.title")}
       </Typography>
 
       {items.length === 0 ? (
         <Typography color="text.secondary" align="center" sx={{ py: 6 }}>
-          Keranjang Anda masih kosong.
+          {t("cart.empty")}
         </Typography>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
@@ -137,7 +139,7 @@ export default function CartPage() {
           <Divider />
 
           <Stack direction="row" sx={{ justifyContent: "space-between", alignItems: "center" }}>
-            <Typography variant="h6">Total</Typography>
+            <Typography variant="h6">{t("cart.total")}</Typography>
             <Typography variant="h6" sx={{ color: "primary.main", fontWeight: 800 }}>
               {formatCurrency(total)}
             </Typography>
@@ -148,7 +150,7 @@ export default function CartPage() {
             size="large"
             onClick={() => router.push("/checkout")}
           >
-            Checkout
+            {t("cart.checkout")}
           </Button>
         </Stack>
       )}

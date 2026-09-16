@@ -11,10 +11,13 @@ import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ShoppingCartOutlinedIcon from "@mui/icons-material/ShoppingCartOutlined";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
+import { useTranslation } from "react-i18next";
 import { useCartTotal } from "@/lib/api/cart";
 import { AUTH_CHANGED_EVENT, isLoggedIn } from "@/lib/auth/token";
+import { LanguageSwitcher } from "./LanguageSwitcher";
 
 export function Header() {
+  const { t } = useTranslation();
   const [loggedIn, setLoggedIn] = useState(false);
   const { data: cartTotal } = useCartTotal();
 
@@ -54,13 +57,15 @@ export function Header() {
         </Typography>
 
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <LanguageSwitcher />
+
           {loggedIn ? (
             <IconButton component={Link} href="/profile">
               <PersonOutlineIcon />
             </IconButton>
           ) : (
             <Button component={Link} href="/login" variant="outlined" size="small">
-              Login
+              {t("nav.login")}
             </Button>
           )}
 

@@ -17,19 +17,22 @@ import FormLabel from "@mui/material/FormLabel";
 import RadioGroup from "@mui/material/RadioGroup";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Radio from "@mui/material/Radio";
+import { useTranslation } from "react-i18next";
 import { useLogin, useRegister } from "@/lib/api/auth";
 
-const registerSchema = z.object({
-  userName: z.string().min(1, "Nama wajib diisi"),
-  userWhatsAppNumber: z.string().min(8, "Nomor WhatsApp tidak valid"),
-  userPassword: z.string().min(6, "Password minimal 6 karakter"),
-  userGender: z.enum(["pria", "wanita"], { message: "Pilih jenis kelamin" }),
-});
+const buildRegisterSchema = (t: (key: string) => string) =>
+  z.object({
+    userName: z.string().min(1, t("auth.fullNameRequired")),
+    userWhatsAppNumber: z.string().min(8, t("auth.whatsappNumberInvalid")),
+    userPassword: z.string().min(6, t("auth.passwordMinLength")),
+    userGender: z.enum(["pria", "wanita"], { message: t("auth.genderRequired") }),
+  });
 
-type RegisterForm = z.infer<typeof registerSchema>;
+type RegisterForm = z.infer<ReturnType<typeof buildRegisterSchema>>;
 
 export default function RegisterPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const registerUser = useRegister();
   const login = useLogin();
   const {
@@ -38,7 +41,7 @@ export default function RegisterPage() {
     control,
     formState: { errors },
   } = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
+    resolver: zodResolver(buildRegisterSchema(t)),
     defaultValues: { userGender: "pria" },
   });
 
@@ -68,19 +71,15 @@ export default function RegisterPage() {
     <Container maxWidth="xs" sx={{ py: 8 }}>
       <Paper variant="outlined" sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 800 }}>
-          Daftar Akun
+          {t("auth.registerTitle")}
         </Typography>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={2} sx={{ mt: 2 }}>
-            {hasError && (
-              <Alert severity="error">
-                Gagal mendaftar. Nomor WhatsApp mungkin sudah terdaftar.
-              </Alert>
-            )}
+            {hasError && <Alert severity="error">{t("auth.registerError")}</Alert>}
 
             <TextField
-              label="Nama Lengkap"
+              label={t("auth.fullName")}
               fullWidth
               {...register("userName")}
               error={!!errors.userName}
@@ -88,7 +87,7 @@ export default function RegisterPage() {
             />
 
             <TextField
-              label="Nomor WhatsApp"
+              label={t("auth.whatsappNumber")}
               fullWidth
               {...register("userWhatsAppNumber")}
               error={!!errors.userWhatsAppNumber}
@@ -96,7 +95,7 @@ export default function RegisterPage() {
             />
 
             <TextField
-              label="Password"
+              label={t("auth.password")}
               type="password"
               fullWidth
               {...register("userPassword")}
@@ -105,14 +104,22 @@ export default function RegisterPage() {
             />
 
             <FormControl>
-              <FormLabel>Jenis Kelamin</FormLabel>
+              <FormLabel>{t("auth.gender")}</FormLabel>
               <Controller
                 name="userGender"
                 control={control}
                 render={({ field }) => (
                   <RadioGroup row {...field}>
-                    <FormControlLabel value="pria" control={<Radio />} label="Pria" />
-                    <FormControlLabel value="wanita" control={<Radio />} label="Wanita" />
+                    <FormControlLabel
+                      value="pria"
+                      control={<Radio />}
+                      label={t("auth.male")}
+                    />
+                    <FormControlLabel
+                      value="wanita"
+                      control={<Radio />}
+                      label={t("auth.female")}
+                    />
                   </RadioGroup>
                 )}
               />
@@ -124,11 +131,11 @@ export default function RegisterPage() {
               size="large"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Memproses..." : "Daftar"}
+              {isSubmitting ? t("auth.submitting") : t("auth.signUp")}
             </Button>
 
             <Typography variant="body2" align="center">
-              Sudah punya akun? <Link href="/login">Masuk</Link>
+              {t("auth.haveAccount")} <Link href="/login">{t("auth.signIn")}</Link>
             </Typography>
           </Stack>
         </form>

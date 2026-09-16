@@ -20,28 +20,23 @@ import CircularProgress from "@mui/material/CircularProgress";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import LogoutIcon from "@mui/icons-material/LogoutOutlined";
+import { useTranslation } from "react-i18next";
 import { useProfile, useUpdateProfile } from "@/lib/api/profile";
 import { isLoggedIn, removeToken } from "@/lib/auth/token";
 
-const profileSchema = z.object({
-  userName: z.string().min(1, "Nama wajib diisi"),
-  userPassword: z
-    .union([z.string().min(6, "Password minimal 6 karakter"), z.literal("")])
-    .optional(),
-});
+const buildProfileSchema = (t: (key: string) => string) =>
+  z.object({
+    userName: z.string().min(1, t("auth.fullNameRequired")),
+    userPassword: z
+      .union([z.string().min(6, t("auth.passwordMinLength")), z.literal("")])
+      .optional(),
+  });
 
-type ProfileForm = z.infer<typeof profileSchema>;
-
-const roleLabel: Record<string, string> = {
-  user: "Pelanggan",
-  courier: "Kurir",
-  office: "Kantor",
-  admin: "Admin",
-  superAdmin: "Super Admin",
-};
+type ProfileForm = z.infer<ReturnType<typeof buildProfileSchema>>;
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
@@ -52,7 +47,7 @@ export default function ProfilePage() {
     reset,
     formState: { errors, isDirty },
   } = useForm<ProfileForm>({
-    resolver: zodResolver(profileSchema),
+    resolver: zodResolver(buildProfileSchema(t)),
     defaultValues: { userName: "", userPassword: "" },
   });
 
@@ -102,7 +97,7 @@ export default function ProfilePage() {
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        Profil Saya
+        {t("profile.title")}
       </Typography>
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
@@ -116,7 +111,7 @@ export default function ProfilePage() {
               {profile.userWhatsAppNumber}
             </Typography>
           </Stack>
-          <Chip label={roleLabel[profile.userRole] ?? profile.userRole} size="small" />
+          <Chip label={t(`profile.role.${profile.userRole}`)} size="small" />
         </Stack>
 
         <Divider sx={{ my: 2 }} />
@@ -124,14 +119,14 @@ export default function ProfilePage() {
         <Stack direction="row" spacing={4}>
           <Stack>
             <Typography variant="body2" color="text.secondary">
-              Poin Koin
+              {t("profile.coinPoints")}
             </Typography>
             <Typography sx={{ fontWeight: 700 }}>{profile.userCoin}</Typography>
           </Stack>
           {profile.userPartnerCode && (
             <Stack>
               <Typography variant="body2" color="text.secondary">
-                Kode Mitra
+                {t("profile.partnerCode")}
               </Typography>
               <Typography sx={{ fontWeight: 700 }}>
                 {profile.userPartnerCode}
@@ -143,20 +138,20 @@ export default function ProfilePage() {
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="h6" gutterBottom sx={{ fontWeight: 700 }}>
-          Edit Profil
+          {t("profile.editProfile")}
         </Typography>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={2} sx={{ mt: 1 }}>
             {updateProfile.isError && (
-              <Alert severity="error">Gagal memperbarui profil.</Alert>
+              <Alert severity="error">{t("profile.updateError")}</Alert>
             )}
             {updateProfile.isSuccess && (
-              <Alert severity="success">Profil berhasil diperbarui.</Alert>
+              <Alert severity="success">{t("profile.updateSuccess")}</Alert>
             )}
 
             <TextField
-              label="Nama Lengkap"
+              label={t("auth.fullName")}
               fullWidth
               {...register("userName")}
               error={!!errors.userName}
@@ -164,18 +159,18 @@ export default function ProfilePage() {
             />
 
             <TextField
-              label="Nomor WhatsApp"
+              label={t("auth.whatsappNumber")}
               fullWidth
               value={profile.userWhatsAppNumber}
               disabled
-              helperText="Nomor WhatsApp tidak dapat diubah"
+              helperText={t("profile.whatsappNumberHelper")}
             />
 
             <TextField
-              label="Password Baru (opsional)"
+              label={t("profile.newPassword")}
               type="password"
               fullWidth
-              placeholder="Kosongkan jika tidak ingin mengubah"
+              placeholder={t("profile.newPasswordPlaceholder")}
               {...register("userPassword")}
               error={!!errors.userPassword}
               helperText={errors.userPassword?.message}
@@ -187,7 +182,7 @@ export default function ProfilePage() {
               size="large"
               disabled={!isDirty || updateProfile.isPending}
             >
-              {updateProfile.isPending ? "Menyimpan..." : "Simpan Perubahan"}
+              {updateProfile.isPending ? t("profile.saving") : t("profile.saveChanges")}
             </Button>
           </Stack>
         </form>
@@ -209,7 +204,7 @@ export default function ProfilePage() {
           }}
         >
           <ReceiptLongOutlinedIcon fontSize="small" />
-          <Typography sx={{ flexGrow: 1 }}>Pesanan Saya</Typography>
+          <Typography sx={{ flexGrow: 1 }}>{t("profile.myOrders")}</Typography>
         </Stack>
 
         <Divider />
@@ -228,7 +223,7 @@ export default function ProfilePage() {
           }}
         >
           <LogoutIcon fontSize="small" />
-          <Typography sx={{ flexGrow: 1, fontWeight: 600 }}>Keluar</Typography>
+          <Typography sx={{ flexGrow: 1, fontWeight: 600 }}>{t("profile.logout")}</Typography>
         </Stack>
       </Paper>
     </Container>

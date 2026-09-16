@@ -6,12 +6,14 @@ import IconButton from "@mui/material/IconButton";
 import Skeleton from "@mui/material/Skeleton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { useTranslation } from "react-i18next";
 import { useBanners } from "@/lib/api/banners";
 import { getImageUrl } from "@/lib/utils/getImageUrl";
 
 const AUTO_ROTATE_MS = 5000;
 
 export function BannerCarousel() {
+  const { t } = useTranslation();
   const { data, isLoading } = useBanners();
   const banners = data?.items ?? [];
   const [active, setActive] = useState(0);
@@ -73,7 +75,7 @@ export function BannerCarousel() {
       {banners.length > 1 && (
         <>
           <IconButton
-            aria-label="Sebelumnya"
+            aria-label={t("common.previous")}
             onClick={() => goTo(active - 1)}
             sx={{
               position: "absolute",
@@ -88,7 +90,7 @@ export function BannerCarousel() {
             <ChevronLeftIcon fontSize="small" />
           </IconButton>
           <IconButton
-            aria-label="Berikutnya"
+            aria-label={t("common.next")}
             onClick={() => goTo(active + 1)}
             sx={{
               position: "absolute",

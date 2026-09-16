@@ -10,6 +10,7 @@ import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import { useTranslation } from "react-i18next";
 import { useCart } from "@/lib/api/cart";
 import { useCreateOrder } from "@/lib/api/orders";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
@@ -20,6 +21,7 @@ const SHIPPING_FEE = 0;
 
 export default function CheckoutPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const { data, isLoading } = useCart();
   const createOrder = useCreateOrder();
@@ -81,12 +83,12 @@ export default function CheckoutPage() {
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
       <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        Checkout
+        {t("checkout.title")}
       </Typography>
 
       {items.length === 0 ? (
         <Typography color="text.secondary" align="center" sx={{ py: 6 }}>
-          Keranjang Anda kosong.
+          {t("checkout.empty")}
         </Typography>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
@@ -112,18 +114,18 @@ export default function CheckoutPage() {
               <Divider />
 
               <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                <Typography variant="body2">Subtotal</Typography>
+                <Typography variant="body2">{t("checkout.subtotal")}</Typography>
                 <Typography variant="body2">{formatCurrency(subtotal)}</Typography>
               </Stack>
               <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                <Typography variant="body2">Ongkir</Typography>
+                <Typography variant="body2">{t("checkout.shipping")}</Typography>
                 <Typography variant="body2">{formatCurrency(SHIPPING_FEE)}</Typography>
               </Stack>
 
               <Divider />
 
               <Stack direction="row" sx={{ justifyContent: "space-between" }}>
-                <Typography variant="h6">Total</Typography>
+                <Typography variant="h6">{t("checkout.total")}</Typography>
                 <Typography variant="h6" sx={{ color: "primary.main", fontWeight: 800 }}>
                   {formatCurrency(grandTotal)}
                 </Typography>
@@ -132,9 +134,7 @@ export default function CheckoutPage() {
           </Paper>
 
           {createOrder.isError && (
-            <Alert severity="error">
-              Gagal membuat pesanan. Silakan coba lagi.
-            </Alert>
+            <Alert severity="error">{t("checkout.orderError")}</Alert>
           )}
 
           <Button
@@ -143,7 +143,7 @@ export default function CheckoutPage() {
             disabled={createOrder.isPending}
             onClick={handleCheckout}
           >
-            {createOrder.isPending ? "Memproses..." : "Bayar Sekarang"}
+            {createOrder.isPending ? t("checkout.processing") : t("checkout.payNow")}
           </Button>
         </Stack>
       )}

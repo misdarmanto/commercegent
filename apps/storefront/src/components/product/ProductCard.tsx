@@ -6,11 +6,13 @@ import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Chip from "@mui/material/Chip";
+import { useTranslation } from "react-i18next";
 import { IProductListItem } from "@/interfaces/Product";
 import { getImageUrl } from "@/lib/utils/getImageUrl";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 
 export function ProductCard({ product }: { product: IProductListItem }) {
+  const { t } = useTranslation();
   const variant = product.variant;
   const outOfStock = product.productTotalStock <= 0;
 
@@ -47,7 +49,7 @@ export function ProductCard({ product }: { product: IProductListItem }) {
           </Stack>
           {outOfStock && (
             <Chip
-              label="Stok habis"
+              label={t("product.outOfStock")}
               size="small"
               color="default"
               sx={{ mt: 1 }}

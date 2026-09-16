@@ -12,23 +12,26 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import Alert from "@mui/material/Alert";
+import { useTranslation } from "react-i18next";
 import { useLogin } from "@/lib/api/auth";
 
-const loginSchema = z.object({
-  userWhatsAppNumber: z.string().min(8, "Nomor WhatsApp tidak valid"),
-  userPassword: z.string().min(1, "Password wajib diisi"),
-});
+const buildLoginSchema = (t: (key: string) => string) =>
+  z.object({
+    userWhatsAppNumber: z.string().min(8, t("auth.whatsappNumberInvalid")),
+    userPassword: z.string().min(1, t("auth.passwordRequired")),
+  });
 
-type LoginForm = z.infer<typeof loginSchema>;
+type LoginForm = z.infer<ReturnType<typeof buildLoginSchema>>;
 
 export default function LoginPage() {
   const router = useRouter();
+  const { t } = useTranslation();
   const login = useLogin();
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
+  } = useForm<LoginForm>({ resolver: zodResolver(buildLoginSchema(t)) });
 
   const onSubmit = (values: LoginForm) => {
     login.mutate(values, {
@@ -43,19 +46,17 @@ export default function LoginPage() {
     <Container maxWidth="xs" sx={{ py: 8 }}>
       <Paper variant="outlined" sx={{ p: 4 }}>
         <Typography variant="h5" gutterBottom sx={{ fontWeight: 800 }}>
-          Masuk
+          {t("auth.loginTitle")}
         </Typography>
 
         <form onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={2} sx={{ mt: 2 }}>
             {login.isError && (
-              <Alert severity="error">
-                Nomor WhatsApp atau password salah.
-              </Alert>
+              <Alert severity="error">{t("auth.loginError")}</Alert>
             )}
 
             <TextField
-              label="Nomor WhatsApp"
+              label={t("auth.whatsappNumber")}
               fullWidth
               {...register("userWhatsAppNumber")}
               error={!!errors.userWhatsAppNumber}
@@ -63,7 +64,7 @@ export default function LoginPage() {
             />
 
             <TextField
-              label="Password"
+              label={t("auth.password")}
               type="password"
               fullWidth
               {...register("userPassword")}
@@ -77,12 +78,12 @@ export default function LoginPage() {
               size="large"
               disabled={login.isPending}
             >
-              {login.isPending ? "Memproses..." : "Masuk"}
+              {login.isPending ? t("auth.submitting") : t("auth.signIn")}
             </Button>
 
             <Typography variant="body2" align="center">
-              Belum punya akun?{" "}
-              <Link href="/register">Daftar</Link>
+              {t("auth.noAccount")}{" "}
+              <Link href="/register">{t("auth.register")}</Link>
             </Typography>
           </Stack>
         </form>
