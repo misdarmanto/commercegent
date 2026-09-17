@@ -4,6 +4,7 @@ import { ChatSessionModel } from '../models/ChatSessionModel'
 import { ChatMessageModel, type ChatMessageRole } from '../models/ChatMessageModel'
 import { ProductEmbeddingService } from './ProductEmbedding.service'
 import { FaqEmbeddingService } from './FaqEmbedding.service'
+import { ProductService } from './Product.service'
 import { OpenAIService } from './external/OpenAI.service'
 import { chatTools, ChatToolsService } from './ChatTools.service'
 import { AppError } from '../utilities/appError'
@@ -21,6 +22,8 @@ Payment, address entry, and shipping method selection are handled by the custome
 
 const HISTORY_LIMIT = 10
 const MAX_TOOL_ITERATIONS = 3
+const RECOMMENDATION_HISTORY_MESSAGE_LIMIT = 5
+const RECOMMENDATION_LIMIT = 6
 
 export class ChatService {
   private static async resolveSession(userId: number, chatSessionId?: number) {
@@ -194,6 +197,61 @@ export class ChatService {
       logger.error(`[ChatService] findSessionMessages failed: ${String(serviceError)}`)
       throw new AppError(
         'Failed to find chat session messages',
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    }
+  }
+
+  /**
+   * Product recommendations derived from the user's most recent chat
+   * session: the last few things they typed are embedded and searched
+   * fresh against Pinecone (rather than replaying old matchedProductIds),
+   * so results stay current with stock/visibility and are re-ranked with
+   * live product data.
+   */
+  static async getRecommendations(userId: number) {
+    try {
+      const session = await ChatSessionModel.findOne({
+        where: { chatSessionUserId: userId, deleted: false },
+        order: [['chatSessionId', 'desc']]
+      })
+
+      if (session == null) return { products: [] }
+
+      const recentUserMessages = await ChatMessageModel.findAll({
+        where: {
+          chatMessageSessionId: session.chatSessionId,
+          chatMessageRole: 'user',
+          deleted: false
+        },
+        order: [['chatMessageId', 'desc']],
+        limit: RECOMMENDATION_HISTORY_MESSAGE_LIMIT
+      })
+
+      if (recentUserMessages.length === 0) return { products: [] }
+
+      const combinedQuery = recentUserMessages
+        .reverse()
+        .map((message) => message.chatMessageContent)
+        .join('\n')
+
+      const matches = await ProductEmbeddingService.searchProducts(
+        combinedQuery,
+        RECOMMENDATION_LIMIT
+      )
+
+      const productIds = matches
+        .map((match) => Number(match.metadata?.productId))
+        .filter((productId) => Number.isFinite(productId))
+
+      const products = await ProductService.findByIds(productIds)
+
+      return { products }
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ChatService] getRecommendations failed: ${String(serviceError)}`)
+      throw new AppError(
+        'Failed to get chat recommendations',
         StatusCodes.INTERNAL_SERVER_ERROR
       )
     }

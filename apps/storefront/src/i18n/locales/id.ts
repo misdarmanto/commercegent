@@ -22,6 +22,7 @@ export const id = {
       allCategories: "Semua",
       noProducts: "Produk tidak ditemukan.",
       highlightTitle: "Promo & Pilihan Terbaik",
+      recommendedTitle: "Rekomendasi untuk Anda",
     },
     product: {
       outOfStock: "Stok habis",

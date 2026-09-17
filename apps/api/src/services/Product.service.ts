@@ -459,6 +459,76 @@ export class ProductService {
     }
   }
 
+  /**
+   * Fetch visible products by id, preserving the given order (used for
+   * relevance-ranked results such as chat-based recommendations).
+   */
+  static async findByIds(productIds: number[]) {
+    try {
+      if (productIds.length === 0) return []
+
+      const rows = await ProductModel.findAll({
+        where: {
+          deleted: { [Op.eq]: false },
+          productIsVisible: { [Op.eq]: true },
+          productId: { [Op.in]: productIds }
+        },
+        include: [
+          {
+            model: CategoryModel,
+            as: 'category',
+            attributes: [
+              'categoryId',
+              'categoryReference',
+              'categoryName',
+              'categoryIcon',
+              'categoryType'
+            ]
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variants',
+            attributes: [
+              'productVariantId',
+              'productVariantProductId',
+              'productVariantName',
+              'productVariantImage',
+              'productVariantPrice',
+              'productVariantSellPrice',
+              'productVariantDiscount',
+              'productVariantTotalSale',
+              'productVariantStock',
+              'productVariantWeight'
+            ]
+          }
+        ],
+        attributes: [
+          'productId',
+          'productName',
+          'productDescription',
+          'productCategoryId',
+          'productSubCategoryId',
+          'productCode',
+          'productIsHighlight',
+          'productIsVisible',
+          'productBarcode',
+          'productUnit'
+        ]
+      })
+
+      const mapped = rows.map((row) => this.mapProductRowToCheapestVariantObject(row))
+      const byId = new Map(mapped.map((row) => [row.productId as number, row]))
+
+      return productIds
+        .map((productId) => byId.get(productId))
+        .filter((row): row is NonNullable<typeof row> => row != null)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ProductService] findByIds failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find products by id', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
   static async createProduct(payload: ICreateProduct) {
     try {
       let createdProductId: number | undefined

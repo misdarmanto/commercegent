@@ -1,3 +1,5 @@
+import { IProductListItem } from "./Product";
+
 export type IChatMessageRole = "user" | "assistant" | "system";
 
 export interface IChatMessage {
@@ -41,6 +43,11 @@ export interface ISendChatMessageResponse {
   reply: string;
   products: IChatProductRef[];
   faqs: IChatFaqRef[];
+}
+
+/** Product recommendations derived from the user's most recent chat session. */
+export interface IChatRecommendationsResponse {
+  products: IProductListItem[];
 }
 
 /** Local-only chat bubble used to render the conversation before/without a server round trip. */

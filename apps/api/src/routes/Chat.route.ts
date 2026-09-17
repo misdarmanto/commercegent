@@ -9,6 +9,8 @@ ChatRoute.use(MiddleWares.authorization)
 
 ChatRoute.get('/sessions', ChatController.findAllChatSessions)
 
+ChatRoute.get('/recommendations', ChatController.findChatRecommendations)
+
 ChatRoute.get(
   '/sessions/:chatSessionId',
   MiddleWares.validate({ params: findChatSessionParamsSchema }),

@@ -22,6 +22,7 @@ export const en = {
       allCategories: "All",
       noProducts: "No products found.",
       highlightTitle: "Promo & Best Picks",
+      recommendedTitle: "Recommended for You",
     },
     product: {
       outOfStock: "Out of stock",

@@ -18,6 +18,7 @@ import { useCategories } from "@/lib/api/categories";
 import { ProductCard } from "@/components/product/ProductCard";
 import { BannerCarousel } from "@/components/home/BannerCarousel";
 import { HighlightedProducts } from "@/components/home/HighlightedProducts";
+import { RecommendedProducts } from "@/components/home/RecommendedProducts";
 import { IPaginatedResult, ICategory } from "@/interfaces/Product";
 
 const PRODUCTS_PER_PAGE = 10;
@@ -51,6 +52,8 @@ export default function HomePage() {
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <BannerCarousel />
+
+      <RecommendedProducts />
 
       <HighlightedProducts />
 

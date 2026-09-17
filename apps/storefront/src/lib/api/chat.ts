@@ -2,6 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import {
   IChatMessage,
+  IChatRecommendationsResponse,
   IChatSession,
   ISendChatMessagePayload,
   ISendChatMessageResponse,
@@ -13,6 +14,7 @@ export const chatKeys = {
   sessions: () => [...chatKeys.all, "sessions"] as const,
   session: (chatSessionId: number) =>
     [...chatKeys.all, "session", chatSessionId] as const,
+  recommendations: () => [...chatKeys.all, "recommendations"] as const,
 };
 
 export function useSendChatMessage() {
@@ -43,5 +45,18 @@ export function useChatSessionMessages(chatSessionId: number | null) {
       return data.data as { session: IChatSession; messages: IChatMessage[] };
     },
     enabled: isLoggedIn() && chatSessionId != null,
+  });
+}
+
+/** Product recommendations derived from the user's most recent chat session. */
+export function useChatRecommendations() {
+  return useQuery({
+    queryKey: chatKeys.recommendations(),
+    queryFn: async () => {
+      const { data } = await apiClient.get("/chats/recommendations");
+      return data.data as IChatRecommendationsResponse;
+    },
+    enabled: isLoggedIn(),
+    staleTime: 60_000,
   });
 }
