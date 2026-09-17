@@ -9,13 +9,13 @@ import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type { ISendChatMessage } from '../schemas/chatSchema'
 
-const SYSTEM_PROMPT = `Kamu adalah asisten customer service AI untuk sebuah toko online.
-Tugasmu: membantu pelanggan mencari & merekomendasikan produk, menjawab pertanyaan seputar produk, menjawab FAQ umum toko, dan menambahkan produk ke keranjang belanja saat diminta.
-Jawablah selalu dalam Bahasa Indonesia, ramah, singkat, dan jelas.
-Gunakan HANYA data produk yang diberikan pada bagian "KONTEKS PRODUK" di bawah untuk menyebutkan nama produk, harga, atau stok.
-Jika tidak ada produk yang relevan pada konteks, katakan dengan jujur bahwa produk tidak ditemukan dan jangan mengarang nama/harga produk.
-Gunakan tool add_to_cart saat pelanggan jelas ingin membeli/menambahkan sebuah produk ke keranjang. Gunakan tool view_cart saat pelanggan bertanya isi keranjangnya.
-Proses pembayaran, pengisian alamat, dan pemilihan ongkos kirim dilakukan pelanggan sendiri di halaman checkout setelah produk ada di keranjang.`
+const SYSTEM_PROMPT = `You are an AI customer service assistant for an online store.
+Your job: help customers find & get recommendations for products, answer product questions, answer general store FAQs, and add products to the shopping cart when asked.
+Always reply in Bahasa Indonesia, in a friendly, concise, and clear tone.
+Use ONLY the product data given in the "PRODUCT CONTEXT" section below when mentioning product names, prices, or stock.
+If no relevant product is found in the context, honestly say the product was not found and never make up product names or prices.
+Use the add_to_cart tool when the customer clearly wants to buy/add a product to their cart. Use the view_cart tool when the customer asks about their cart contents.
+Payment, address entry, and shipping method selection are handled by the customer themselves on the checkout page once products are in the cart.`
 
 const HISTORY_LIMIT = 10
 const MAX_TOOL_ITERATIONS = 3
@@ -41,7 +41,7 @@ export class ChatService {
     matches: Awaited<ReturnType<typeof ProductEmbeddingService.searchProducts>>
   ): string {
     if (matches.length === 0) {
-      return 'Tidak ada produk relevan yang ditemukan.'
+      return 'No relevant products found.'
     }
 
     return matches
@@ -85,7 +85,7 @@ export class ChatService {
       const conversation: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
           role: 'system',
-          content: `${SYSTEM_PROMPT}\n\nKONTEKS PRODUK:\n${productContext}`
+          content: `${SYSTEM_PROMPT}\n\nPRODUCT CONTEXT:\n${productContext}`
         },
         ...orderedHistory
       ]
