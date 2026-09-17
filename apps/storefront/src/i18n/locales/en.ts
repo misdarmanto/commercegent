@@ -106,5 +106,15 @@ export const en = {
         superAdmin: "Super Admin",
       },
     },
+    chat: {
+      title: "Customer Service",
+      openButton: "Chat with us",
+      loginRequired: "Please sign in to chat with our assistant.",
+      placeholder: "Type a message...",
+      send: "Send",
+      welcome: "Hi! Ask me about our products, store policies, or add items to your cart.",
+      error: "Sorry, something went wrong. Please try again.",
+      viewProduct: "View product",
+    },
   },
 };

@@ -106,5 +106,15 @@ export const id = {
         superAdmin: "Super Admin",
       },
     },
+    chat: {
+      title: "Layanan Pelanggan",
+      openButton: "Chat dengan kami",
+      loginRequired: "Silakan masuk untuk chat dengan asisten kami.",
+      placeholder: "Ketik pesan...",
+      send: "Kirim",
+      welcome: "Hai! Tanyakan tentang produk kami, kebijakan toko, atau tambahkan barang ke keranjang.",
+      error: "Maaf, terjadi kesalahan. Silakan coba lagi.",
+      viewProduct: "Lihat produk",
+    },
   },
 };

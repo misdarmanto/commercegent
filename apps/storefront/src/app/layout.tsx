@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "./providers";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { ChatWidget } from "@/components/chat/ChatWidget";
 
 export const metadata: Metadata = {
   title: "Commercegent",
@@ -28,6 +29,7 @@ export default function RootLayout({
           <Header />
           <main style={{ minHeight: "70vh" }}>{children}</main>
           <Footer />
+          <ChatWidget />
         </Providers>
       </body>
     </html>
