@@ -172,7 +172,7 @@ export default function ListUploadView() {
       width: 100,
       renderCell: (params) => (
         <img
-          src={getImageUrl(params.row.fileName)}
+          src={params.row.url}
           alt={params.row.fileName}
           style={{
             width: 80,
@@ -246,7 +246,7 @@ export default function ListUploadView() {
                         <CardMedia
                           component="img"
                           height="140"
-                          image={getImageUrl(item.fileName)}
+                          image={item.url}
                           alt={item.fileName}
                           sx={{ objectFit: "cover" }}
                         />
