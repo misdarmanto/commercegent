@@ -1,12 +1,12 @@
-# FRESH Ecommerce
+# Commergent
 
-FRESH Ecommerce is a full e-commerce platform built as a monorepo. It has three parts that work together:
+Commergent is a full e-commerce platform built as a monorepo. It has three parts that work together:
 
-- **API** — the backend server that stores data and handles all the business logic (products, orders, payments, shipping, and an AI-powered chat assistant).
-- **Dashboard** — an admin panel where staff manage products, orders, customers, and settings.
-- **Storefront** — the public website where customers browse and buy products.
+- **API**: the backend server that stores data and handles all the business logic (products, orders, payments, shipping, and an AI-powered chat assistant).
+- **Dashboard**: an admin panel where staff manage products, orders, customers, and settings.
+- **Storefront**: the public website where customers browse and buy products.
 
-> Proprietary project — see [LICENSE](./LICENSE). Internal use only.
+> Proprietary project, see [LICENSE](./LICENSE). Internal use only.
 
 ## What's inside
 
@@ -31,11 +31,11 @@ Each app has its own README with more details specific to that app:
 The API is the core of the system. A few things worth knowing:
 
 - **Database**: MySQL, accessed through [Sequelize](https://sequelize.org) models, with migrations for schema changes.
-- **Background jobs**: [BullMQ](https://docs.bullmq.io) (powered by Redis) handles slow tasks in the background instead of blocking requests — for example:
-  - `productEmbeddingQueue` / `productFileQueue` — process product data and files.
-  - `faqEmbeddingQueue` — process FAQ content.
+- **Background jobs**: [BullMQ](https://docs.bullmq.io) (powered by Redis) handles slow tasks in the background instead of blocking requests, for example:
+  - `productEmbeddingQueue` / `productFileQueue`, process product data and files.
+  - `faqEmbeddingQueue`, process FAQ content.
 - **AI features**: The API includes an AI chat assistant (see `Chat.service.ts` and `ChatTools.service.ts`) that uses vector embeddings (stored in [Pinecone](https://www.pinecone.io)) so it can answer questions about products and FAQs.
-- **Payments & shipping**: integrations for Midtrans (payments), BiteShip (shipping), and Wablas (WhatsApp notifications) — see `services/external`.
+- **Payments & shipping**: integrations for Midtrans (payments), BiteShip (shipping), and Wablas (WhatsApp notifications), see `services/external`.
 
 Main folders inside `apps/api/src`:
 
@@ -54,11 +54,11 @@ Main folders inside `apps/api/src`:
 Before you start, make sure you have:
 
 - **Node.js 20+** (the exact version is in [`.nvmrc`](./.nvmrc))
-- **pnpm** — install it with `corepack enable` or `npm i -g pnpm`
-- **MySQL** — used by the API to store data
-- **Redis** — used by the API for background job queues
+- **pnpm**, install it with `corepack enable` or `npm i -g pnpm`
+- **MySQL**, used by the API to store data
+- **Redis**, used by the API for background job queues
 
-If you don't want to install MySQL/Redis yourself, skip to [Running with Docker](#running-with-docker) below — Docker sets everything up for you.
+If you don't want to install MySQL/Redis yourself, skip to [Running with Docker](#running-with-docker) below. Docker sets everything up for you.
 
 ## Getting started (running locally without Docker)
 
@@ -120,7 +120,7 @@ pnpm --filter @fresh-ecommerce/api run seed           # insert sample/starter da
 
 ## Running with Docker
 
-This is the easiest way to try the whole platform — it starts MySQL, Redis, the API, and the dashboard together, so you don't need to install anything locally besides Docker.
+This is the easiest way to try the whole platform. It starts MySQL, Redis, the API, and the dashboard together, so you don't need to install anything locally besides Docker.
 
 1. Copy the environment files:
 
