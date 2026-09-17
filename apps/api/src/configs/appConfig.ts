@@ -23,6 +23,7 @@ export const appConfigs = {
     appMode: process.env.APP_MODE ?? 'development',
     env: process.env.APP_ENV,
     port: process.env.APP_PORT ?? 8000,
+    url: process.env.APP_URL ?? 'http://localhost:8000',
     log: process.env.APP_LOG === 'true'
   },
   secret: {

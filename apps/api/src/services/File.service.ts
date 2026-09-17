@@ -5,6 +5,7 @@ import { Op } from 'sequelize'
 import { FileModel } from '../models/FileModel'
 import { Pagination } from '../utilities/pagination'
 import { AppError } from '../utilities/appError'
+import { appConfigs } from '../configs/appConfig'
 import logger from '../utilities/logger'
 
 // eslint-disable-next-line @typescript-eslint/no-extraneous-class
@@ -29,7 +30,7 @@ export class FileService {
       })
 
       return {
-        url: `/api/v1/uploads/files/${fileRecord.fileId}`,
+        url: `${appConfigs.app.url}/api/v1/uploads/files/${fileRecord.fileId}`,
         fileName: fileRecord.fileName,
         fileId: fileRecord.fileId
       }
@@ -63,7 +64,7 @@ export class FileService {
         fileSize: file.fileSize,
         mimeType: file.mimeType,
         uploadedBy: file.uploadedBy,
-        url: `/api/v1/uploads/files/${file.fileId}`,
+        url: `${appConfigs.app.url}/api/v1/uploads/files/${file.fileId}`,
         createdAt: file.createdAt
       }))
 
