@@ -9,17 +9,17 @@
 // categories.js (matched here by name) and ships with 1-2 variants.
 const seedProducts = [
   {
-    category_name: 'Sayuran',
-    product_name: 'Bayam Segar',
-    product_description: 'Bayam hijau segar, dipetik langsung dari kebun mitra.',
+    category_name: 'Vegetables',
+    product_name: 'Fresh Spinach',
+    product_description: 'Fresh green spinach, picked straight from partner farms.',
     product_code: 'SYR-001',
-    product_unit: 'ikat',
-    variants: [{ name: '1 Ikat (250g)', price: 5000, sellPrice: 4500, stock: 50, weight: 250 }]
+    product_unit: 'bunch',
+    variants: [{ name: '1 Bunch (250g)', price: 5000, sellPrice: 4500, stock: 50, weight: 250 }]
   },
   {
-    category_name: 'Sayuran',
-    product_name: 'Wortel',
-    product_description: 'Wortel segar kaya vitamin A, cocok untuk sup dan jus.',
+    category_name: 'Vegetables',
+    product_name: 'Carrot',
+    product_description: 'Fresh carrots rich in vitamin A, great for soups and juices.',
     product_code: 'SYR-002',
     product_unit: 'kg',
     variants: [
@@ -28,17 +28,17 @@ const seedProducts = [
     ]
   },
   {
-    category_name: 'Sayuran',
-    product_name: 'Brokoli',
-    product_description: 'Brokoli hijau renyah, tinggi serat dan vitamin C.',
+    category_name: 'Vegetables',
+    product_name: 'Broccoli',
+    product_description: 'Crisp green broccoli, high in fiber and vitamin C.',
     product_code: 'SYR-003',
     product_unit: 'pcs',
     variants: [{ name: '1 Pack (300g)', price: 12000, sellPrice: 11000, stock: 25, weight: 300 }]
   },
   {
-    category_name: 'Buah',
-    product_name: 'Apel Fuji',
-    product_description: 'Apel fuji manis dan renyah, import quality.',
+    category_name: 'Fruits',
+    product_name: 'Fuji Apple',
+    product_description: 'Sweet and crisp Fuji apples, import quality.',
     product_code: 'BUH-001',
     product_unit: 'kg',
     variants: [
@@ -47,91 +47,91 @@ const seedProducts = [
     ]
   },
   {
-    category_name: 'Buah',
-    product_name: 'Pisang Cavendish',
-    product_description: 'Pisang cavendish matang pohon, manis alami.',
+    category_name: 'Fruits',
+    product_name: 'Cavendish Banana',
+    product_description: 'Tree-ripened Cavendish bananas, naturally sweet.',
     product_code: 'BUH-002',
-    product_unit: 'sisir',
-    variants: [{ name: '1 Sisir', price: 15000, sellPrice: 13500, stock: 40, weight: 1200 }]
+    product_unit: 'bunch',
+    variants: [{ name: '1 Bunch', price: 15000, sellPrice: 13500, stock: 40, weight: 1200 }]
   },
   {
-    category_name: 'Buah',
-    product_name: 'Jeruk Sunkist',
-    product_description: 'Jeruk sunkist segar dan berair, kaya vitamin C.',
+    category_name: 'Fruits',
+    product_name: 'Sunkist Orange',
+    product_description: 'Fresh and juicy Sunkist oranges, rich in vitamin C.',
     product_code: 'BUH-003',
     product_unit: 'kg',
     variants: [{ name: '1kg', price: 28000, sellPrice: 25000, stock: 30, weight: 1000 }]
   },
   {
-    category_name: 'Daging & Ikan',
-    product_name: 'Daging Sapi Segar',
-    product_description: 'Daging sapi segar pilihan, potongan has dalam.',
+    category_name: 'Meat & Fish',
+    product_name: 'Fresh Beef',
+    product_description: 'Premium fresh beef, tenderloin cut.',
     product_code: 'DGI-001',
     product_unit: 'kg',
     variants: [{ name: '500g', price: 65000, sellPrice: 62000, stock: 20, weight: 500 }]
   },
   {
-    category_name: 'Daging & Ikan',
-    product_name: 'Ayam Fillet',
-    product_description: 'Fillet dada ayam tanpa tulang, siap olah.',
+    category_name: 'Meat & Fish',
+    product_name: 'Chicken Fillet',
+    product_description: 'Boneless chicken breast fillet, ready to cook.',
     product_code: 'DGI-002',
     product_unit: 'kg',
     variants: [{ name: '500g', price: 24000, sellPrice: 22000, stock: 35, weight: 500 }]
   },
   {
-    category_name: 'Daging & Ikan',
-    product_name: 'Ikan Salmon',
-    product_description: 'Salmon segar import, tinggi omega-3.',
+    category_name: 'Meat & Fish',
+    product_name: 'Salmon',
+    product_description: 'Imported fresh salmon, high in omega-3.',
     product_code: 'DGI-003',
     product_unit: 'pack',
     variants: [{ name: '300g', price: 75000, sellPrice: 69000, stock: 15, weight: 300 }]
   },
   {
-    category_name: 'Bumbu Dapur',
-    product_name: 'Bawang Merah',
-    product_description: 'Bawang merah lokal kualitas super.',
+    category_name: 'Cooking Spices',
+    product_name: 'Shallot',
+    product_description: 'Premium quality local shallots.',
     product_code: 'BMB-001',
     product_unit: 'kg',
     variants: [{ name: '250g', price: 9000, sellPrice: 8500, stock: 50, weight: 250 }]
   },
   {
-    category_name: 'Bumbu Dapur',
-    product_name: 'Bawang Putih',
-    product_description: 'Bawang putih kating, aroma kuat dan tahan lama.',
+    category_name: 'Cooking Spices',
+    product_name: 'Garlic',
+    product_description: 'Kating garlic, strong aroma and long shelf life.',
     product_code: 'BMB-002',
     product_unit: 'kg',
     variants: [{ name: '250g', price: 10000, sellPrice: 9500, stock: 50, weight: 250 }]
   },
   {
-    category_name: 'Bumbu Dapur',
-    product_name: 'Cabai Merah Keriting',
-    product_description: 'Cabai merah keriting segar, pedas mantap.',
+    category_name: 'Cooking Spices',
+    product_name: 'Curly Red Chili',
+    product_description: 'Fresh curly red chilies, packs a solid kick.',
     product_code: 'BMB-003',
     product_unit: 'kg',
     variants: [{ name: '250g', price: 12000, sellPrice: 11000, stock: 45, weight: 250 }]
   },
   {
-    category_name: 'Minuman',
-    product_name: 'Air Mineral',
-    product_description: 'Air mineral dalam kemasan botol 600ml.',
+    category_name: 'Beverages',
+    product_name: 'Mineral Water',
+    product_description: 'Bottled mineral water, 600ml.',
     product_code: 'MNM-001',
-    product_unit: 'botol',
+    product_unit: 'bottle',
     variants: [{ name: '600ml', price: 4000, sellPrice: 3500, stock: 100, weight: 600 }]
   },
   {
-    category_name: 'Minuman',
-    product_name: 'Susu UHT Full Cream',
-    product_description: 'Susu UHT full cream kemasan 1 liter.',
+    category_name: 'Beverages',
+    product_name: 'Full Cream UHT Milk',
+    product_description: 'Full cream UHT milk, 1 liter carton.',
     product_code: 'MNM-002',
     product_unit: 'liter',
     variants: [{ name: '1 Liter', price: 20000, sellPrice: 18500, stock: 60, weight: 1000 }]
   },
   {
-    category_name: 'Minuman',
-    product_name: 'Jus Jeruk Segar',
-    product_description: 'Jus jeruk segar tanpa pengawet, kemasan 500ml.',
+    category_name: 'Beverages',
+    product_name: 'Fresh Orange Juice',
+    product_description: 'Fresh orange juice with no preservatives, 500ml bottle.',
     product_code: 'MNM-003',
-    product_unit: 'botol',
+    product_unit: 'bottle',
     variants: [{ name: '500ml', price: 15000, sellPrice: 13500, stock: 40, weight: 500 }]
   }
 ]
