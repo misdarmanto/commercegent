@@ -14,6 +14,7 @@
     "seed": "npx sequelize-cli db:seed:all",
     "download-product-images": "node scripts/download-product-images.js",
     "reindex-products": "tsx scripts/reindexProducts.ts",
+    "reindex-faqs": "tsx scripts/reindexFaqs.ts",
     "lint:fix": "eslint --fix ./*.ts",
     "typecheck": "tsc --noEmit",
     "test": "jest",

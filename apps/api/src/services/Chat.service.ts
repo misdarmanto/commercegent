@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes'
 import { ChatSessionModel } from '../models/ChatSessionModel'
 import { ChatMessageModel, type ChatMessageRole } from '../models/ChatMessageModel'
 import { ProductEmbeddingService } from './ProductEmbedding.service'
+import { FaqEmbeddingService } from './FaqEmbedding.service'
 import { OpenAIService } from './external/OpenAI.service'
 import { chatTools, ChatToolsService } from './ChatTools.service'
 import { AppError } from '../utilities/appError'
@@ -13,7 +14,8 @@ const SYSTEM_PROMPT = `You are an AI customer service assistant for an online st
 Your job: help customers find & get recommendations for products, answer product questions, answer general store FAQs, and add products to the shopping cart when asked.
 Always reply in Bahasa Indonesia, in a friendly, concise, and clear tone.
 Use ONLY the product data given in the "PRODUCT CONTEXT" section below when mentioning product names, prices, or stock.
-If no relevant product is found in the context, honestly say the product was not found and never make up product names or prices.
+Use ONLY the entries given in the "FAQ CONTEXT" section below when answering general store questions (shipping, returns, payment methods, etc).
+If no relevant product or FAQ entry is found in the context, honestly say so and never make up product names, prices, or store policies.
 Use the add_to_cart tool when the customer clearly wants to buy/add a product to their cart. Use the view_cart tool when the customer asks about their cart contents.
 Payment, address entry, and shipping method selection are handled by the customer themselves on the checkout page once products are in the cart.`
 
@@ -58,6 +60,24 @@ export class ChatService {
       .join('\n')
   }
 
+  private static buildFaqContext(
+    matches: Awaited<ReturnType<typeof FaqEmbeddingService.searchFaqs>>
+  ): string {
+    if (matches.length === 0) {
+      return 'No relevant FAQ entries found.'
+    }
+
+    return matches
+      .map((match) => {
+        const metadata = (match.metadata ?? {}) as Record<string, unknown>
+        return [
+          `- Q: ${String(metadata.faqQuestion)}`,
+          `  A: ${String(metadata.faqAnswer)}`
+        ].join('\n')
+      })
+      .join('\n')
+  }
+
   static async sendMessage(userId: number, payload: ISendChatMessage) {
     try {
       const session = await this.resolveSession(userId, payload.chatSessionId)
@@ -68,8 +88,12 @@ export class ChatService {
         chatMessageContent: payload.message
       })
 
-      const matches = await ProductEmbeddingService.searchProducts(payload.message, 5)
+      const [matches, faqMatches] = await Promise.all([
+        ProductEmbeddingService.searchProducts(payload.message, 5),
+        FaqEmbeddingService.searchFaqs(payload.message, 3)
+      ])
       const productContext = this.buildProductContext(matches)
+      const faqContext = this.buildFaqContext(faqMatches)
 
       const history = await ChatMessageModel.findAll({
         where: { chatMessageSessionId: session.chatSessionId, deleted: false },
@@ -85,7 +109,7 @@ export class ChatService {
       const conversation: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
           role: 'system',
-          content: `${SYSTEM_PROMPT}\n\nPRODUCT CONTEXT:\n${productContext}`
+          content: `${SYSTEM_PROMPT}\n\nPRODUCT CONTEXT:\n${productContext}\n\nFAQ CONTEXT:\n${faqContext}`
         },
         ...orderedHistory
       ]
@@ -125,6 +149,7 @@ export class ChatService {
         chatMessageContent: replyContent,
         chatMessageMeta: {
           matchedProductIds: matches.map((match) => match.metadata?.productId),
+          matchedFaqIds: faqMatches.map((match) => match.metadata?.faqId),
           toolCalls: toolCallsExecuted
         }
       })
@@ -138,7 +163,8 @@ export class ChatService {
       return {
         chatSessionId: session.chatSessionId,
         reply: replyContent,
-        products: matches.map((match) => match.metadata)
+        products: matches.map((match) => match.metadata),
+        faqs: faqMatches.map((match) => match.metadata)
       }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError

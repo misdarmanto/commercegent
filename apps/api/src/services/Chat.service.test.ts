@@ -3,6 +3,7 @@ import { ChatService } from './Chat.service'
 import { ChatSessionModel } from '../models/ChatSessionModel'
 import { ChatMessageModel } from '../models/ChatMessageModel'
 import { ProductEmbeddingService } from './ProductEmbedding.service'
+import { FaqEmbeddingService } from './FaqEmbedding.service'
 import { OpenAIService } from './external/OpenAI.service'
 import { ChatToolsService } from './ChatTools.service'
 
@@ -14,6 +15,9 @@ jest.mock('../models/ChatMessageModel', () => ({
 }))
 jest.mock('./ProductEmbedding.service', () => ({
   ProductEmbeddingService: { searchProducts: jest.fn() }
+}))
+jest.mock('./FaqEmbedding.service', () => ({
+  FaqEmbeddingService: { searchFaqs: jest.fn() }
 }))
 jest.mock('./external/OpenAI.service', () => ({
   OpenAIService: { createChatCompletion: jest.fn() }
@@ -30,6 +34,7 @@ const mockedSessionFindAll = ChatSessionModel.findAll as jest.Mock
 const mockedMessageCreate = ChatMessageModel.create as jest.Mock
 const mockedMessageFindAll = ChatMessageModel.findAll as jest.Mock
 const mockedSearchProducts = ProductEmbeddingService.searchProducts as jest.Mock
+const mockedSearchFaqs = FaqEmbeddingService.searchFaqs as jest.Mock
 const mockedCreateChatCompletion = OpenAIService.createChatCompletion as jest.Mock
 const mockedToolExecute = ChatToolsService.execute as jest.Mock
 
@@ -43,6 +48,7 @@ const buildSession = (overrides: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   mockedSearchProducts.mockResolvedValue([])
+  mockedSearchFaqs.mockResolvedValue([])
   mockedMessageFindAll.mockResolvedValue([])
 })
 
@@ -59,7 +65,8 @@ describe('ChatService.sendMessage', () => {
     expect(result).toEqual({
       chatSessionId: 1,
       reply: 'Hi there!',
-      products: []
+      products: [],
+      faqs: []
     })
   })
 
@@ -118,6 +125,27 @@ describe('ChatService.sendMessage', () => {
         chatMessageRole: 'assistant',
         chatMessageContent: 'Here is Salmon',
         chatMessageMeta: expect.objectContaining({ matchedProductIds: [1] })
+      })
+    )
+  })
+
+  it('includes matched FAQ ids in the persisted assistant message and the response', async () => {
+    const session = buildSession()
+    mockedSessionCreate.mockResolvedValue(session)
+    mockedSearchFaqs.mockResolvedValue([
+      { metadata: { faqId: 4, faqQuestion: 'How long is shipping?', faqAnswer: '2-3 days' } }
+    ])
+    mockedCreateChatCompletion.mockResolvedValue({ content: 'Shipping takes 2-3 days', tool_calls: undefined })
+
+    const result = await ChatService.sendMessage(1, { message: 'How long is shipping?' } as any)
+
+    expect(result.faqs).toEqual([
+      { faqId: 4, faqQuestion: 'How long is shipping?', faqAnswer: '2-3 days' }
+    ])
+    expect(mockedMessageCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        chatMessageRole: 'assistant',
+        chatMessageMeta: expect.objectContaining({ matchedFaqIds: [4] })
       })
     )
   })
