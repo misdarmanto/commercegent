@@ -8,3 +8,7 @@ export const pineconeClient = new Pinecone({
 export const productPineconeIndex = pineconeClient
   .index(appConfigs.pinecone.index)
   .namespace(appConfigs.pinecone.namespace)
+
+export const faqPineconeIndex = pineconeClient
+  .index(appConfigs.pinecone.index)
+  .namespace(appConfigs.pinecone.faqNamespace)

@@ -15,7 +15,8 @@ export const appConfigs = {
   pinecone: {
     apiKey: process.env.PINECONE_API_KEY,
     index: process.env.PINECONE_INDEX ?? 'ecommerce-products',
-    namespace: process.env.PINECONE_NAMESPACE ?? 'products'
+    namespace: process.env.PINECONE_NAMESPACE ?? 'products',
+    faqNamespace: process.env.PINECONE_FAQ_NAMESPACE ?? 'faqs'
   },
   app: {
     appVersion: process.env.APP_VERSION ?? '',
