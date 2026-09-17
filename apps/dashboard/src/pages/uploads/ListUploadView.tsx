@@ -401,7 +401,7 @@ export default function ListUploadView() {
         <DialogTitle>{t("gallery.confirmDeleteTitle")}</DialogTitle>
         <DialogContent>
           <Typography>
-            {t("gallery.confirmDeleteMessage", { name: deleteTarget?.name })}
+            {t("gallery.confirmDeleteMessage", { name: deleteTarget?.fileName })}
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -417,7 +417,7 @@ export default function ListUploadView() {
           <Button
             color="error"
             variant="contained"
-            onClick={() => handleDelete(deleteTarget?.name ?? "")}
+            onClick={() => handleDelete(deleteTarget?.fileId ?? "")}
             disabled={actionLoading}
           >
             {actionLoading ? (

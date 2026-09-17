@@ -19,8 +19,17 @@ export function useUploads(
     queryKey: uploadKeys.list(params),
     queryFn: async () => {
       const query = buildTableQueryString(params);
-      const { data } = await fileUploadClient.get(`/${query}`);
-      return data.data as PaginatedResult<IUpload>;
+      const { data } = await fileUploadClient.get(`/api/v1/uploads${query}`);
+      const result = data.data as {
+        items: IUpload[];
+        totalItems: number;
+        totalPages: number;
+        currentPage: number;
+      };
+      return {
+        items: result.items,
+        totalItems: result.totalItems,
+      } as PaginatedResult<IUpload>;
     },
     enabled: options?.enabled ?? true,
   });
@@ -29,7 +38,7 @@ export function useUploads(
 export function useRemoveUpload() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (fileId: string) => fileUploadClient.delete(`/${fileId}`),
+    mutationFn: (fileId: string) => fileUploadClient.delete(`/api/v1/uploads/${fileId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: uploadKeys.lists() });
     },
@@ -47,10 +56,10 @@ export function useUploadImage() {
     mutationFn: async ({ file, onUploadProgress }: UploadImageVariables) => {
       const formData = new FormData();
       formData.append("file", file);
-      const { data } = await fileUploadClient.post("/", formData, {
+      const { data } = await fileUploadClient.post("/api/v1/uploads", formData, {
         onUploadProgress,
       });
-      return data as { url: string };
+      return data.data as { url: string; fileName: string; fileId: string };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: uploadKeys.lists() });
@@ -64,8 +73,8 @@ export function useUploadZip() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      const { data } = await fileUploadClient.post("/zip", formData);
-      return data as { fileName?: string };
+      const { data } = await fileUploadClient.post("/api/v1/uploads", formData);
+      return data.data as { url: string; fileName: string; fileId: string };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: uploadKeys.lists() });

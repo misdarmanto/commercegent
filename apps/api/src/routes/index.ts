@@ -36,6 +36,7 @@ routers.use('/api/v1/upload-products', RoutesRegistry.UploadProductRoute)
 routers.use('/api/v1/banners', RoutesRegistry.BannerRoute)
 routers.use('/api/v1/local-shippings', RoutesRegistry.LocalShippingRoute)
 routers.use('/api/v1/faqs', RoutesRegistry.FaqRoute)
+routers.use('/api/v1/uploads', RoutesRegistry.FileRoute)
 
 routers.use(
   '/api/v1/docs',

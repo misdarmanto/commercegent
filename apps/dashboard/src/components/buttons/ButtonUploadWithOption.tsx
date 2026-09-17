@@ -22,7 +22,6 @@ import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FolderIcon from '@mui/icons-material/Folder';
-import { CONFIGS } from '../../configs';
 import { useUploads, useUploadImage } from '../../services/uploads';
 
 interface ButtonUploadFileTypes {
@@ -226,19 +225,19 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                                 <>
                                     <Grid container spacing={2}>
                                         {tableData.map((file) => (
-                                            <Grid item xs={4} key={file.id}>
+                                            <Grid item xs={4} key={file.fileId}>
                                                 <Card sx={{ borderRadius: 2 }}>
                                                     <CardMedia
                                                         component="img"
-                                                        image={`${CONFIGS.uploadFileUrl}/${file.name}`}
-                                                        alt={file.name}
+                                                        image={file.url}
+                                                        alt={file.fileName}
                                                         sx={{
                                                             height: 120,
                                                             objectFit: 'cover',
                                                             cursor: 'pointer',
                                                         }}
                                                         onClick={() => {
-                                                            onUpload(file.name);
+                                                            onUpload(file.url);
                                                             setOpenModal(false);
                                                         }}
                                                     />
@@ -259,13 +258,13 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
                                                                 whiteSpace: 'nowrap',
                                                             }}
                                                         >
-                                                            {file.name}
+                                                            {file.fileName}
                                                         </Typography>
                                                         <Tooltip title={t('uploadButton.copyFileName')}>
                                                             <IconButton
                                                                 size="small"
                                                                 onClick={() =>
-                                                                    handleCopy(file.name)
+                                                                    handleCopy(file.url)
                                                                 }
                                                             >
                                                                 <ContentCopyIcon fontSize="small" />

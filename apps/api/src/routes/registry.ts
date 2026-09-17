@@ -24,6 +24,7 @@ import AppLogRoute from './AppLog.route'
 import BannerRoute from './Banner.route'
 import LocalShippingRoute from './LocalShipping.route'
 import FaqRoute from './Faq.route'
+import FileRoute from './File.route'
 
 const RoutesRegistry = {
   AddressRoute,
@@ -51,7 +52,8 @@ const RoutesRegistry = {
   UploadProductRoute,
   BannerRoute,
   LocalShippingRoute,
-  FaqRoute
+  FaqRoute,
+  FileRoute
 }
 
 export default RoutesRegistry
