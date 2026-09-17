@@ -22,6 +22,9 @@ jest.mock('../configs/database', () => ({
   sequelizeInit: { transaction: jest.fn(async (cb: any) => await cb({})) }
 }))
 jest.mock('../utilities/logger', () => ({ error: jest.fn(), info: jest.fn(), warn: jest.fn() }))
+jest.mock('../queues/productEmbeddingQueue', () => ({
+  addProductEmbeddingToQueue: jest.fn()
+}))
 
 const mockedFindAndCountAll = ProductModel.findAndCountAll as jest.Mock
 const mockedFindOne = ProductModel.findOne as jest.Mock

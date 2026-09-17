@@ -13,6 +13,7 @@
     "migrate:undo": "npx sequelize-cli db:migrate:undo",
     "seed": "npx sequelize-cli db:seed:all",
     "download-product-images": "node scripts/download-product-images.js",
+    "reindex-products": "tsx scripts/reindexProducts.ts",
     "lint:fix": "eslint --fix ./*.ts",
     "typecheck": "tsc --noEmit",
     "test": "jest",
@@ -25,6 +26,7 @@
   "author": "Misdar Manto",
   "license": "ISC",
   "dependencies": {
+    "@pinecone-database/pinecone": "^9.0.0",
     "@types/multer": "^1.4.7",
     "axios": "^0.21.1",
     "bullmq": "^1.91.1",
@@ -46,6 +48,7 @@
     "morgan": "^1.10.1",
     "multer": "^1.4.4",
     "mysql2": "^2.2.5",
+    "openai": "^7.15.0",
     "path": "^0.12.7",
     "sequelize": "^6.32.1",
     "sequelize-cli": "^6.6.1",

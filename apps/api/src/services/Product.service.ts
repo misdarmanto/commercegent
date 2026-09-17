@@ -23,6 +23,7 @@ import type {
 } from '../schemas/productSchema'
 import { ProductVariantModel } from '../models/ProductVariantModel'
 import type { ICreateProductVariant } from '../schemas/ProductVariantSchema'
+import { addProductEmbeddingToQueue } from '../queues/productEmbeddingQueue'
 
 export class ProductService {
   private static buildDuplicateProductWhere(payload: {
@@ -460,6 +461,8 @@ export class ProductService {
 
   static async createProduct(payload: ICreateProduct) {
     try {
+      let createdProductId: number | undefined
+
       await sequelizeInit.transaction(async (transaction) => {
         const existingProduct = await ProductModel.findOne({
           where: this.buildDuplicateProductWhere(payload),
@@ -508,7 +511,12 @@ export class ProductService {
         )
 
         await this.createProductVariants(product.productId, productVariants, transaction)
+        createdProductId = product.productId
       })
+
+      if (createdProductId != null) {
+        await addProductEmbeddingToQueue(createdProductId, 'sync')
+      }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       if (serviceError instanceof UniqueConstraintError) {
@@ -632,6 +640,8 @@ export class ProductService {
 
         await this.upsertProductVariants(product.productId, productVariants, transaction)
       })
+
+      await addProductEmbeddingToQueue(payload.productId, 'sync')
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] updateProduct failed: ${String(serviceError)}`)
@@ -664,6 +674,8 @@ export class ProductService {
           }
         }
       )
+
+      await addProductEmbeddingToQueue(payload.productId, 'remove')
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] removeProduct failed: ${String(serviceError)}`)

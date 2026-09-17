@@ -1,6 +1,7 @@
 import AddressRoute from './Address.route'
 import AdminRoute from './Admin.route'
 import CartRoute from './Cart.route'
+import ChatRoute from './Chat.route'
 import CategoryRoute from './Category.route'
 import HealthRoute from './Healt.route'
 import MyProfileRoute from './MyProfile.route'
@@ -28,6 +29,7 @@ const RoutesRegistry = {
   AdminRoute,
   AppLogRoute,
   CartRoute,
+  ChatRoute,
   CategoryRoute,
   HealthRoute,
   MyProfileRoute,
