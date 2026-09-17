@@ -1,40 +1,51 @@
 import { z } from "zod";
+import i18n from "../i18n";
 
 /** Satu baris varian di form (create + update) */
-const productVariantRowSchema = z.object({
-  productVariantId: z.number().optional(),
-  productVariantName: z.string().min(1, "Nama varian wajib diisi"),
-  productVariantImage: z.string().optional(),
-  productVariantPrice: z.coerce.number().min(0, "Harga >= 0"),
-  productVariantStock: z.coerce.number().min(0, "Stok >= 0"),
-  productVariantDiscount: z.coerce.number().min(0).max(100, "Diskon 0–100"),
-  productVariantWeight: z.coerce.number().min(0, "Berat >= 0").optional(),
-});
+const getProductVariantRowSchema = () =>
+  z.object({
+    productVariantId: z.number().optional(),
+    productVariantName: z.string().min(1, i18n.t("validation.product.variantNameRequired")),
+    productVariantImage: z.string().optional(),
+    productVariantPrice: z.coerce.number().min(0, i18n.t("validation.product.priceMin")),
+    productVariantStock: z.coerce.number().min(0, i18n.t("validation.product.stockMin")),
+    productVariantDiscount: z.coerce
+      .number()
+      .min(0)
+      .max(100, i18n.t("validation.product.discountRange")),
+    productVariantWeight: z.coerce
+      .number()
+      .min(0, i18n.t("validation.product.weightMin"))
+      .optional(),
+  });
 
-const productBaseSchema = z.object({
-  productName: z.string().min(3, "Nama produk minimal 3 karakter"),
-  productDescription: z.string().optional().default(""),
-  productCategoryId: z.coerce.number().refine((v) => v > 0, "Pilih kategori"),
-  productSubCategoryId: z.coerce
-    .number()
-    .refine((v) => v > 0, "Pilih subkategori"),
-  productCode: z.string().min(1, "Kode produk wajib diisi"),
-  productBarcode: z.string().min(1, "Barcode wajib diisi"),
-  productUnit: z.string().min(1, "Satuan wajib diisi"),
-  productIsVisible: z.boolean().optional().default(true),
-  productVariants: z
-    .array(productVariantRowSchema)
-    .min(1, "Minimal satu varian produk"),
-});
+const getProductBaseSchema = () =>
+  z.object({
+    productName: z.string().min(3, i18n.t("validation.product.nameMin")),
+    productDescription: z.string().optional().default(""),
+    productCategoryId: z.coerce
+      .number()
+      .refine((v) => v > 0, i18n.t("validation.product.categoryRequired")),
+    productSubCategoryId: z.coerce
+      .number()
+      .refine((v) => v > 0, i18n.t("validation.product.subCategoryRequired")),
+    productCode: z.string().min(1, i18n.t("validation.product.codeRequired")),
+    productBarcode: z.string().min(1, i18n.t("validation.product.barcodeRequired")),
+    productUnit: z.string().min(1, i18n.t("validation.product.unitRequired")),
+    productIsVisible: z.boolean().optional().default(true),
+    productVariants: z
+      .array(getProductVariantRowSchema())
+      .min(1, i18n.t("validation.product.variantsMin")),
+  });
 
 /** Create: setiap varian wajib lengkap (sesuai contoh API) */
-export const productFormCreateSchema = productBaseSchema.superRefine(
-  (data, ctx) => {
+export const getProductFormCreateSchema = () =>
+  getProductBaseSchema().superRefine((data, ctx) => {
     data.productVariants.forEach((v, i) => {
       if (!v.productVariantImage?.trim()) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Gambar varian wajib diisi",
+          message: i18n.t("validation.product.variantImageRequired"),
           path: ["productVariants", i, "productVariantImage"],
         });
       }
@@ -44,24 +55,23 @@ export const productFormCreateSchema = productBaseSchema.superRefine(
       ) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: "Berat wajib diisi",
+          message: i18n.t("validation.product.variantWeightRequired"),
           path: ["productVariants", i, "productVariantWeight"],
         });
       }
     });
-  },
-);
+  });
 
 /** Update: lebih longgar; varian existing boleh partial */
-export const productFormUpdateSchema = productBaseSchema.superRefine(
-  (data, ctx) => {
+export const getProductFormUpdateSchema = () =>
+  getProductBaseSchema().superRefine((data, ctx) => {
     data.productVariants.forEach((v, i) => {
       const isNew = v.productVariantId == null;
       if (isNew) {
         if (!v.productVariantImage?.trim()) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Gambar varian wajib untuk varian baru",
+            message: i18n.t("validation.product.variantImageRequiredNew"),
             path: ["productVariants", i, "productVariantImage"],
           });
         }
@@ -71,13 +81,12 @@ export const productFormUpdateSchema = productBaseSchema.superRefine(
         ) {
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
-            message: "Berat wajib untuk varian baru",
+            message: i18n.t("validation.product.variantWeightRequiredNew"),
             path: ["productVariants", i, "productVariantWeight"],
           });
         }
       }
     });
-  },
-);
+  });
 
-export type ProductFormValues = z.infer<typeof productBaseSchema>;
+export type ProductFormValues = z.infer<ReturnType<typeof getProductBaseSchema>>;

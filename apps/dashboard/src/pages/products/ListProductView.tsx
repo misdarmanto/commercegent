@@ -11,6 +11,7 @@ import {
 } from "@mui/x-data-grid";
 import { Add, MoreOutlined, UploadFile } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   useProducts,
   useRemoveProduct,
@@ -36,6 +37,7 @@ import { getImageUrl } from "../../utilities/getImageUrl";
 import { IListProduct } from "../../interfaces/Product";
 
 export default function ProductListView() {
+  const { t } = useTranslation();
   const navigation = useNavigate();
 
   const [modalDeleteData, setModalDeleteData] = useState<IListProduct>();
@@ -52,7 +54,7 @@ export default function ProductListView() {
   });
 
   const { data, isLoading } = useProducts({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });
@@ -72,7 +74,7 @@ export default function ProductListView() {
   };
 
   const handleUploadExcel = () => {
-    if (!uploadFile) return alert("Pilih file Excel terlebih dahulu!");
+    if (!uploadFile) return alert(t("common.pickExcelFileAlert"));
 
     uploadExcel.mutate(uploadFile, {
       onSuccess: () => {
@@ -86,21 +88,21 @@ export default function ProductListView() {
     {
       field: "productCode",
       flex: 1,
-      renderHeader: () => <strong>CODE</strong>,
+      renderHeader: () => <strong>{t("product.column.code")}</strong>,
     },
     {
       field: "productName",
       flex: 1,
       editable: true,
-      renderHeader: () => <strong>NAMA</strong>,
+      renderHeader: () => <strong>{t("product.column.name")}</strong>,
     },
     {
       field: "productIsVisible",
       flex: 1,
-      renderHeader: () => <strong>{"STATUS"}</strong>,
+      renderHeader: () => <strong>{t("product.column.status")}</strong>,
       editable: false,
       renderCell: (params) => {
-        const status = params.value ? "visible" : "hidden";
+        const status = params.value ? t("product.visible") : t("product.hidden");
         return (
           <Chip
             label={status}
@@ -114,7 +116,7 @@ export default function ProductListView() {
     {
       field: "productImage",
       flex: 1,
-      renderHeader: () => <strong>GAMBAR</strong>,
+      renderHeader: () => <strong>{t("product.column.image")}</strong>,
       renderCell: (params) => (
         <img
           src={getImageUrl(params.row?.variant?.productVariantImage)}
@@ -133,54 +135,53 @@ export default function ProductListView() {
     {
       field: "productVariantPrice",
       flex: 1,
-      renderHeader: () => <strong>HARGA</strong>,
+      renderHeader: () => <strong>{t("product.column.price")}</strong>,
       renderCell: (params) =>
         "Rp" + convertNumberToCurrency(params.row.variant?.productVariantPrice),
     },
     {
       field: "productVariantDiscount",
       flex: 1,
-      headerName: "DISKON (%)",
-      renderHeader: () => <strong>DISKON (%)</strong>,
+      renderHeader: () => <strong>{t("product.column.discount")}</strong>,
       renderCell: (params) => params.row.variant?.productVariantDiscount + "%",
     },
     {
       field: "productSellPrice",
       flex: 1,
-      renderHeader: () => <strong>HARGA JUAL</strong>,
+      renderHeader: () => <strong>{t("product.column.finalPrice")}</strong>,
       renderCell: (params) =>
         "Rp" +
         convertNumberToCurrency(params.row.variant?.productVariantSellPrice),
     },
     {
       field: "productStock",
-      renderHeader: () => <strong>STOK</strong>,
+      renderHeader: () => <strong>{t("product.column.stock")}</strong>,
       renderCell: (params) => params.row.variant?.productVariantStock,
     },
     {
       field: "productTotalSale",
-      renderHeader: () => <strong>TERJUAL</strong>,
+      renderHeader: () => <strong>{t("product.column.sold")}</strong>,
       renderCell: (params) => params.row.productTotalSale || 0,
     },
     {
       field: "actions",
       type: "actions",
-      renderHeader: () => <strong>AKSI</strong>,
+      renderHeader: () => <strong>{t("product.column.actions")}</strong>,
       flex: 2,
       getActions: ({ row }) => [
         <GridActionsCellItem
           icon={<EditIcon />}
-          label="Edit"
+          label={t("common.edit")}
           onClick={() => navigation("edit/" + row.productId)}
         />,
         <GridActionsCellItem
           icon={<DeleteIcon color="error" />}
-          label="Delete"
+          label={t("common.delete")}
           onClick={() => handleOpenModalDelete(row)}
         />,
         <GridActionsCellItem
           icon={<MoreOutlined color="info" />}
-          label="Detail"
+          label={t("common.detail")}
           onClick={() => navigation("detail/" + row.productId)}
         />,
       ],
@@ -198,7 +199,7 @@ export default function ProductListView() {
             startIcon={<Add />}
             variant="outlined"
           >
-            Tambah Produk
+            {t("product.addProduct")}
           </Button>
           <Button
             onClick={() => navigation("uploads/histories")}
@@ -206,18 +207,18 @@ export default function ProductListView() {
             variant="outlined"
             color="secondary"
           >
-            Upload
+            {t("common.upload")}
           </Button>
         </Stack>
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="search..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Search
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -229,7 +230,7 @@ export default function ProductListView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Product",
+            label: t("product.title"),
             link: "/products",
             icon: <IconMenus.products fontSize="small" />,
           },
@@ -242,7 +243,7 @@ export default function ProductListView() {
           getRowId={(row) => row.productId}
           columns={columns}
           autoHeight
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           paginationModel={paginationModel}
           onPaginationModelChange={setPaginationModel}
           pageSizeOptions={[10, 25, 50]}
@@ -259,7 +260,7 @@ export default function ProductListView() {
       <Modal
         openModal={openModalDelete}
         handleModalOnCancel={() => setOpenModalDelete(false)}
-        message={`Apakah anda yakin ingin menghapus ${modalDeleteData?.productName}?`}
+        message={t("common.confirmDeleteNamed", { name: modalDeleteData?.productName })}
         handleModal={() => {
           handleDeleteCategory(modalDeleteData?.productId!);
           setOpenModalDelete(false);
@@ -276,10 +277,10 @@ export default function ProductListView() {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Upload Produk via Excel</DialogTitle>
+        <DialogTitle>{t("product.uploadExcelTitle")}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Silakan pilih file Excel (.xlsx atau .xls)
+            {t("product.chooseExcelFile")}
           </Typography>
           <input
             type="file"
@@ -296,14 +297,14 @@ export default function ProductListView() {
               setUploadFile(null);
             }}
           >
-            Batal
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleUploadExcel}
             disabled={uploadExcel.isPending}
             variant="contained"
           >
-            {uploadExcel.isPending ? "Mengunggah..." : "Upload"}
+            {uploadExcel.isPending ? t("product.uploading") : t("common.upload")}
           </Button>
         </DialogActions>
       </Dialog>

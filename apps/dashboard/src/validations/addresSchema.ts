@@ -1,20 +1,22 @@
 import z from "zod";
+import i18n from "../i18n";
 
-export const AddressSchema = z.object({
-  addressUserName: z.string().min(1, "Nama wajib diisi"),
-  addressKontak: z.string().min(1, "Kontak wajib diisi"),
-  addressDetail: z.string().min(1, "Detail alamat wajib diisi"),
-  addressPostalCode: z.string().min(3, "Kode Pos tidak valid"),
-  addressProvinsiId: z.string().min(1, "Provinsi wajib diisi"),
-  addressProvinsiName: z.string().min(1, "Provinsi wajib diisi"),
-  addressKabupatenId: z.string().min(1, "Kabupaten wajib diisi"),
-  addressKabupatenName: z.string().min(1, "Kabupaten wajib diisi"),
-  addressKecamatanId: z.string().min(1, "Kecamatan wajib diisi"),
-  addressKecamatanName: z.string().min(1, "Kecamatan wajib diisi"),
-  addressDesaId: z.string().min(1, "Desa wajib diisi"),
-  addressDesaName: z.string().min(1, "Desa wajib diisi"),
-  addressLatitude: z.string().min(1, "Lokasi belum dipilih"),
-  addressLongitude: z.string().min(1, "Lokasi belum dipilih"),
-});
+export const getAddressSchema = () =>
+  z.object({
+    addressUserName: z.string().min(1, i18n.t("validation.address.nameRequired")),
+    addressKontak: z.string().min(1, i18n.t("validation.address.contactRequired")),
+    addressDetail: z.string().min(1, i18n.t("validation.address.detailRequired")),
+    addressPostalCode: z.string().min(3, i18n.t("validation.address.postalInvalid")),
+    addressProvinsiId: z.string().min(1, i18n.t("validation.address.provinceRequired")),
+    addressProvinsiName: z.string().min(1, i18n.t("validation.address.provinceRequired")),
+    addressKabupatenId: z.string().min(1, i18n.t("validation.address.regencyRequired")),
+    addressKabupatenName: z.string().min(1, i18n.t("validation.address.regencyRequired")),
+    addressKecamatanId: z.string().min(1, i18n.t("validation.address.districtRequired")),
+    addressKecamatanName: z.string().min(1, i18n.t("validation.address.districtRequired")),
+    addressDesaId: z.string().min(1, i18n.t("validation.address.villageRequired")),
+    addressDesaName: z.string().min(1, i18n.t("validation.address.villageRequired")),
+    addressLatitude: z.string().min(1, i18n.t("validation.address.locationRequired")),
+    addressLongitude: z.string().min(1, i18n.t("validation.address.locationRequired")),
+  });
 
-export type AddressFormType = z.infer<typeof AddressSchema>;
+export type AddressFormType = z.infer<ReturnType<typeof getAddressSchema>>;

@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useUploadImage, useRemoveUpload } from '../../services/uploads';
 import { Button, Typography, Box, LinearProgress } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
@@ -12,6 +13,7 @@ interface ButtonUploadFileTypes {
 }
 
 export default function ButtonUpdateFile({ onUpdate, filename }: ButtonUploadFileTypes) {
+    const { t } = useTranslation();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploadError, setUploadError] = useState<string | null>(null);
     const [uploadProgress, setUploadProgress] = useState<number | null>(null);
@@ -26,7 +28,7 @@ export default function ButtonUpdateFile({ onUpdate, filename }: ButtonUploadFil
         const MAX_FILE_SIZE = 2048; // 2MB
 
         if (!selectedFile) {
-            setUploadError('Silahkan pilih file terlebih dahulu');
+            setUploadError(t('uploadButton.selectFileFirst'));
             setUploadProgress(null);
             setUploadSuccess(false);
             setSelectedFileName(null);
@@ -34,7 +36,7 @@ export default function ButtonUpdateFile({ onUpdate, filename }: ButtonUploadFil
         }
 
         if (selectedFile.size / 1024 > MAX_FILE_SIZE) {
-            setUploadError('Ukuran file maksimum adalah 2MB');
+            setUploadError(t('uploadButton.maxFileSize'));
             setUploadProgress(null);
             setUploadSuccess(false);
             setSelectedFileName(selectedFile.name);
@@ -67,7 +69,7 @@ export default function ButtonUpdateFile({ onUpdate, filename }: ButtonUploadFil
             setUploadProgress(null);
             setUploadSuccess(false);
             const errorMessage =
-                'Tidak dapat mengunggah file' +
+                t('uploadButton.uploadFailed') +
                 (error.response?.data?.errorMessage ? `: ${error.response.data.errorMessage}` : '');
             setUploadError(errorMessage);
         } finally {
@@ -97,11 +99,11 @@ export default function ButtonUpdateFile({ onUpdate, filename }: ButtonUploadFil
                 startIcon={<CloudUploadIcon />}
                 disabled={uploadProgress !== null}
             >
-                Pilih File
+                {t('uploadButton.chooseFile')}
             </Button>
             {selectedFileName && !uploadSuccess && !uploadError && (
                 <Typography variant="caption" mt={1}>
-                    Memilih: {selectedFileName}
+                    {t('uploadButton.selecting', { name: selectedFileName })}
                 </Typography>
             )}
             {uploadProgress !== null && (
@@ -133,7 +135,7 @@ export default function ButtonUpdateFile({ onUpdate, filename }: ButtonUploadFil
                     }}
                 >
                     <CheckCircleOutlineIcon sx={{ mr: 0.5 }} />
-                    <Typography variant="caption">Berhasil di update!</Typography>
+                    <Typography variant="caption">{t('uploadButton.updateSuccess')}</Typography>
                 </Box>
             )}
         </Box>

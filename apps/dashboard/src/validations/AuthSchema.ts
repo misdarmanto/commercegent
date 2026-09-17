@@ -1,14 +1,16 @@
 import { z } from "zod";
+import i18n from "../i18n";
 
-export const loginAdminSchema = z.object({
-  adminWhatsAppNumber: z
-    .string()
-    .min(1, "Whatsapp wajib diisi")
-    .min(5, "Whatsapp minimal 5 karakter"),
-  adminPassword: z
-    .string()
-    .min(1, "Password wajib diisi")
-    .min(6, "Password minimal 6 karakter"),
-});
+export const getLoginAdminSchema = () =>
+  z.object({
+    adminWhatsAppNumber: z
+      .string()
+      .min(1, i18n.t("validation.auth.whatsappRequired"))
+      .min(5, i18n.t("validation.auth.whatsappMin")),
+    adminPassword: z
+      .string()
+      .min(1, i18n.t("validation.auth.passwordRequired"))
+      .min(6, i18n.t("validation.auth.passwordMin")),
+  });
 
-export type ILoginAdmin = z.infer<typeof loginAdminSchema>;
+export type ILoginAdmin = z.infer<ReturnType<typeof getLoginAdminSchema>>;

@@ -11,6 +11,7 @@ import {
 } from "@mui/x-data-grid";
 import { Add, MoreOutlined } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCategories, useRemoveCategory } from "../../services/categories";
 import { Button, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -22,6 +23,7 @@ import { ICategory } from "../../interfaces/Category";
 import CategoryFormView from "./CategoryFormView";
 
 export default function ListCategoryView() {
+  const { t } = useTranslation();
   const navigation = useNavigate();
   const [modalDeleteData, setModalDeleteData] = useState<ICategory>();
   const [openModalDelete, setOpenModalDelete] = useState<boolean>(false);
@@ -57,13 +59,13 @@ export default function ListCategoryView() {
   const columns: GridColDef[] = [
     {
       field: "categoryId",
-      renderHeader: () => <strong>{"ID"}</strong>,
+      renderHeader: () => <strong>{t("category.column.id")}</strong>,
       editable: true,
     },
     {
       field: "categoryIcon",
       flex: 1,
-      renderHeader: () => <strong>{"ICON"}</strong>,
+      renderHeader: () => <strong>{t("category.column.icon")}</strong>,
       renderCell: (params) => (
         <img
           src={getImageUrl(params.value)}
@@ -77,20 +79,20 @@ export default function ListCategoryView() {
     {
       field: "categoryName",
       flex: 1,
-      renderHeader: () => <strong>{"NAMA"}</strong>,
+      renderHeader: () => <strong>{t("category.column.name")}</strong>,
       editable: true,
     },
     {
       field: "actions",
       type: "actions",
-      renderHeader: () => <strong>{"Aksi"}</strong>,
+      renderHeader: () => <strong>{t("category.column.actions")}</strong>,
       flex: 1,
       cellClassName: "actions",
       getActions: ({ row }) => {
         return [
           <GridActionsCellItem
             icon={<EditIcon />}
-            label="Edit"
+            label={t("common.edit")}
             className="textPrimary"
             onClick={() => {
               setSelectedCategoryId(row.categoryId);
@@ -100,13 +102,13 @@ export default function ListCategoryView() {
           />,
           <GridActionsCellItem
             icon={<DeleteIcon color="error" />}
-            label="Delete"
+            label={t("common.delete")}
             onClick={() => handleOpenModalDelete(row)}
             color="inherit"
           />,
           <GridActionsCellItem
             icon={<MoreOutlined color="info" />}
-            label="Detail"
+            label={t("common.detail")}
             onClick={() =>
               navigation("/categories/subcategories/" + row.categoryId)
             }
@@ -131,18 +133,18 @@ export default function ListCategoryView() {
             startIcon={<Add />}
             variant="outlined"
           >
-            Tambah Kategori
+            {t("category.addCategory")}
           </Button>
         </Stack>
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="cari..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Cari
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -154,7 +156,7 @@ export default function ListCategoryView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Category",
+            label: t("category.title"),
             link: "/categories",
             icon: <IconMenus.category fontSize="small" />,
           },
@@ -176,7 +178,7 @@ export default function ListCategoryView() {
           getRowId={(row) => row.categoryId}
           columns={columns}
           editMode="row"
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           initialState={{
             pagination: { paginationModel: { pageSize: 10, page: 0 } },
           }}
@@ -196,10 +198,7 @@ export default function ListCategoryView() {
       <Modal
         openModal={openModalDelete}
         handleModalOnCancel={() => setOpenModalDelete(false)}
-        message={
-          "Apakah anda yakin ingin menghapus kategori " +
-          modalDeleteData?.categoryName
-        }
+        message={t("common.confirmDeleteNamed", { name: modalDeleteData?.categoryName })}
         handleModal={() => {
           handleDeleteCategory(modalDeleteData?.categoryId ?? "");
           setOpenModalDelete(!openModalDelete);

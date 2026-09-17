@@ -9,6 +9,7 @@ import {
 } from "@mui/x-data-grid";
 import { MoreOutlined } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useCustomers } from "../../services/customers";
 import { Button, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -17,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { convertTime } from "../../utilities/convertTime";
 
 export default function ListCustomersView() {
+  const { t } = useTranslation();
   const navigation = useNavigate();
   const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
@@ -25,7 +27,7 @@ export default function ListCustomersView() {
   });
 
   const { data, isLoading: loading } = useCustomers({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });
@@ -36,39 +38,39 @@ export default function ListCustomersView() {
     {
       field: "userName",
       flex: 1,
-      renderHeader: () => <strong>{"Nama"}</strong>,
+      renderHeader: () => <strong>{t("customer.column.name")}</strong>,
       editable: true,
     },
     {
       field: "userWhatsAppNumber",
       flex: 1,
-      renderHeader: () => <strong>{"WA"}</strong>,
+      renderHeader: () => <strong>{t("customer.column.whatsapp")}</strong>,
       editable: true,
     },
     {
       field: "userPartnerCode",
       flex: 1,
-      renderHeader: () => <strong>{"Kode Partner"}</strong>,
+      renderHeader: () => <strong>{t("customer.column.partnerCode")}</strong>,
       editable: true,
     },
     {
       field: "createdAt",
       flex: 1,
-      renderHeader: () => <strong>{"Registrasi Pada"}</strong>,
+      renderHeader: () => <strong>{t("customer.column.registeredAt")}</strong>,
       editable: true,
       valueFormatter: (item) => convertTime(item.value),
     },
     {
       field: "actions",
       type: "actions",
-      renderHeader: () => <strong>{"Aksi"}</strong>,
+      renderHeader: () => <strong>{t("customer.column.actions")}</strong>,
       flex: 1,
       cellClassName: "actions",
       getActions: ({ row }) => {
         return [
           <GridActionsCellItem
             icon={<MoreOutlined color="info" />}
-            label="Detail"
+            label={t("common.detail")}
             onClick={() => navigation("/customers/detail/" + row.userId)}
             color="inherit"
           />,
@@ -88,12 +90,12 @@ export default function ListCustomersView() {
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="search..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Search
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -105,7 +107,7 @@ export default function ListCustomersView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Customers",
+            label: t("customer.title"),
             link: "/customers",
             icon: <IconMenus.customers fontSize="small" />,
           },
@@ -127,7 +129,7 @@ export default function ListCustomersView() {
           getRowId={(row) => row.userId}
           columns={columns}
           editMode="row"
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           initialState={{
             pagination: { paginationModel: { pageSize: 2, page: 0 } },
           }}

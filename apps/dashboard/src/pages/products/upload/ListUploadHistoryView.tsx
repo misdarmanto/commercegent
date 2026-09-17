@@ -8,6 +8,7 @@ import {
 import { ArrowBack, UploadFile } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Stack,
@@ -28,6 +29,7 @@ import {
 import { convertTime } from "../../../utilities/convertTime";
 
 export default function ListUploadHistoryView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleBack = () => {
@@ -48,7 +50,7 @@ export default function ListUploadHistoryView() {
   });
 
   const { data, isLoading: loading } = useUploadHistories({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });
@@ -59,7 +61,7 @@ export default function ListUploadHistoryView() {
   const uploadLoading = uploadExcel.isPending;
 
   const handleUploadExcel = () => {
-    if (!uploadFile) return alert("Pilih file Excel terlebih dahulu!");
+    if (!uploadFile) return alert(t("common.pickExcelFileAlert"));
 
     uploadExcel.mutate(uploadFile, {
       onSuccess: () => {
@@ -73,13 +75,13 @@ export default function ListUploadHistoryView() {
     {
       field: "fileName",
       flex: 1,
-      renderHeader: () => <strong>NAMA</strong>,
+      renderHeader: () => <strong>{t("gallery.historyColumn.name")}</strong>,
     },
 
     {
       field: "status",
       flex: 1,
-      renderHeader: () => <strong>STATUS</strong>,
+      renderHeader: () => <strong>{t("gallery.historyColumn.status")}</strong>,
       editable: false,
       renderCell: (params) => {
         const status = params.value;
@@ -96,19 +98,19 @@ export default function ListUploadHistoryView() {
         switch (status) {
           case "PENDING":
             color = "warning";
-            label = "Menunggu";
+            label = t("gallery.historyStatus.pending");
             break;
           case "PROCESSING":
             color = "info";
-            label = "Diproses";
+            label = t("gallery.historyStatus.processing");
             break;
           case "SUCCESS":
             color = "success";
-            label = "Selesai";
+            label = t("gallery.historyStatus.success");
             break;
           case "FAILED":
             color = "error";
-            label = "Dibatalkan";
+            label = t("gallery.historyStatus.failed");
             break;
           default:
             color = "default";
@@ -123,14 +125,14 @@ export default function ListUploadHistoryView() {
     {
       field: "message",
       flex: 1,
-      renderHeader: () => <strong>MESSAGE</strong>,
+      renderHeader: () => <strong>{t("gallery.historyColumn.message")}</strong>,
       valueFormatter: (item) => item.value || "-",
       editable: true,
     },
     {
       field: "createdAt",
       flex: 1,
-      renderHeader: () => <strong>{"UPLOADED AT"}</strong>,
+      renderHeader: () => <strong>{t("gallery.historyColumn.uploadedAt")}</strong>,
       editable: true,
       valueFormatter: (item) => convertTime(item.value),
     },
@@ -147,25 +149,25 @@ export default function ListUploadHistoryView() {
             startIcon={<ArrowBack />}
             onClick={handleBack}
           >
-            Kembali
+            {t("gallery.back")}
           </Button>
           <Button
             onClick={() => setOpenUploadDialog(true)}
             startIcon={<UploadFile />}
             variant="outlined"
           >
-            Upload Produk
+            {t("gallery.uploadProduct")}
           </Button>
         </Stack>
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="search..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Search
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -177,7 +179,7 @@ export default function ListUploadHistoryView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Product",
+            label: t("product.title"),
             link: "/products",
             icon: <IconMenus.products fontSize="small" />,
           },
@@ -212,10 +214,10 @@ export default function ListUploadHistoryView() {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Upload Produk via Excel</DialogTitle>
+        <DialogTitle>{t("product.uploadExcelTitle")}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" sx={{ mb: 2 }}>
-            Silakan pilih file Excel (.xlsx atau .xls)
+            {t("product.chooseExcelFile")}
           </Typography>
           <input
             type="file"
@@ -232,14 +234,14 @@ export default function ListUploadHistoryView() {
               setUploadFile(null);
             }}
           >
-            Batal
+            {t("common.cancel")}
           </Button>
           <Button
             onClick={handleUploadExcel}
             disabled={uploadLoading}
             variant="contained"
           >
-            {uploadLoading ? "Mengunggah..." : "Upload"}
+            {uploadLoading ? t("product.uploading") : t("common.upload")}
           </Button>
         </DialogActions>
       </Dialog>

@@ -5,7 +5,15 @@
       "name": "dashboard-dev",
       "runtimeExecutable": "pnpm",
       "runtimeArgs": ["--filter", "@fresh-ecommerce/dashboard", "run", "dev"],
-      "port": 5173
+      "port": 5173,
+      "autoPort": true
+    },
+    {
+      "name": "storefront-dev",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": ["-c", "cd apps/storefront && node_modules/.bin/next dev"],
+      "port": 3000,
+      "autoPort": true
     }
   ]
 }

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 // import axios from 'axios';
+import { useTranslation } from 'react-i18next';
 import { CircularProgress, Tooltip, Button, Box, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 // import { CONFIGS } from '../../configs';
@@ -12,6 +13,7 @@ interface DeleteImageButtonProps {
 }
 
 const ButtonDeleteFile: React.FC<DeleteImageButtonProps> = ({ filename, onDelete }) => {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(false);
     const [uploadError, setUploadError] = useState<string | null>(null);
 
@@ -28,7 +30,7 @@ const ButtonDeleteFile: React.FC<DeleteImageButtonProps> = ({ filename, onDelete
             onDelete();
         } catch (error: any) {
             console.error('Error uploading file:', error);
-            const errorMessage = `Tidak dapat menghapus file ${error?.response?.data?.errorMessage}`;
+            const errorMessage = t('uploadButton.deleteFailed', { message: error?.response?.data?.errorMessage });
             setUploadError(errorMessage);
         } finally {
             setLoading(false);
@@ -36,10 +38,10 @@ const ButtonDeleteFile: React.FC<DeleteImageButtonProps> = ({ filename, onDelete
     };
 
     return (
-        <Tooltip title="Delete Image">
+        <Tooltip title={t('uploadButton.deleteImageTooltip')}>
             <>
                 <Button variant="outlined" onClick={handleDelete} startIcon={<DeleteIcon />}>
-                    {loading ? <CircularProgress size={24} /> : 'Delete'}
+                    {loading ? <CircularProgress size={24} /> : t('uploadButton.delete')}
                 </Button>
                 {uploadError && (
                     <Box

@@ -15,11 +15,13 @@ import ReactApexChart from "react-apexcharts";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useStatisticTotal, useVisitorStatistic } from "../../services/dashboard";
 import { useNavigate } from "react-router-dom";
 import ListOrderView from "../orders/ListOrderView";
 
 const DashboardView = () => {
+  const { t } = useTranslation();
   const navigation = useNavigate();
   const theme = useTheme();
 
@@ -35,28 +37,28 @@ const DashboardView = () => {
 
   const summaryCards = [
     {
-      title: "Penjualan",
+      title: t("dashboard.sales"),
       value: statisticTotal?.totalTransaction ?? 0,
       icon: <IconMenus.transaction fontSize="large" />,
       color: theme.palette.primary.main,
       route: "/transactions",
     },
     {
-      title: "Produk",
+      title: t("dashboard.product"),
       value: statisticTotal?.totalProduct ?? 0,
       icon: <IconMenus.products fontSize="large" />,
       color: theme.palette.success.main,
       route: "/products",
     },
     {
-      title: "Pesanan",
+      title: t("dashboard.order"),
       value: statisticTotal?.totalOrder ?? 0,
       icon: <IconMenus.orders fontSize="large" />,
       color: theme.palette.warning.main,
       route: "/orders",
     },
     {
-      title: "Pelanggan",
+      title: t("dashboard.customer"),
       value: statisticTotal?.totalCustomer ?? 0,
       icon: <IconMenus.customers fontSize="large" />,
       color: theme.palette.info.main,
@@ -69,7 +71,7 @@ const DashboardView = () => {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Beranda",
+            label: t("sidebar.home"),
             link: "/",
             icon: <IconMenus.dashboard fontSize="small" />,
           },
@@ -146,15 +148,15 @@ const DashboardView = () => {
               }}
             >
               <Typography variant="h6" fontWeight="bold" color="text.primary">
-                Trafik Pengunjung
+                {t("dashboard.visitorTraffic")}
               </Typography>
               <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap" }}>
                 <FormControl size="small" sx={{ minWidth: 100 }}>
-                  <InputLabel id="visitor-range-label">Range</InputLabel>
+                  <InputLabel id="visitor-range-label">{t("dashboard.range")}</InputLabel>
                   <Select
                     labelId="visitor-range-label"
                     value={visitorRange}
-                    label="Range"
+                    label={t("dashboard.range")}
                     onChange={(e) => setVisitorRange(e.target.value)}
                   >
                     <MenuItem value="1d">1d</MenuItem>
@@ -165,11 +167,11 @@ const DashboardView = () => {
                   </Select>
                 </FormControl>
                 <FormControl size="small" sx={{ minWidth: 100 }}>
-                  <InputLabel id="visitor-interval-label">Interval</InputLabel>
+                  <InputLabel id="visitor-interval-label">{t("dashboard.interval")}</InputLabel>
                   <Select
                     labelId="visitor-interval-label"
                     value={visitorInterval}
-                    label="Interval"
+                    label={t("dashboard.interval")}
                     onChange={(e) => setVisitorInterval(e.target.value)}
                   >
                     <MenuItem value="1h">1h</MenuItem>
@@ -205,7 +207,7 @@ const DashboardView = () => {
                   x: { show: true },
                 },
               }}
-              series={[{ name: "Trafik", data: visitorSeries }]}
+              series={[{ name: t("dashboard.visitorTraffic"), data: visitorSeries }]}
               type="area"
               height={350}
             />
@@ -227,12 +229,12 @@ const DashboardView = () => {
               color="text.primary"
               mb={2}
             >
-              Distribusi Gender
+              {t("dashboard.genderDistribution")}
             </Typography>
             <ReactApexChart
               options={{
                 chart: { type: "pie" },
-                labels: ["Pria", "Wanita"],
+                labels: [t("dashboard.male"), t("dashboard.female")],
                 legend: {
                   position: "bottom",
                   labels: { colors: theme.palette.text.secondary },

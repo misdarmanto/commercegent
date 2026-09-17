@@ -8,6 +8,7 @@ import AddressSettingsView from "./AddressSettingsView";
 import BannerSettingsView from "./BannerSettingsView";
 import GeneralSettingsView from "./GeneralSettingsView";
 import ShipmentSettingsView from "./ShipmentSettingsView";
+import { useTranslation } from "react-i18next";
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -45,6 +46,7 @@ function a11yProps(index: number) {
 const tabValues = ["general", "address", "banner", "shipment"];
 
 export default function SettingsView() {
+  const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [value, setValue] = useState(0);
 
@@ -68,10 +70,10 @@ export default function SettingsView() {
       <Box sx={{ width: "100%" }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs value={value} onChange={handleChange}>
-            <Tab label="General" {...a11yProps(0)} />
-            <Tab label="Address" {...a11yProps(1)} />
-            <Tab label="Banner" {...a11yProps(2)} />
-            <Tab label="Shipment" {...a11yProps(3)} />
+            <Tab label={t("settings.general")} {...a11yProps(0)} />
+            <Tab label={t("settings.address")} {...a11yProps(1)} />
+            <Tab label={t("settings.banner")} {...a11yProps(2)} />
+            <Tab label={t("settings.shipment")} {...a11yProps(3)} />
           </Tabs>
         </Box>
         <CustomTabPanel value={value} index={0}>

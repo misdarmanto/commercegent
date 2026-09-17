@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useCustomer, useUpdateCustomerCoin } from "../../services/customers";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -18,6 +19,7 @@ import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 
 export default function DetailCustomersView() {
+  const { t } = useTranslation();
   const { customerId } = useParams();
 
   const { data: detailCustomer } = useCustomer(customerId);
@@ -53,12 +55,12 @@ export default function DetailCustomersView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Customers",
+            label: t("customer.title"),
             link: "/customers",
             icon: <IconMenus.customers fontSize="small" />,
           },
           {
-            label: "Customers",
+            label: t("common.detail"),
             link: "/customers/detail/" + customerId,
           },
         ]}
@@ -70,13 +72,13 @@ export default function DetailCustomersView() {
               <Stack direction="row" spacing={2}>
                 <IconMenus.transaction fontSize="large" color={"inherit"} />
                 <Stack justifyContent="center">
-                  <Typography>Koin</Typography>
+                  <Typography>{t("customer.detail.coin")}</Typography>
                   <Typography fontSize="large" fontWeight="bold">
                     {detailCustomer?.userCoin}
                   </Typography>
                 </Stack>
               </Stack>
-              <Button onClick={handleOpenModalUpdateCoin}>Update Koin</Button>
+              <Button onClick={handleOpenModalUpdateCoin}>{t("customer.detail.updateCoin")}</Button>
             </Stack>
           </Card>
         </Grid>
@@ -92,7 +94,7 @@ export default function DetailCustomersView() {
           <tbody>
             <tr>
               <td>
-                <Typography fontWeight={"Bold"}>Nama</Typography>
+                <Typography fontWeight={"Bold"}>{t("customer.detail.name")}</Typography>
               </td>
               <td>:</td>
               <td>
@@ -102,7 +104,7 @@ export default function DetailCustomersView() {
 
             <tr>
               <td>
-                <Typography fontWeight={"Bold"}>WA</Typography>
+                <Typography fontWeight={"Bold"}>{t("customer.detail.whatsapp")}</Typography>
               </td>
               <td>:</td>
               <td>
@@ -112,7 +114,7 @@ export default function DetailCustomersView() {
 
             <tr>
               <td>
-                <Typography fontWeight={"Bold"}>Kode Partner</Typography>
+                <Typography fontWeight={"Bold"}>{t("customer.detail.partnerCode")}</Typography>
               </td>
               <td>:</td>
               <td>
@@ -122,7 +124,7 @@ export default function DetailCustomersView() {
 
             <tr>
               <td>
-                <Typography fontWeight={"Bold"}>Role</Typography>
+                <Typography fontWeight={"Bold"}>{t("customer.detail.role")}</Typography>
               </td>
               <td>:</td>
               <td>
@@ -131,7 +133,7 @@ export default function DetailCustomersView() {
             </tr>
             <tr>
               <td>
-                <Typography fontWeight={"Bold"}>Bergabung</Typography>
+                <Typography fontWeight={"Bold"}>{t("customer.detail.joined")}</Typography>
               </td>
               <td>:</td>
               <td>
@@ -149,11 +151,11 @@ export default function DetailCustomersView() {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">{"Update Coin?"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">{t("customer.detail.updateCoinTitle")}</DialogTitle>
         <DialogContent>
           <TextField
             id="outlined-number"
-            label="Coin"
+            label={t("customer.detail.coin")}
             type="number"
             value={coinSelected}
             inputProps={{ min: 0 }}
@@ -161,9 +163,9 @@ export default function DetailCustomersView() {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleOpenModalUpdateCoin}>Cancel</Button>
+          <Button onClick={handleOpenModalUpdateCoin}>{t("customer.detail.cancel")}</Button>
           <Button onClick={handleUpdateCoin} autoFocus>
-            Update
+            {t("customer.detail.update")}
           </Button>
         </DialogActions>
       </Dialog>

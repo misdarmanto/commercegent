@@ -11,6 +11,7 @@ import {
 } from "@mui/x-data-grid";
 import { Add } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useAdmins, useRemoveAdmin } from "../../services/admins";
 import { Button, Stack, TextField } from "@mui/material";
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
@@ -20,6 +21,7 @@ import ModalStyle from "../../components/modal";
 import { IUser } from "../../interfaces/User";
 
 export default function ListAdminView() {
+  const { t } = useTranslation();
   const navigation = useNavigate();
 
   const [modalDeleteData, setModalDeleteData] = useState<IUser>();
@@ -32,7 +34,7 @@ export default function ListAdminView() {
   });
 
   const { data, isLoading: loading } = useAdmins({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });
@@ -54,12 +56,12 @@ export default function ListAdminView() {
     {
       field: "userName",
       flex: 1,
-      renderHeader: () => <strong>{"NAMA"}</strong>,
+      renderHeader: () => <strong>{t("admin.column.name")}</strong>,
       editable: true,
     },
     {
       field: "userRole",
-      renderHeader: () => <strong>{"ROLE"}</strong>,
+      renderHeader: () => <strong>{t("admin.column.role")}</strong>,
       flex: 1,
       editable: true,
       type: "singleSelect",
@@ -67,28 +69,28 @@ export default function ListAdminView() {
     },
     {
       field: "createdAt",
-      renderHeader: () => <strong>{"CREATED AT"}</strong>,
+      renderHeader: () => <strong>{t("admin.column.createdAt")}</strong>,
       editable: true,
       flex: 1,
     },
     {
       field: "actions",
       type: "actions",
-      renderHeader: () => <strong>{"ACTION"}</strong>,
+      renderHeader: () => <strong>{t("admin.column.actions")}</strong>,
       flex: 1,
       cellClassName: "actions",
       getActions: ({ row }) => {
         return [
           <GridActionsCellItem
             icon={<EditIcon />}
-            label="Edit"
+            label={t("common.edit")}
             className="textPrimary"
             onClick={() => navigation("/admins/edit/" + row.userId)}
             color="inherit"
           />,
           <GridActionsCellItem
             icon={<DeleteIcon color="error" />}
-            label="Delete"
+            label={t("common.delete")}
             onClick={() => handleOpenModalDelete(row)}
             color="inherit"
           />,
@@ -114,18 +116,18 @@ export default function ListAdminView() {
             variant="outlined"
             onClick={() => navigation("/admins/create")}
           >
-            Tambah Admin
+            {t("admin.addAdmin")}
           </Button>
         </Stack>
         <Stack direction={"row"} spacing={1} alignItems={"center"}>
           <TextField
             size="small"
-            placeholder="search..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
           <Button variant="outlined" onClick={() => setSearch(searchInput)}>
-            Search
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </GridToolbarContainer>
@@ -137,7 +139,7 @@ export default function ListAdminView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Admin",
+            label: t("admin.title"),
             link: "/admins",
             icon: <IconMenus.admin fontSize="small" />,
           },
@@ -179,9 +181,7 @@ export default function ListAdminView() {
       <ModalStyle
         openModal={openModalDelete}
         handleModalOnCancel={() => setOpenModalDelete(false)}
-        message={
-          "Apakah anda yakin ingin menghapus " + modalDeleteData?.userName
-        }
+        message={t("common.confirmDeleteNamed", { name: modalDeleteData?.userName })}
         handleModal={() => {
           handleDeleteAdmin(modalDeleteData?.userId!);
           setOpenModalDelete(!openModalDelete);

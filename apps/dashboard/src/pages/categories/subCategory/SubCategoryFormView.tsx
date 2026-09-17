@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -21,7 +22,7 @@ import {
 import BreadCrumberStyle from "../../../components/breadcrumb/Index";
 import { IconMenus } from "../../../components/icon";
 import {
-  subCategorySchema,
+  getSubCategorySchema,
   SubCategoryFormValues,
 } from "../../../validations/categorySchema";
 import type { ICategoryCreate } from "../../../interfaces/Category";
@@ -39,6 +40,7 @@ export default function SubCategoryFormView({
   categoryReference: propsCategoryReference,
   onClose,
 }: SubCategoryFormViewProps = {}) {
+  const { t } = useTranslation();
   const {
     categoryId: paramsCategoryId,
     categoryReference: paramsCategoryReference,
@@ -63,7 +65,7 @@ export default function SubCategoryFormView({
     reset,
     formState: { errors },
   } = useForm<SubCategoryFormValues>({
-    resolver: zodResolver(subCategorySchema),
+    resolver: zodResolver(getSubCategorySchema()),
     defaultValues: {
       categoryName: "",
       categoryReference,
@@ -125,7 +127,7 @@ export default function SubCategoryFormView({
           render={({ field }) => (
             <TextField
               {...field}
-              label="Nama Kategori"
+              label={t("category.form.name")}
               fullWidth
               error={!!errors.categoryName}
               helperText={errors.categoryName?.message}
@@ -136,7 +138,7 @@ export default function SubCategoryFormView({
         <Stack direction="row" justifyContent="flex-end" spacing={1.5}>
           {isModalMode && (
             <Button variant="outlined" onClick={onClose} disabled={loading}>
-              Batal
+              {t("category.form.cancel")}
             </Button>
           )}
           <Button
@@ -147,11 +149,11 @@ export default function SubCategoryFormView({
           >
             {loading
               ? categoryId
-                ? "Updating..."
-                : "Submitting..."
+                ? t("category.form.updating")
+                : t("category.form.submitting")
               : categoryId
-                ? "Update"
-                : "Submit"}
+                ? t("category.form.update")
+                : t("category.form.submit")}
           </Button>
         </Stack>
       </Stack>
@@ -162,7 +164,7 @@ export default function SubCategoryFormView({
     return (
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
         <DialogTitle>
-          {categoryId ? "Edit Sub Kategori" : "Tambah Sub Kategori"}
+          {categoryId ? t("category.form.editSubTitle") : t("category.form.createSubTitle")}
         </DialogTitle>
         <DialogContent dividers>{formContent}</DialogContent>
       </Dialog>
@@ -174,12 +176,12 @@ export default function SubCategoryFormView({
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Category",
+            label: t("category.title"),
             link: `/categories`,
             icon: <IconMenus.category fontSize="small" />,
           },
           {
-            label: categoryId ? "Edit" : "Create",
+            label: categoryId ? t("common.edit") : t("common.add"),
             link: categoryId
               ? `/categories/subcategories/edit/${categoryId}/${categoryReference}`
               : "/categories/subcategories/create",
@@ -189,7 +191,7 @@ export default function SubCategoryFormView({
 
       <Card sx={{ mt: 5, p: { xs: 3, md: 5 } }}>
         <Typography variant="h4" mb={5} color="primary" fontWeight="bold">
-          {categoryId ? "Edit Sub Kategori" : "Tambah Sub Kategori"}
+          {categoryId ? t("category.form.editSubTitle") : t("category.form.createSubTitle")}
         </Typography>
         {formContent}
       </Card>

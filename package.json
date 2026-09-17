@@ -13,12 +13,16 @@
     "dev": "turbo run dev",
     "dev:api": "turbo run dev --filter=@fresh-ecommerce/api",
     "dev:dashboard": "turbo run dev --filter=@fresh-ecommerce/dashboard",
+    "dev:storefront": "turbo run dev --filter=@fresh-ecommerce/storefront",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
-    "prepare": "husky"
+    "prepare": "husky",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
@@ -33,6 +37,9 @@
     ],
     "apps/dashboard/**/*.{ts,tsx}": [
       "sh -c 'cd apps/dashboard && npx eslint --fix'"
+    ],
+    "apps/storefront/**/*.{ts,tsx}": [
+      "sh -c 'cd apps/storefront && npx eslint --fix'"
     ]
   }
 }

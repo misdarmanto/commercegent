@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Box, Button, LinearProgress, Typography } from '@mui/material';
+import { useTranslation } from 'react-i18next';
 import { useUploadZip } from '../../services/uploads';
 
 interface ButtonUploadZipProps {
@@ -7,6 +8,7 @@ interface ButtonUploadZipProps {
 }
 
 export default function ButtonUploadZip({ onUploaded }: ButtonUploadZipProps) {
+    const { t } = useTranslation();
     const uploadZip = useUploadZip();
 
     const [uploading, setUploading] = useState(false);
@@ -19,7 +21,7 @@ export default function ButtonUploadZip({ onUploaded }: ButtonUploadZipProps) {
         if (!file) return;
 
         if (!file.name.endsWith('.zip')) {
-            alert('Hanya file ZIP yang diperbolehkan.');
+            alert(t('uploadButton.zipOnlyAlert'));
             e.target.value = '';
             return;
         }
@@ -45,7 +47,7 @@ export default function ButtonUploadZip({ onUploaded }: ButtonUploadZipProps) {
             }, 500);
         } catch (error) {
             console.error(error);
-            alert('Gagal mengunggah file ZIP.');
+            alert(t('uploadButton.zipFailedAlert'));
             setUploading(false);
             setProgress(0);
         } finally {
@@ -56,7 +58,7 @@ export default function ButtonUploadZip({ onUploaded }: ButtonUploadZipProps) {
     return (
         <Box sx={{ textAlign: 'center' }}>
             <Button variant="outlined" component="label" disabled={uploading}>
-                Upload ZIP File
+                {t('uploadButton.uploadZipFile')}
                 <input type="file" hidden accept=".zip" onChange={handleFileChange} />
             </Button>
 
@@ -68,7 +70,7 @@ export default function ButtonUploadZip({ onUploaded }: ButtonUploadZipProps) {
                         sx={{ height: 8, borderRadius: 1 }}
                     />
                     <Typography variant="body2" sx={{ mt: 1 }}>
-                        Mengunggah ZIP ({progress}%)
+                        {t('uploadButton.uploadingZip', { progress })}
                     </Typography>
                     {fileName && (
                         <Typography variant="caption" color="text.secondary">

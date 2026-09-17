@@ -1,23 +1,26 @@
 import z from "zod";
+import i18n from "../i18n";
 
-export const WaBlasSchema = z.object({
-  waBlasToken: z.string().min(1, "Token wajib diisi"),
-  waBlasServer: z.string().url("Masukkan URL server yang valid"),
-});
+export const getWaBlasSchema = () =>
+  z.object({
+    waBlasToken: z.string().min(1, i18n.t("validation.settings.tokenRequired")),
+    waBlasServer: z.string().url(i18n.t("validation.settings.urlInvalid")),
+  });
 
-export type WaBlasFormType = z.infer<typeof WaBlasSchema>;
+export type WaBlasFormType = z.infer<ReturnType<typeof getWaBlasSchema>>;
 
-export const LocalShippingSchema = z.object({
-  localShippingCompanyName: z.string().min(1, "Nama wajib diisi"),
-  localShippingProvinceName: z.string().min(1, "Provinsi wajib diisi"),
-  localShippingProvinceId: z.string().min(1, "Provinsi wajib dipilih"),
-  localShippingKabupatenName: z.string().min(1, "Kabupaten/Kota wajib diisi"),
-  localShippingKabupatenId: z.string().min(1, "Kabupaten/Kota wajib dipilih"),
-  localShippingPricePerKg: z.coerce
-    .number()
-    .min(0, "Harga per kg harus 0 atau lebih"),
-  localShippingDuration: z.string().min(1, "Durasi wajib diisi"),
-});
+export const getLocalShippingSchema = () =>
+  z.object({
+    localShippingCompanyName: z.string().min(1, i18n.t("validation.settings.nameRequired")),
+    localShippingProvinceName: z.string().min(1, i18n.t("validation.settings.provinceRequired")),
+    localShippingProvinceId: z.string().min(1, i18n.t("validation.settings.provinceSelectRequired")),
+    localShippingKabupatenName: z.string().min(1, i18n.t("validation.settings.regencyRequired")),
+    localShippingKabupatenId: z.string().min(1, i18n.t("validation.settings.regencySelectRequired")),
+    localShippingPricePerKg: z.coerce
+      .number()
+      .min(0, i18n.t("validation.settings.pricePerKgMin")),
+    localShippingDuration: z.string().min(1, i18n.t("validation.settings.durationRequired")),
+  });
 
-export type LocalShippingFormInputType = z.input<typeof LocalShippingSchema>;
-export type LocalShippingFormType = z.infer<typeof LocalShippingSchema>;
+export type LocalShippingFormInputType = z.input<ReturnType<typeof getLocalShippingSchema>>;
+export type LocalShippingFormType = z.infer<ReturnType<typeof getLocalShippingSchema>>;

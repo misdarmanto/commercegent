@@ -9,6 +9,7 @@ import {
 } from "@mui/x-data-grid";
 import { Add, GridView, TableRows } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Stack,
@@ -40,6 +41,7 @@ import { useUploads, useRemoveUpload } from "../../services/uploads";
 import ButtonUploadZip from "../../components/buttons/ButtonUploadZip";
 
 export default function ListUploadView() {
+  const { t } = useTranslation();
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 12,
     page: 1,
@@ -66,7 +68,7 @@ export default function ListUploadView() {
 
   // === Fetch data ===
   const { data, isLoading: loading } = useUploads({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search: committedSearch },
   });
@@ -81,10 +83,10 @@ export default function ListUploadView() {
       await removeUpload.mutateAsync(fileId);
       setOpenDeleteDialog(false);
       setDeleteTarget(null);
-      setSnackbar({ open: true, message: "File berhasil dihapus." });
+      setSnackbar({ open: true, message: t("gallery.fileDeleted") });
     } catch (err) {
       console.error("delete error", err);
-      setSnackbar({ open: true, message: "Gagal menghapus file." });
+      setSnackbar({ open: true, message: t("gallery.fileDeleteFailed") });
     }
   };
   const actionLoading = removeUpload.isPending;
@@ -95,7 +97,7 @@ export default function ListUploadView() {
     setTimeout(() => {
       setOpenUploadDialog(false);
       setUploadedImage("");
-      setSnackbar({ open: true, message: "File berhasil diunggah." });
+      setSnackbar({ open: true, message: t("gallery.fileUploaded") });
     }, 500);
 
     console.log(uploadedImage);
@@ -104,7 +106,7 @@ export default function ListUploadView() {
   // === Copy file name ===
   const handleCopy = (fileName: string) => {
     navigator.clipboard.writeText(fileName);
-    setSnackbar({ open: true, message: `Nama file "${fileName}" disalin.` });
+    setSnackbar({ open: true, message: t("gallery.fileNameCopied", { name: fileName }) });
   };
 
   // === Toolbar ===
@@ -122,7 +124,7 @@ export default function ListUploadView() {
             startIcon={<Add />}
             onClick={() => setOpenUploadDialog(true)}
           >
-            Upload
+            {t("common.upload")}
           </Button>
 
           <ToggleButtonGroup
@@ -143,7 +145,7 @@ export default function ListUploadView() {
         <Stack direction="row" spacing={1} alignItems="center">
           <TextField
             size="small"
-            placeholder="Cari..."
+            placeholder={t("common.search")}
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
           />
@@ -154,7 +156,7 @@ export default function ListUploadView() {
               setCommittedSearch(searchValue);
             }}
           >
-            Cari
+            {t("common.searchButton")}
           </Button>
         </Stack>
       </Stack>
@@ -162,11 +164,11 @@ export default function ListUploadView() {
   }
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: "ID", width: 90 },
-    { field: "name", headerName: "NAMA", flex: 1, minWidth: 150 },
+    { field: "id", headerName: t("gallery.column.id"), width: 90 },
+    { field: "name", headerName: t("gallery.column.name"), flex: 1, minWidth: 150 },
     {
       field: "preview",
-      headerName: "IMAGE",
+      headerName: t("gallery.column.image"),
       width: 100,
       renderCell: (params) => (
         <img
@@ -183,20 +185,20 @@ export default function ListUploadView() {
     },
     {
       field: "createdAt",
-      headerName: "CREATED AT",
+      headerName: t("gallery.column.createdAt"),
       width: 160,
       valueFormatter: (params) => convertTime(params.value),
     },
     {
       field: "actions",
       type: "actions",
-      headerName: "ACTION",
+      headerName: t("gallery.column.actions"),
       width: 120,
       getActions: ({ row }) => [
         <GridActionsCellItem
           key="delete"
           icon={<DeleteIcon color="error" />}
-          label="Delete"
+          label={t("common.delete")}
           onClick={() => {
             setDeleteTarget(row as IUpload);
             setOpenDeleteDialog(true);
@@ -211,7 +213,7 @@ export default function ListUploadView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Uploads",
+            label: t("gallery.title"),
             link: "/uploads",
             icon: <IconMenus.upload fontSize="small" />,
           },
@@ -271,7 +273,7 @@ export default function ListUploadView() {
                           </Tooltip>
 
                           <Stack direction="row" spacing={0.5}>
-                            <Tooltip title="Salin nama file">
+                            <Tooltip title={t("gallery.copyFileName")}>
                               <IconButton
                                 size="small"
                                 color="primary"
@@ -281,7 +283,7 @@ export default function ListUploadView() {
                               </IconButton>
                             </Tooltip>
 
-                            <Tooltip title="Hapus file">
+                            <Tooltip title={t("gallery.deleteFile")}>
                               <IconButton
                                 size="small"
                                 color="error"
@@ -325,7 +327,7 @@ export default function ListUploadView() {
               columns={columns}
               loading={loading}
               sx={{
-                backgroundColor: "background.default",
+                backgroundColor: "background.paper",
                 borderRadius: 2,
                 p: 2,
               }}
@@ -350,11 +352,10 @@ export default function ListUploadView() {
         fullWidth
         maxWidth="sm"
       >
-        <DialogTitle>Upload File</DialogTitle>
+        <DialogTitle>{t("gallery.uploadDialogTitle")}</DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Unggah gambar (600×600 px, maks 2MB) atau file ZIP berisi banyak
-            gambar.
+            {t("gallery.uploadDialogHint")}
           </Typography>
 
           {/* Upload gambar biasa */}
@@ -368,7 +369,7 @@ export default function ListUploadView() {
               onUploaded={(uploadedName) => {
                 setSnackbar({
                   open: true,
-                  message: `ZIP berhasil diunggah: ${uploadedName}`,
+                  message: t("gallery.zipUploaded", { name: uploadedName }),
                 });
                 setOpenUploadDialog(false);
               }}
@@ -377,12 +378,12 @@ export default function ListUploadView() {
         </DialogContent>
 
         <DialogActions>
-          <Button onClick={() => setOpenUploadDialog(false)}>Batal</Button>
+          <Button onClick={() => setOpenUploadDialog(false)}>{t("gallery.cancel")}</Button>
           <Button
             variant="contained"
             onClick={() => setOpenUploadDialog(false)}
           >
-            Selesai
+            {t("gallery.done")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -397,10 +398,10 @@ export default function ListUploadView() {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>Konfirmasi Hapus</DialogTitle>
+        <DialogTitle>{t("gallery.confirmDeleteTitle")}</DialogTitle>
         <DialogContent>
           <Typography>
-            Apakah anda yakin ingin menghapus <b>{deleteTarget?.name}</b>?
+            {t("gallery.confirmDeleteMessage", { name: deleteTarget?.name })}
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -411,7 +412,7 @@ export default function ListUploadView() {
             }}
             disabled={actionLoading}
           >
-            Batal
+            {t("gallery.cancel")}
           </Button>
           <Button
             color="error"
@@ -422,7 +423,7 @@ export default function ListUploadView() {
             {actionLoading ? (
               <CircularProgress size={18} color="inherit" />
             ) : (
-              "Hapus"
+              t("gallery.delete")
             )}
           </Button>
         </DialogActions>

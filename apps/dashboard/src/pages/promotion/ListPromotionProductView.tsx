@@ -8,6 +8,7 @@ import {
 } from "@mui/x-data-grid";
 import { Add } from "@mui/icons-material";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   usePromotions,
   useHighlightCandidates,
@@ -30,6 +31,7 @@ import { getImageUrl } from "../../utilities/getImageUrl";
 import HighlightOffIcon from "@mui/icons-material/HighlightOff";
 
 export default function ListProductPromotionView() {
+  const { t } = useTranslation();
   /** ================== STATE ================== */
   const [search, setSearch] = useState("");
   const [paginationModel, setPaginationModel] = useState({
@@ -47,7 +49,7 @@ export default function ListProductPromotionView() {
 
   /** ================== API ================== */
   const { data, isLoading: loading } = usePromotions({
-    page: paginationModel.page,
+    page: paginationModel.page + 1,
     size: paginationModel.pageSize,
     filters: { search },
   });
@@ -74,7 +76,7 @@ export default function ListProductPromotionView() {
 
   const handleSaveHighlight = () => {
     if (selectedProductIds.length === 0) {
-      alert("Pilih minimal 1 produk");
+      alert(t("promotion.selectMinOneAlert"));
       return;
     }
 
@@ -97,21 +99,18 @@ export default function ListProductPromotionView() {
     {
       field: "productName",
       flex: 1,
-      headerName: "NAMA",
-      renderHeader: () => <strong>NAMA</strong>,
+      renderHeader: () => <strong>{t("promotion.column.name")}</strong>,
       renderCell: (params) => params.row.productName,
     },
     {
       field: "productCode",
       flex: 1,
-      headerName: "BARCODE",
-      renderHeader: () => <strong>BARCODE</strong>,
+      renderHeader: () => <strong>{t("promotion.column.barcode")}</strong>,
       renderCell: (params) => params.row.productCode,
     },
     {
       field: "productImage",
-      headerName: "GAMBAR",
-      renderHeader: () => <strong>GAMBAR</strong>,
+      renderHeader: () => <strong>{t("promotion.column.image")}</strong>,
       renderCell: (params) => (
         <img
           src={getImageUrl(params.row?.variant?.productVariantImage)}
@@ -122,8 +121,7 @@ export default function ListProductPromotionView() {
     {
       field: "productSellPrice",
       flex: 1,
-      headerName: "HARGA",
-      renderHeader: () => <strong>HARGA</strong>,
+      renderHeader: () => <strong>{t("promotion.column.price")}</strong>,
       renderCell: (params) =>
         "Rp" +
         convertNumberToCurrency(params.row.variant?.productVariantSellPrice),
@@ -131,34 +129,31 @@ export default function ListProductPromotionView() {
     {
       field: "productDiscount",
       flex: 1,
-      headerName: "DISKON (%)",
-      renderHeader: () => <strong>DISKON (%)</strong>,
+      renderHeader: () => <strong>{t("promotion.column.discount")}</strong>,
       renderCell: (params) => params.row.variant?.productVariantDiscount + "%",
     },
 
     {
       field: "productStock",
       flex: 1,
-      headerName: "STOK",
-      renderHeader: () => <strong>STOK</strong>,
+      renderHeader: () => <strong>{t("promotion.column.stock")}</strong>,
       renderCell: (params) => params.row.variant?.productVariantStock,
     },
     {
       field: "productTotalSale",
       flex: 1,
-      headerName: "TERJUAL",
-      renderHeader: () => <strong>TERJUAL</strong>,
+      renderHeader: () => <strong>{t("promotion.column.sold")}</strong>,
       renderCell: (params) => params.row.productTotalSale || 0,
     },
     {
       field: "actions",
       type: "actions",
-      renderHeader: () => <strong>AKSI</strong>,
+      renderHeader: () => <strong>{t("promotion.column.actions")}</strong>,
       flex: 1,
       getActions: ({ row }) => [
         <GridActionsCellItem
           icon={<HighlightOffIcon color="warning" />}
-          label="Remove Promotion"
+          label={t("promotion.removePromotion")}
           onClick={() => handleRemovePromotion(row.productId)}
           showInMenu
         />,
@@ -170,7 +165,7 @@ export default function ListProductPromotionView() {
     {
       field: "select",
       width: 70,
-      renderHeader: () => <strong>PILIH</strong>,
+      renderHeader: () => <strong>{t("promotion.select")}</strong>,
       renderCell: (params) => (
         <input
           type="checkbox"
@@ -189,7 +184,7 @@ export default function ListProductPromotionView() {
     },
     {
       field: "productImage",
-      renderHeader: () => <strong>GAMBAR</strong>,
+      renderHeader: () => <strong>{t("promotion.column.image")}</strong>,
       renderCell: (params) => (
         <img
           src={getImageUrl(params.row?.variant?.productVariantImage)}
@@ -200,22 +195,19 @@ export default function ListProductPromotionView() {
     {
       field: "productName",
       flex: 1,
-      headerName: "Nama Produk",
-      renderHeader: () => <strong>NAMA</strong>,
+      renderHeader: () => <strong>{t("promotion.column.name")}</strong>,
       renderCell: (params) => params.row.productName,
     },
     {
       field: "productCode",
       flex: 1,
-      headerName: "CODE",
-      renderHeader: () => <strong>CODE</strong>,
+      renderHeader: () => <strong>{t("promotion.column.code")}</strong>,
       renderCell: (params) => params.row.productCode,
     },
     {
       field: "productSellPrice",
       flex: 1,
-      headerName: "Harga",
-      renderHeader: () => <strong>HARGA</strong>,
+      renderHeader: () => <strong>{t("promotion.column.price")}</strong>,
       renderCell: (params) =>
         "Rp" +
         convertNumberToCurrency(params.row.variant?.productVariantSellPrice),
@@ -234,17 +226,17 @@ export default function ListProductPromotionView() {
             setOpenHighlightModal(true);
           }}
         >
-          Tambah Produk
+          {t("promotion.addProduct")}
         </Button>
 
         <Stack direction="row" spacing={1}>
           <TextField
             size="small"
-            placeholder="search..."
+            placeholder={t("common.search")}
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
-          <Button onClick={() => setSearch(searchInput)}>Search</Button>
+          <Button onClick={() => setSearch(searchInput)}>{t("common.searchButton")}</Button>
         </Stack>
       </GridToolbarContainer>
     );
@@ -255,7 +247,7 @@ export default function ListProductPromotionView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Promotion",
+            label: t("promotion.title"),
             link: "/promotions",
             icon: <IconMenus.promotion fontSize="small" />,
           },
@@ -267,7 +259,7 @@ export default function ListProductPromotionView() {
           rows={tableData}
           getRowId={(row) => row.productId}
           columns={columns}
-          sx={{ backgroundColor: "background.default", borderRadius: 2, p: 2 }}
+          sx={{ backgroundColor: "background.paper", borderRadius: 2, p: 2 }}
           autoHeight
           loading={loading}
           rowCount={rowCount}
@@ -280,7 +272,7 @@ export default function ListProductPromotionView() {
 
       {/* HIGHLIGHT MODAL */}
       <Dialog open={openHighlightModal} maxWidth="md" fullWidth>
-        <DialogTitle>Pilih Produk Highlight</DialogTitle>
+        <DialogTitle>{t("promotion.selectHighlightTitle")}</DialogTitle>
         <DialogContent>
           <Box sx={{ width: "100%", minHeight: 420 }}>
             <DataGrid
@@ -298,9 +290,9 @@ export default function ListProductPromotionView() {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenHighlightModal(false)}>Batal</Button>
+          <Button onClick={() => setOpenHighlightModal(false)}>{t("common.cancel")}</Button>
           <Button variant="contained" onClick={handleSaveHighlight}>
-            Simpan
+            {t("common.save")}
           </Button>
         </DialogActions>
       </Dialog>

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Button,
   Card,
@@ -22,9 +23,10 @@ import {
   useCreateAdmin,
   useUpdateAdmin,
 } from "../../services/admins";
-import { AdminForm, AdminSchema } from "../../validations/adminSchema";
+import { AdminForm, getAdminSchema } from "../../validations/adminSchema";
 
 export default function FormAdminView() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { id } = useParams();
 
@@ -39,7 +41,7 @@ export default function FormAdminView() {
     formState: { errors, isSubmitting },
     reset,
   } = useForm<AdminForm>({
-    resolver: zodResolver(AdminSchema),
+    resolver: zodResolver(getAdminSchema()),
     defaultValues: {
       userRole: "",
     },
@@ -73,12 +75,12 @@ export default function FormAdminView() {
       <BreadCrumberStyle
         navigation={[
           {
-            label: "Admin",
+            label: t("admin.title"),
             link: "/admins",
             icon: <IconMenus.admin fontSize="small" />,
           },
           {
-            label: id ? "Update" : "Create",
+            label: id ? t("admin.form.update") : t("common.add"),
             link: id ? `/admins/update/${id}` : "/admins/create",
           },
         ]}
@@ -98,7 +100,7 @@ export default function FormAdminView() {
           fontWeight="bold"
           textAlign="center"
         >
-          {id ? "Edit Admin" : "Tambah Admin"}
+          {id ? t("admin.form.editTitle") : t("admin.form.createTitle")}
         </Typography>
 
         <Box
@@ -113,7 +115,7 @@ export default function FormAdminView() {
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Nama"
+                label={t("admin.form.name")}
                 fullWidth
                 {...register("userName")}
                 error={!!errors.userName}
@@ -123,7 +125,7 @@ export default function FormAdminView() {
 
             <Grid item xs={12} sm={6}>
               <TextField
-                label="Whatsapp"
+                label={t("admin.form.whatsapp")}
                 fullWidth
                 {...register("userWhatsAppNumber")}
                 error={!!errors.userWhatsAppNumber}
@@ -134,7 +136,7 @@ export default function FormAdminView() {
             {!id && (
               <Grid item xs={12} sm={6}>
                 <TextField
-                  label="Password"
+                  label={t("admin.form.password")}
                   type="password"
                   fullWidth
                   autoComplete="new-password"
@@ -150,13 +152,13 @@ export default function FormAdminView() {
 
             <Grid item xs={12} sm={6}>
               <FormControl fullWidth error={!!errors.userRole}>
-                <InputLabel id="role-label">Pilih Role</InputLabel>
+                <InputLabel id="role-label">{t("admin.form.selectRole")}</InputLabel>
 
                 <Controller
                   name="userRole"
                   control={control}
                   render={({ field }) => (
-                    <Select {...field} labelId="role-label" label="Pilih Role">
+                    <Select {...field} labelId="role-label" label={t("admin.form.selectRole")}>
                       <MenuItem value="admin">Admin</MenuItem>
                       <MenuItem value="superAdmin">Super Admin</MenuItem>
                     </Select>
@@ -182,7 +184,7 @@ export default function FormAdminView() {
               color="secondary"
               onClick={() => navigate("/admins")}
             >
-              Batal
+              {t("admin.form.cancel")}
             </Button>
             <Button
               variant="contained"
@@ -195,7 +197,7 @@ export default function FormAdminView() {
                 borderRadius: 3,
               }}
             >
-              {id ? "Update" : "Submit"}
+              {id ? t("admin.form.update") : t("admin.form.submit")}
             </Button>
           </Stack>
         </Box>
