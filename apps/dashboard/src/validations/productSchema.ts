@@ -26,11 +26,12 @@ const getProductBaseSchema = () =>
     productCategoryId: z.coerce
       .number()
       .refine((v) => v > 0, i18n.t("validation.product.categoryRequired")),
-    productSubCategoryId: z.coerce
-      .number()
-      .refine((v) => v > 0, i18n.t("validation.product.subCategoryRequired")),
+    // Optional: not every category has subcategories, and existing products
+    // may not have one assigned (productSubCategoryId can be null in the DB).
+    productSubCategoryId: z.coerce.number().optional().default(0),
     productCode: z.string().min(1, i18n.t("validation.product.codeRequired")),
-    productBarcode: z.string().min(1, i18n.t("validation.product.barcodeRequired")),
+    // Optional: existing products may have no barcode assigned (null in the DB).
+    productBarcode: z.string().optional().default(""),
     productUnit: z.string().min(1, i18n.t("validation.product.unitRequired")),
     productIsVisible: z.boolean().optional().default(true),
     productVariants: z
