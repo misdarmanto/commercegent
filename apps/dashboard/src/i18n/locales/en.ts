@@ -1,11 +1,11 @@
 export const en = {
   translation: {
     app: {
-      name: "FRESH",
+      name: "Commercegent",
       tagline: "Manage your store with ease.",
       description:
-        "One dashboard for products, orders, customers, and all of your FRESH business operations.",
-      copyright: "© {{year}} FRESH Ecommerce",
+        "One dashboard for products, orders, customers, and all of your Commercegent business operations.",
+      copyright: "© {{year}} Commercegent",
     },
     sidebar: {
       home: "Home",

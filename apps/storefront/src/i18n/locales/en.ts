@@ -17,7 +17,7 @@ export const en = {
       next: "Next",
     },
     home: {
-      title: "Fresh Picks For You",
+      title: "Commercegent Picks For You",
       searchPlaceholder: "Search products...",
       allCategories: "All",
       noProducts: "No products found.",
