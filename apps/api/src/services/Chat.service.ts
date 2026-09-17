@@ -1,20 +1,24 @@
+import type OpenAI from 'openai'
 import { StatusCodes } from 'http-status-codes'
 import { ChatSessionModel } from '../models/ChatSessionModel'
 import { ChatMessageModel, type ChatMessageRole } from '../models/ChatMessageModel'
 import { ProductEmbeddingService } from './ProductEmbedding.service'
 import { OpenAIService } from './external/OpenAI.service'
+import { chatTools, ChatToolsService } from './ChatTools.service'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
 import type { ISendChatMessage } from '../schemas/chatSchema'
 
 const SYSTEM_PROMPT = `Kamu adalah asisten customer service AI untuk sebuah toko online.
-Tugasmu: membantu pelanggan mencari & merekomendasikan produk, menjawab pertanyaan seputar produk, dan menjawab FAQ umum toko.
+Tugasmu: membantu pelanggan mencari & merekomendasikan produk, menjawab pertanyaan seputar produk, menjawab FAQ umum toko, dan menambahkan produk ke keranjang belanja saat diminta.
 Jawablah selalu dalam Bahasa Indonesia, ramah, singkat, dan jelas.
 Gunakan HANYA data produk yang diberikan pada bagian "KONTEKS PRODUK" di bawah untuk menyebutkan nama produk, harga, atau stok.
 Jika tidak ada produk yang relevan pada konteks, katakan dengan jujur bahwa produk tidak ditemukan dan jangan mengarang nama/harga produk.
-Saat ini fitur checkout langsung dari chat belum tersedia; arahkan pelanggan untuk menambahkan produk ke keranjang secara manual jika mereka ingin membeli.`
+Gunakan tool add_to_cart saat pelanggan jelas ingin membeli/menambahkan sebuah produk ke keranjang. Gunakan tool view_cart saat pelanggan bertanya isi keranjangnya.
+Proses pembayaran, pengisian alamat, dan pemilihan ongkos kirim dilakukan pelanggan sendiri di halaman checkout setelah produk ada di keranjang.`
 
 const HISTORY_LIMIT = 10
+const MAX_TOOL_ITERATIONS = 3
 
 export class ChatService {
   private static async resolveSession(userId: number, chatSessionId?: number) {
@@ -78,22 +82,50 @@ export class ChatService {
         content: item.chatMessageContent
       }))
 
-      const assistantMessage = await OpenAIService.createChatCompletion([
+      const conversation: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
           role: 'system',
           content: `${SYSTEM_PROMPT}\n\nKONTEKS PRODUK:\n${productContext}`
         },
         ...orderedHistory
-      ])
+      ]
 
-      const replyContent = assistantMessage.content ?? 'Maaf, terjadi kesalahan.'
+      const toolCallsExecuted: Array<{ name: string; result: string }> = []
+      let finalMessage: OpenAI.Chat.Completions.ChatCompletionMessage | undefined
+
+      for (let iteration = 0; iteration < MAX_TOOL_ITERATIONS; iteration++) {
+        const assistantMessage = await OpenAIService.createChatCompletion(conversation, {
+          tools: chatTools
+        })
+
+        conversation.push(assistantMessage)
+
+        if (assistantMessage.tool_calls == null || assistantMessage.tool_calls.length === 0) {
+          finalMessage = assistantMessage
+          break
+        }
+
+        for (const toolCall of assistantMessage.tool_calls) {
+          const result = await ChatToolsService.execute(userId, toolCall)
+          const toolName = toolCall.type === 'function' ? toolCall.function.name : toolCall.type
+          toolCallsExecuted.push({ name: toolName, result })
+          conversation.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: result
+          })
+        }
+      }
+
+      const replyContent = finalMessage?.content ?? 'Maaf, terjadi kesalahan.'
 
       await ChatMessageModel.create({
         chatMessageSessionId: session.chatSessionId,
         chatMessageRole: 'assistant',
         chatMessageContent: replyContent,
         chatMessageMeta: {
-          matchedProductIds: matches.map((match) => match.metadata?.productId)
+          matchedProductIds: matches.map((match) => match.metadata?.productId),
+          toolCalls: toolCallsExecuted
         }
       })
 
