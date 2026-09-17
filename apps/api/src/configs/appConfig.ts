@@ -9,7 +9,8 @@ export const appConfigs = {
   openAi: {
     apiKey: process.env.OPENAI_API_KEY,
     chatModel: process.env.OPENAI_CHAT_MODEL ?? 'gpt-4o-mini',
-    embeddingModel: process.env.OPENAI_EMBEDDING_MODEL ?? 'text-embedding-3-small'
+    embeddingModel: process.env.OPENAI_EMBEDDING_MODEL ?? 'text-embedding-3-small',
+    embeddingDimensions: Number(process.env.OPENAI_EMBEDDING_DIMENSIONS ?? 1024)
   },
   pinecone: {
     apiKey: process.env.PINECONE_API_KEY,

@@ -11,6 +11,7 @@ export class OpenAIService {
     try {
       const response = await client.embeddings.create({
         model: appConfigs.openAi.embeddingModel,
+        dimensions: appConfigs.openAi.embeddingDimensions,
         input
       })
 
