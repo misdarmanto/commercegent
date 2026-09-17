@@ -23,6 +23,7 @@ import type {
 } from '../schemas/productSchema'
 import { ProductVariantModel } from '../models/ProductVariantModel'
 import type { ICreateProductVariant } from '../schemas/ProductVariantSchema'
+import { addProductEmbeddingToQueue } from '../queues/productEmbeddingQueue'
 
 export class ProductService {
   private static buildDuplicateProductWhere(payload: {
@@ -458,8 +459,80 @@ export class ProductService {
     }
   }
 
+  /**
+   * Fetch visible products by id, preserving the given order (used for
+   * relevance-ranked results such as chat-based recommendations).
+   */
+  static async findByIds(productIds: number[]) {
+    try {
+      if (productIds.length === 0) return []
+
+      const rows = await ProductModel.findAll({
+        where: {
+          deleted: { [Op.eq]: false },
+          productIsVisible: { [Op.eq]: true },
+          productId: { [Op.in]: productIds }
+        },
+        include: [
+          {
+            model: CategoryModel,
+            as: 'category',
+            attributes: [
+              'categoryId',
+              'categoryReference',
+              'categoryName',
+              'categoryIcon',
+              'categoryType'
+            ]
+          },
+          {
+            model: ProductVariantModel,
+            as: 'variants',
+            attributes: [
+              'productVariantId',
+              'productVariantProductId',
+              'productVariantName',
+              'productVariantImage',
+              'productVariantPrice',
+              'productVariantSellPrice',
+              'productVariantDiscount',
+              'productVariantTotalSale',
+              'productVariantStock',
+              'productVariantWeight'
+            ]
+          }
+        ],
+        attributes: [
+          'productId',
+          'productName',
+          'productDescription',
+          'productCategoryId',
+          'productSubCategoryId',
+          'productCode',
+          'productIsHighlight',
+          'productIsVisible',
+          'productBarcode',
+          'productUnit'
+        ]
+      })
+
+      const mapped = rows.map((row) => this.mapProductRowToCheapestVariantObject(row))
+      const byId = new Map(mapped.map((row) => [row.productId as number, row]))
+
+      return productIds
+        .map((productId) => byId.get(productId))
+        .filter((row): row is NonNullable<typeof row> => row != null)
+    } catch (serviceError) {
+      if (serviceError instanceof AppError) throw serviceError
+      logger.error(`[ProductService] findByIds failed: ${String(serviceError)}`)
+      throw new AppError('Failed to find products by id', StatusCodes.INTERNAL_SERVER_ERROR)
+    }
+  }
+
   static async createProduct(payload: ICreateProduct) {
     try {
+      let createdProductId: number | undefined
+
       await sequelizeInit.transaction(async (transaction) => {
         const existingProduct = await ProductModel.findOne({
           where: this.buildDuplicateProductWhere(payload),
@@ -508,7 +581,12 @@ export class ProductService {
         )
 
         await this.createProductVariants(product.productId, productVariants, transaction)
+        createdProductId = product.productId
       })
+
+      if (createdProductId != null) {
+        await addProductEmbeddingToQueue(createdProductId, 'sync')
+      }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       if (serviceError instanceof UniqueConstraintError) {
@@ -632,6 +710,8 @@ export class ProductService {
 
         await this.upsertProductVariants(product.productId, productVariants, transaction)
       })
+
+      await addProductEmbeddingToQueue(payload.productId, 'sync')
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] updateProduct failed: ${String(serviceError)}`)
@@ -664,6 +744,8 @@ export class ProductService {
           }
         }
       )
+
+      await addProductEmbeddingToQueue(payload.productId, 'remove')
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
       logger.error(`[ProductService] removeProduct failed: ${String(serviceError)}`)

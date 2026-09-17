@@ -377,7 +377,7 @@ export default function AppLayout() {
           <Box
             component="img"
             src={logo}
-            alt="FRESH"
+            alt={translate("app.name")}
             sx={{ width: 34, height: 34, borderRadius: 1.5, flexShrink: 0 }}
           />
           {(isMobile || openDrawer) && (
@@ -389,7 +389,7 @@ export default function AppLayout() {
                 whiteSpace: "nowrap",
               }}
             >
-              FRESH
+              {translate("app.name")}
             </Typography>
           )}
         </Box>
@@ -622,7 +622,7 @@ export default function AppLayout() {
                     {user?.userRole ?? "Admin"}
                   </Typography>
                   <Typography noWrap sx={{ fontSize: "0.6875rem", color: sidebarTokens.textInactive }}>
-                    FRESH Ecommerce
+                    {translate("app.name")}
                   </Typography>
                 </Box>
                 <Tooltip title={translate("topbar.logout")}>

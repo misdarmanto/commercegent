@@ -100,11 +100,11 @@ export default function LoginView() {
           <Box
             component="img"
             src={logo}
-            alt="FRESH"
+            alt={t("app.name")}
             sx={{ width: 44, height: 44, borderRadius: 2 }}
           />
           <Typography variant="h5" fontWeight={800} letterSpacing=".08em">
-            FRESH
+            {t("app.name")}
           </Typography>
         </Stack>
 
@@ -142,11 +142,11 @@ export default function LoginView() {
             <Box
               component="img"
               src={logo}
-              alt="FRESH"
+              alt={t("app.name")}
               sx={{ width: 40, height: 40, borderRadius: 2 }}
             />
             <Typography variant="h6" fontWeight={800} color="primary" letterSpacing=".08em">
-              FRESH
+              {t("app.name")}
             </Typography>
           </Stack>
 

@@ -1,6 +1,7 @@
 import AddressRoute from './Address.route'
 import AdminRoute from './Admin.route'
 import CartRoute from './Cart.route'
+import ChatRoute from './Chat.route'
 import CategoryRoute from './Category.route'
 import HealthRoute from './Healt.route'
 import MyProfileRoute from './MyProfile.route'
@@ -22,12 +23,15 @@ import UploadProductRoute from './UploadProduct.route'
 import AppLogRoute from './AppLog.route'
 import BannerRoute from './Banner.route'
 import LocalShippingRoute from './LocalShipping.route'
+import FaqRoute from './Faq.route'
+import FileRoute from './File.route'
 
 const RoutesRegistry = {
   AddressRoute,
   AdminRoute,
   AppLogRoute,
   CartRoute,
+  ChatRoute,
   CategoryRoute,
   HealthRoute,
   MyProfileRoute,
@@ -47,7 +51,9 @@ const RoutesRegistry = {
   AuthRoute,
   UploadProductRoute,
   BannerRoute,
-  LocalShippingRoute
+  LocalShippingRoute,
+  FaqRoute,
+  FileRoute
 }
 
 export default RoutesRegistry

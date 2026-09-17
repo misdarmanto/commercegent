@@ -17,11 +17,12 @@ export const en = {
       next: "Next",
     },
     home: {
-      title: "Fresh Picks For You",
+      title: "Commercegent Picks For You",
       searchPlaceholder: "Search products...",
       allCategories: "All",
       noProducts: "No products found.",
       highlightTitle: "Promo & Best Picks",
+      recommendedTitle: "Recommended for You",
     },
     product: {
       outOfStock: "Out of stock",
@@ -105,6 +106,16 @@ export const en = {
         admin: "Admin",
         superAdmin: "Super Admin",
       },
+    },
+    chat: {
+      title: "Customer Service",
+      openButton: "Chat with us",
+      loginRequired: "Please sign in to chat with our assistant.",
+      placeholder: "Type a message...",
+      send: "Send",
+      welcome: "Hi! Ask me about our products, store policies, or add items to your cart.",
+      error: "Sorry, something went wrong. Please try again.",
+      viewProduct: "View product",
     },
   },
 };

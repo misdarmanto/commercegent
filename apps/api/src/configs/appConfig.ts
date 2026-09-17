@@ -6,6 +6,18 @@ export const appConfigs = {
     baseURL: process.env.BITESHIP_BASE_URL,
     apiKey: process.env.BITESHIP_API_KEY
   },
+  openAi: {
+    apiKey: process.env.OPENAI_API_KEY,
+    chatModel: process.env.OPENAI_CHAT_MODEL ?? 'gpt-4o-mini',
+    embeddingModel: process.env.OPENAI_EMBEDDING_MODEL ?? 'text-embedding-3-small',
+    embeddingDimensions: Number(process.env.OPENAI_EMBEDDING_DIMENSIONS ?? 1024)
+  },
+  pinecone: {
+    apiKey: process.env.PINECONE_API_KEY,
+    index: process.env.PINECONE_INDEX ?? 'ecommerce-products',
+    namespace: process.env.PINECONE_NAMESPACE ?? 'products',
+    faqNamespace: process.env.PINECONE_FAQ_NAMESPACE ?? 'faqs'
+  },
   app: {
     appVersion: process.env.APP_VERSION ?? '',
     appMode: process.env.APP_MODE ?? 'development',

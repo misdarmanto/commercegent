@@ -7,27 +7,27 @@
 
 const seedCategories = [
   {
-    category_name: 'Sayuran',
+    category_name: 'Vegetables',
     category_type: 'parent',
     category_icon: 'https://cdn-icons-png.flaticon.com/512/2909/2909808.png'
   },
   {
-    category_name: 'Buah',
+    category_name: 'Fruits',
     category_type: 'parent',
     category_icon: 'https://cdn-icons-png.flaticon.com/512/3194/3194591.png'
   },
   {
-    category_name: 'Daging & Ikan',
+    category_name: 'Meat & Fish',
     category_type: 'parent',
     category_icon: 'https://cdn-icons-png.flaticon.com/512/2153/2153788.png'
   },
   {
-    category_name: 'Bumbu Dapur',
+    category_name: 'Cooking Spices',
     category_type: 'parent',
     category_icon: 'https://cdn-icons-png.flaticon.com/512/2515/2515183.png'
   },
   {
-    category_name: 'Minuman',
+    category_name: 'Beverages',
     category_type: 'parent',
     category_icon: 'https://cdn-icons-png.flaticon.com/512/2405/2405479.png'
   }

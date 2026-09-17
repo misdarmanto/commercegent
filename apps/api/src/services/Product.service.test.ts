@@ -7,7 +7,13 @@ import { sequelizeInit } from '../configs/database'
 import { calculateSellPrice } from '../utilities/priceCalculator'
 
 jest.mock('../models/ProductModel', () => ({
-  ProductModel: { findAndCountAll: jest.fn(), findOne: jest.fn(), create: jest.fn(), update: jest.fn() }
+  ProductModel: {
+    findAndCountAll: jest.fn(),
+    findAll: jest.fn(),
+    findOne: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn()
+  }
 }))
 jest.mock('../models/CategoryModel', () => ({ CategoryModel: {} }))
 jest.mock('../models/ProductVariantModel', () => ({
@@ -22,8 +28,12 @@ jest.mock('../configs/database', () => ({
   sequelizeInit: { transaction: jest.fn(async (cb: any) => await cb({})) }
 }))
 jest.mock('../utilities/logger', () => ({ error: jest.fn(), info: jest.fn(), warn: jest.fn() }))
+jest.mock('../queues/productEmbeddingQueue', () => ({
+  addProductEmbeddingToQueue: jest.fn()
+}))
 
 const mockedFindAndCountAll = ProductModel.findAndCountAll as jest.Mock
+const mockedFindAll = ProductModel.findAll as jest.Mock
 const mockedFindOne = ProductModel.findOne as jest.Mock
 const mockedCreate = ProductModel.create as jest.Mock
 const mockedUpdate = ProductModel.update as jest.Mock
@@ -86,6 +96,33 @@ describe('ProductService.findProductByBarcode', () => {
     await expect(
       ProductService.findProductByBarcode({ barcode: '123' } as any)
     ).rejects.toMatchObject({ statusCode: StatusCodes.NOT_FOUND })
+  })
+})
+
+describe('ProductService.findByIds', () => {
+  it('returns an empty array without querying when given no ids', async () => {
+    const result = await ProductService.findByIds([])
+    expect(result).toEqual([])
+    expect(mockedFindAll).not.toHaveBeenCalled()
+  })
+
+  it('re-orders the rows to match the given id order', async () => {
+    mockedFindAll.mockResolvedValue([
+      fakeRow({ productId: 2, variants: [] }),
+      fakeRow({ productId: 1, variants: [] })
+    ])
+
+    const result = await ProductService.findByIds([1, 2])
+
+    expect(result.map((row: any) => row.productId)).toEqual([1, 2])
+  })
+
+  it('silently drops ids that were not found (deleted/invisible products)', async () => {
+    mockedFindAll.mockResolvedValue([fakeRow({ productId: 1, variants: [] })])
+
+    const result = await ProductService.findByIds([1, 99])
+
+    expect(result.map((row: any) => row.productId)).toEqual([1])
   })
 })
 

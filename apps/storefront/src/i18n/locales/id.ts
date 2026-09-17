@@ -22,6 +22,7 @@ export const id = {
       allCategories: "Semua",
       noProducts: "Produk tidak ditemukan.",
       highlightTitle: "Promo & Pilihan Terbaik",
+      recommendedTitle: "Rekomendasi untuk Anda",
     },
     product: {
       outOfStock: "Stok habis",
@@ -105,6 +106,16 @@ export const id = {
         admin: "Admin",
         superAdmin: "Super Admin",
       },
+    },
+    chat: {
+      title: "Layanan Pelanggan",
+      openButton: "Chat dengan kami",
+      loginRequired: "Silakan masuk untuk chat dengan asisten kami.",
+      placeholder: "Ketik pesan...",
+      send: "Kirim",
+      welcome: "Hai! Tanyakan tentang produk kami, kebijakan toko, atau tambahkan barang ke keranjang.",
+      error: "Maaf, terjadi kesalahan. Silakan coba lagi.",
+      viewProduct: "Lihat produk",
     },
   },
 };

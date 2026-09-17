@@ -1,4 +1,9 @@
 export interface IUpload {
-    id: string;
-    name: string;
+    fileId: string;
+    fileName: string;
+    fileSize: number;
+    mimeType: string;
+    uploadedBy?: string;
+    url: string;
+    createdAt: string;
 }

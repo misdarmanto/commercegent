@@ -1,6 +1,8 @@
 import app from './src/app'
 import { appConfigs } from './src/configs/appConfig'
 import './src/worker/productFileWorker'
+import './src/worker/productEmbeddingWorker'
+import './src/worker/faqEmbeddingWorker'
 import logger from './src/utilities/logger'
 
 const PORT = appConfigs.app.port || 8000
