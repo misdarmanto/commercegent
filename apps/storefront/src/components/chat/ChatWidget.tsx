@@ -23,6 +23,8 @@ import { getStoredChatSessionId, setStoredChatSessionId } from "@/lib/chat/sessi
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { IChatBubble, IChatProductRef } from "@/interfaces/Chat";
 
+const MESSAGES_DISPLAY_LIMIT = 10;
+
 let bubbleIdCounter = 0;
 const nextBubbleId = () => `bubble-${++bubbleIdCounter}`;
 
@@ -65,6 +67,15 @@ export function ChatWidget() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [localBubbles]);
+
+  useEffect(() => {
+    // Auto-scroll to bottom when chat first opens
+    if (open) {
+      setTimeout(() => {
+        scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "auto" });
+      }, 0);
+    }
+  }, [open]);
 
   // Messages already persisted on the server (loaded once per session) plus
   // any bubbles created locally during this render (new user/assistant
@@ -188,7 +199,7 @@ export function ChatWidget() {
                   {showWelcome && bubbles.length === 0 && (
                     <ChatBubbleView bubble={{ id: "welcome", role: "assistant", content: t("chat.welcome") }} />
                   )}
-                  {bubbles.map((bubble) => (
+                  {bubbles.slice(-MESSAGES_DISPLAY_LIMIT).map((bubble) => (
                     <ChatBubbleView key={bubble.id} bubble={bubble} />
                   ))}
                   {sendMessage.isPending && (
