@@ -15,7 +15,9 @@ import CircularProgress from "@mui/material/CircularProgress";
 import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlineOutlined";
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSendChatMessage, useChatSessionMessages } from "@/lib/api/chat";
+import { cartKeys } from "@/lib/api/cart";
 import { AUTH_CHANGED_EVENT, isLoggedIn } from "@/lib/auth/token";
 import { getStoredChatSessionId, setStoredChatSessionId } from "@/lib/chat/session";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
@@ -30,18 +32,26 @@ export function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [chatSessionId, setChatSessionId] = useState<number | null>(null);
+  // The session id loaded from localStorage on mount, kept stable for the
+  // lifetime of the widget so sending a new message (which updates
+  // chatSessionId) never re-triggers a history refetch that would duplicate
+  // the bubbles we already track locally.
+  const [initialSessionId, setInitialSessionId] = useState<number | null>(null);
   const [localBubbles, setLocalBubbles] = useState<IChatBubble[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
 
+  const queryClient = useQueryClient();
   const sendMessage = useSendChatMessage();
   const { data: history, isFetched: historyFetched } = useChatSessionMessages(
-    open ? chatSessionId : null,
+    open ? initialSessionId : null,
   );
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- reads localStorage, unavailable during SSR
     setLoggedIn(isLoggedIn());
-    setChatSessionId(getStoredChatSessionId());
+    const storedSessionId = getStoredChatSessionId();
+    setChatSessionId(storedSessionId);
+    setInitialSessionId(storedSessionId);
 
     const handleAuthChange = () => setLoggedIn(isLoggedIn());
     window.addEventListener(AUTH_CHANGED_EVENT, handleAuthChange);
@@ -76,7 +86,7 @@ export function ChatWidget() {
   );
 
   const showWelcome =
-    bubbles.length === 0 && (chatSessionId == null || historyFetched);
+    bubbles.length === 0 && (initialSessionId == null || historyFetched);
 
   function handleToggle() {
     setOpen((prev) => !prev);
@@ -105,6 +115,9 @@ export function ChatWidget() {
               products: data.products,
             },
           ]);
+          // The assistant may have called add_to_cart on the server; refresh
+          // the header badge/cart page in case it did (cheap no-op otherwise).
+          queryClient.invalidateQueries({ queryKey: cartKeys.all });
         },
         onError: () => {
           setLocalBubbles((prev) => [
