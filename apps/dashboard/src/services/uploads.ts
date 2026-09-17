@@ -19,7 +19,7 @@ export function useUploads(
     queryKey: uploadKeys.list(params),
     queryFn: async () => {
       const query = buildTableQueryString(params);
-      const { data } = await fileUploadClient.get(`/api/v1/uploads${query}`);
+      const { data } = await fileUploadClient.get(`/uploads${query}`);
       const result = data.data as {
         items: IUpload[];
         totalItems: number;
@@ -38,7 +38,7 @@ export function useUploads(
 export function useRemoveUpload() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (fileId: string) => fileUploadClient.delete(`/api/v1/uploads/${fileId}`),
+    mutationFn: (fileId: string) => fileUploadClient.delete(`/uploads/${fileId}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: uploadKeys.lists() });
     },
@@ -56,7 +56,7 @@ export function useUploadImage() {
     mutationFn: async ({ file, onUploadProgress }: UploadImageVariables) => {
       const formData = new FormData();
       formData.append("file", file);
-      const { data } = await fileUploadClient.post("/api/v1/uploads", formData, {
+      const { data } = await fileUploadClient.post("/uploads", formData, {
         onUploadProgress,
       });
       return data.data as { url: string; fileName: string; fileId: string };
@@ -73,7 +73,7 @@ export function useUploadZip() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      const { data } = await fileUploadClient.post("/api/v1/uploads", formData);
+      const { data } = await fileUploadClient.post("/uploads", formData);
       return data.data as { url: string; fileName: string; fileId: string };
     },
     onSuccess: () => {
