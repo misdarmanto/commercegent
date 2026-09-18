@@ -8,6 +8,8 @@ import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "react-i18next";
 import { useOrders } from "@/lib/api/orders";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
@@ -44,9 +46,18 @@ export default function OrdersPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        {t("orders.title")}
-      </Typography>
+      <Stack direction="row" sx={{ alignItems: "center", mb: 3 }}>
+        <IconButton
+          onClick={() => router.push("/profile")}
+          size="small"
+          sx={{ mr: 1 }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>
+          {t("orders.title")}
+        </Typography>
+      </Stack>
 
       {orders.length === 0 ? (
         <Typography color="text.secondary" align="center" sx={{ py: 6 }}>

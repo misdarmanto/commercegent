@@ -9,6 +9,8 @@ import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
 import RadioGroup from "@mui/material/RadioGroup";
@@ -127,9 +129,18 @@ export default function CheckoutPage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        {t("checkout.title")}
-      </Typography>
+      <Stack direction="row" sx={{ alignItems: "center", mb: 3 }}>
+        <IconButton
+          onClick={() => router.push("/cart")}
+          size="small"
+          sx={{ mr: 1 }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>
+          {t("checkout.title")}
+        </Typography>
+      </Stack>
 
       {items.length === 0 ? (
         <Typography color="text.secondary" align="center" sx={{ py: 6 }}>

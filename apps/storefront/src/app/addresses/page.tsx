@@ -14,6 +14,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import Alert from "@mui/material/Alert";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "react-i18next";
 import { useAddresses, useRemoveAddress, useSetMainAddress } from "@/lib/api/addresses";
 import { isLoggedIn } from "@/lib/auth/token";
@@ -52,10 +53,19 @@ export default function AddressesPage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-          {t("address.title")}
-        </Typography>
+      <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between", mb: 3 }}>
+        <Stack direction="row" sx={{ alignItems: "center" }}>
+          <IconButton
+            onClick={() => router.push("/profile")}
+            size="small"
+            sx={{ mr: 1 }}
+          >
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h4" sx={{ fontWeight: 800 }}>
+            {t("address.title")}
+          </Typography>
+        </Stack>
       </Stack>
 
       {redirectTo && (

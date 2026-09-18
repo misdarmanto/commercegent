@@ -14,6 +14,7 @@ import CircularProgress from "@mui/material/CircularProgress";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "react-i18next";
 import { useCart, useRemoveCart, useUpdateCart } from "@/lib/api/cart";
 import { getImageUrl } from "@/lib/utils/getImageUrl";
@@ -58,9 +59,18 @@ export default function CartPage() {
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        {t("cart.title")}
-      </Typography>
+      <Stack direction="row" sx={{ alignItems: "center", mb: 3 }}>
+        <IconButton
+          onClick={() => router.push("/")}
+          size="small"
+          sx={{ mr: 1 }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>
+          {t("cart.title")}
+        </Typography>
+      </Stack>
 
       {items.length === 0 ? (
         <Typography color="text.secondary" align="center" sx={{ py: 6 }}>
