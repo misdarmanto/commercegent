@@ -19,6 +19,7 @@ import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import LogoutIcon from "@mui/icons-material/LogoutOutlined";
 import { useTranslation } from "react-i18next";
 import { useProfile, useUpdateProfile } from "@/lib/api/profile";
@@ -205,6 +206,26 @@ export default function ProfilePage() {
         >
           <ReceiptLongOutlinedIcon fontSize="small" />
           <Typography sx={{ flexGrow: 1 }}>{t("profile.myOrders")}</Typography>
+        </Stack>
+
+        <Divider />
+
+        <Stack
+          component={Link}
+          href="/addresses"
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            p: 1.5,
+            borderRadius: 1,
+            color: "text.primary",
+            textDecoration: "none",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <LocationOnOutlinedIcon fontSize="small" />
+          <Typography sx={{ flexGrow: 1 }}>{t("profile.myAddresses")}</Typography>
         </Stack>
 
         <Divider />
