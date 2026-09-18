@@ -20,7 +20,7 @@ import { AUTH_CHANGED_EVENT, isLoggedIn } from "@/lib/auth/token";
 export function RecommendedProducts() {
   const { t } = useTranslation();
   const [loggedIn, setLoggedIn] = useState(false);
-  const { data, isLoading } = useChatRecommendations();
+  const { data, isLoading } = useChatRecommendations({ enabled: loggedIn });
   const items = data?.products ?? [];
 
   useEffect(() => {

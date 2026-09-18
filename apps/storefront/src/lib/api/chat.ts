@@ -58,14 +58,21 @@ export function useChatSessionMessages(chatSessionId: number | null) {
 }
 
 /** Product recommendations derived from the user's most recent chat session. */
-export function useChatRecommendations() {
+export function useChatRecommendations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: chatKeys.recommendations(),
     queryFn: async () => {
       const { data } = await apiClient.get("/chats/recommendations");
       return data.data as IChatRecommendationsResponse;
     },
-    enabled: isLoggedIn(),
+    // Callers pass their own (state-backed) logged-in flag rather than this
+    // hook re-evaluating isLoggedIn() inline: `enabled` is read on every
+    // render, so an inline call here could flip independently of whatever
+    // state gates the component's own render output, and — combined with
+    // the auth-changed/storage listeners other chat hooks react to — that
+    // mismatch could trigger a redundant refetch shortly after mount that
+    // raced with the correct one.
+    enabled: options?.enabled ?? isLoggedIn(),
     staleTime: 60_000,
   });
 }
