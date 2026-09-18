@@ -34,7 +34,6 @@ import {
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { convertTime } from "../../utilities/convertTime";
-import { getImageUrl } from "../../utilities/getImageUrl";
 import { IUpload } from "../../interfaces/Upload";
 import ButtonUploadFile from "../../components/buttons/ButtonUploadFile";
 import { useUploads, useRemoveUpload } from "../../services/uploads";
@@ -44,7 +43,7 @@ export default function ListUploadView() {
   const { t } = useTranslation();
   const [paginationModel, setPaginationModel] = useState({
     pageSize: 12,
-    page: 1,
+    page: 0,
   });
 
   // Default view: grid
@@ -164,16 +163,16 @@ export default function ListUploadView() {
   }
 
   const columns: GridColDef[] = [
-    { field: "id", headerName: t("gallery.column.id"), width: 90 },
-    { field: "name", headerName: t("gallery.column.name"), flex: 1, minWidth: 150 },
+    { field: "fileId", headerName: t("gallery.column.id"), width: 90 },
+    { field: "fileName", headerName: t("gallery.column.name"), flex: 1, minWidth: 150 },
     {
       field: "preview",
       headerName: t("gallery.column.image"),
       width: 100,
       renderCell: (params) => (
         <img
-          src={getImageUrl(params.row.name)}
-          alt={params.row.name}
+          src={params.row.url}
+          alt={params.row.fileName}
           style={{
             width: 80,
             height: 80,
@@ -233,8 +232,8 @@ export default function ListUploadView() {
             ) : (
               <>
                 <Grid container spacing={2} sx={{ pt: 5 }}>
-                  {tableData.map((item: any) => (
-                    <Grid item xs={6} sm={4} md={3} lg={2} key={item.id}>
+                  {(tableData as IUpload[]).map((item) => (
+                    <Grid item xs={6} sm={4} md={3} lg={2} key={item.fileId}>
                       <Card
                         sx={{
                           borderRadius: 2,
@@ -246,8 +245,8 @@ export default function ListUploadView() {
                         <CardMedia
                           component="img"
                           height="140"
-                          image={getImageUrl(item.name)}
-                          alt={item.name}
+                          image={item.url}
+                          alt={item.fileName}
                           sx={{ objectFit: "cover" }}
                         />
                         <CardActions
@@ -258,7 +257,7 @@ export default function ListUploadView() {
                             alignItems: "center",
                           }}
                         >
-                          <Tooltip title={item.name}>
+                          <Tooltip title={item.fileName}>
                             <Typography
                               variant="body2"
                               sx={{
@@ -268,7 +267,7 @@ export default function ListUploadView() {
                                 whiteSpace: "nowrap",
                               }}
                             >
-                              {item.name}
+                              {item.fileName}
                             </Typography>
                           </Tooltip>
 
@@ -277,7 +276,7 @@ export default function ListUploadView() {
                               <IconButton
                                 size="small"
                                 color="primary"
-                                onClick={() => handleCopy(item.name)}
+                                onClick={() => handleCopy(item.fileName)}
                               >
                                 <ContentCopyIcon fontSize="small" />
                               </IconButton>
@@ -323,7 +322,7 @@ export default function ListUploadView() {
           <Box sx={{ height: "auto", width: "100%" }}>
             <DataGrid
               rows={tableData}
-              getRowId={(row) => (row as any).id}
+              getRowId={(row) => (row as IUpload).fileId}
               columns={columns}
               loading={loading}
               sx={{

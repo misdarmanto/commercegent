@@ -183,7 +183,7 @@ export default function ListAdminView() {
         handleModalOnCancel={() => setOpenModalDelete(false)}
         message={t("common.confirmDeleteNamed", { name: modalDeleteData?.userName })}
         handleModal={() => {
-          handleDeleteAdmin(modalDeleteData?.userId!);
+          if (modalDeleteData) handleDeleteAdmin(modalDeleteData.userId);
           setOpenModalDelete(!openModalDelete);
         }}
       />

@@ -2,29 +2,38 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Container from "@mui/material/Container";
 import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 import Paper from "@mui/material/Paper";
 import Divider from "@mui/material/Divider";
 import Button from "@mui/material/Button";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Alert from "@mui/material/Alert";
 import CircularProgress from "@mui/material/CircularProgress";
+import RadioGroup from "@mui/material/RadioGroup";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import Radio from "@mui/material/Radio";
 import { useTranslation } from "react-i18next";
 import { useCart } from "@/lib/api/cart";
 import { useCreateOrder } from "@/lib/api/orders";
+import { useAddresses } from "@/lib/api/addresses";
+import { useShippingRates } from "@/lib/api/shipping";
 import { formatCurrency } from "@/lib/utils/formatCurrency";
 import { isLoggedIn } from "@/lib/auth/token";
 import { ICartItem } from "@/interfaces/Cart";
-
-const SHIPPING_FEE = 0;
+import { IShippingRate } from "@/interfaces/Shipping";
 
 export default function CheckoutPage() {
   const router = useRouter();
   const { t } = useTranslation();
   const [checkedAuth, setCheckedAuth] = useState(false);
-  const { data, isLoading } = useCart();
+  const { data: cartData, isLoading: isLoadingCart } = useCart();
+  const { data: addresses, isLoading: isLoadingAddresses } = useAddresses();
   const createOrder = useCreateOrder();
+  const [selectedRateIndex, setSelectedRateIndex] = useState<number | null>(null);
 
   useEffect(() => {
     if (!isLoggedIn()) {
@@ -36,23 +45,64 @@ export default function CheckoutPage() {
   }, [router]);
 
   const items: ICartItem[] = useMemo(() => {
-    if (!data) return [];
-    return Array.isArray(data) ? data : data.items;
-  }, [data]);
+    if (!cartData) return [];
+    return Array.isArray(cartData) ? cartData : cartData.items;
+  }, [cartData]);
+
+  const mainAddress = useMemo(
+    () => addresses?.find((a) => a.addressType === "main"),
+    [addresses],
+  );
+
+  const rateQueryItems = useMemo(
+    () =>
+      items.map((item) => ({
+        productVariantId: item.variant.productVariantId,
+        quantity: item.cartQuantity,
+      })),
+    [items],
+  );
+
+  const {
+    data: rates = [],
+    isLoading: isLoadingRates,
+    isError: isRatesError,
+  } = useShippingRates(rateQueryItems, { enabled: Boolean(mainAddress) });
+
+  // Fall back to the first rate whenever the picked index doesn't exist in
+  // the current quote (initial load, or a new quote invalidated the old
+  // pick) instead of resetting state from an effect.
+  const effectiveRateIndex =
+    selectedRateIndex != null && selectedRateIndex < rates.length
+      ? selectedRateIndex
+      : rates.length > 0
+        ? 0
+        : null;
+
+  const selectedRate: IShippingRate | null =
+    effectiveRateIndex != null ? (rates[effectiveRateIndex] ?? null) : null;
 
   const subtotal = items.reduce(
     (sum, item) => sum + item.variant.productVariantSellPrice * item.cartQuantity,
     0,
   );
-  const grandTotal = subtotal + SHIPPING_FEE;
+  const shippingFee = selectedRate?.price ?? 0;
+  const grandTotal = subtotal + shippingFee;
 
   const handleCheckout = () => {
+    if (!selectedRate) return;
+
+    // Open the tab synchronously within the click handler so browsers don't
+    // treat it as an unsolicited popup; the Midtrans Snap URL is only known
+    // once the order is created, so it's filled in once the mutation resolves.
+    const paymentTab = window.open("", "_blank", "noopener,noreferrer");
+
     createOrder.mutate(
       {
-        orderShippingProvider: "FRESH",
-        orderShippingFee: SHIPPING_FEE,
-        orderCourierCompany: null,
-        orderCourierType: null,
+        orderShippingProvider: selectedRate.provider,
+        orderShippingFee: selectedRate.price,
+        orderCourierCompany: selectedRate.courier_code,
+        orderCourierType: selectedRate.courier_service_code,
         items: items.map((item) => ({
           orderItemProductWeight: item.variant.productVariantWeight,
           productId: item.cartProductId,
@@ -62,17 +112,23 @@ export default function CheckoutPage() {
       },
       {
         onSuccess: (order) => {
-          if (order.orderPaymentUrl) {
-            window.location.href = order.orderPaymentUrl;
-          } else {
-            router.push("/orders");
+          if (order.redirectUrl && paymentTab) {
+            paymentTab.location.href = order.redirectUrl;
+          } else if (order.redirectUrl) {
+            window.open(order.redirectUrl, "_blank", "noopener,noreferrer");
           }
+          router.push("/orders");
+        },
+        onError: () => {
+          paymentTab?.close();
         },
       },
     );
   };
 
-  if (!checkedAuth || isLoading) {
+  const isLoading = !checkedAuth || isLoadingCart || isLoadingAddresses;
+
+  if (isLoading) {
     return (
       <Container sx={{ py: 8, display: "flex", justifyContent: "center" }}>
         <CircularProgress />
@@ -82,9 +138,18 @@ export default function CheckoutPage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        {t("checkout.title")}
-      </Typography>
+      <Stack direction="row" sx={{ alignItems: "center", mb: 3 }}>
+        <IconButton
+          onClick={() => router.push("/cart")}
+          size="small"
+          sx={{ mr: 1 }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>
+          {t("checkout.title")}
+        </Typography>
+      </Stack>
 
       {items.length === 0 ? (
         <Typography color="text.secondary" align="center" sx={{ py: 6 }}>
@@ -92,6 +157,119 @@ export default function CheckoutPage() {
         </Typography>
       ) : (
         <Stack spacing={2} sx={{ mt: 2 }}>
+          <Paper variant="outlined" sx={{ p: 2 }}>
+            <Stack
+              direction="row"
+              sx={{ justifyContent: "space-between", alignItems: "flex-start" }}
+            >
+              <Stack sx={{ flexGrow: 1 }}>
+                <Typography variant="subtitle2" color="text.secondary">
+                  {t("checkout.shippingAddress")}
+                </Typography>
+                {mainAddress ? (
+                  <>
+                    <Typography sx={{ fontWeight: 700 }}>
+                      {mainAddress.addressUserName} · {mainAddress.addressKontak}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {mainAddress.addressDetail}, {mainAddress.addressDesaName},{" "}
+                      {mainAddress.addressKecamatanName},{" "}
+                      {mainAddress.addressKabupatenName},{" "}
+                      {mainAddress.addressProvinsiName}{" "}
+                      {mainAddress.addressPostalCode}
+                    </Typography>
+                  </>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    {t("checkout.noAddress")}
+                  </Typography>
+                )}
+              </Stack>
+              <Button
+                component={Link}
+                href="/addresses?redirect=/checkout"
+                size="small"
+              >
+                {mainAddress ? t("checkout.changeAddress") : t("checkout.addAddress")}
+              </Button>
+            </Stack>
+          </Paper>
+
+          {!mainAddress ? (
+            <Alert severity="warning">{t("checkout.needsAddress")}</Alert>
+          ) : (
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+                {t("checkout.selectCourier")}
+              </Typography>
+
+              {isLoadingRates ? (
+                <Stack sx={{ alignItems: "center", py: 2 }}>
+                  <CircularProgress size={24} />
+                </Stack>
+              ) : isRatesError || rates.length === 0 ? (
+                <Alert severity="error">{t("checkout.noCourierAvailable")}</Alert>
+              ) : (
+                <RadioGroup
+                  value={effectiveRateIndex ?? ""}
+                  onChange={(e) => setSelectedRateIndex(Number(e.target.value))}
+                >
+                  {rates.map((rate, index) => (
+                    <FormControlLabel
+                      key={`${rate.courier_code}-${rate.courier_service_code}-${index}`}
+                      value={index}
+                      control={<Radio sx={{ alignSelf: "flex-start" }} />}
+                      sx={{
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 1,
+                        mx: 0,
+                        mb: 1,
+                        px: 1,
+                        width: "100%",
+                        alignItems: "flex-start",
+                        "& .MuiFormControlLabel-label": {
+                          flex: 1,
+                          minWidth: 0,
+                        },
+                      }}
+                      label={
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{
+                            justifyContent: "space-between",
+                            alignItems: "flex-start",
+                            width: "100%",
+                            py: 1,
+                          }}
+                        >
+                          <Stack sx={{ minWidth: 0 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 600, wordBreak: "break-word" }}
+                            >
+                              {rate.courier_name} - {rate.courier_service_name}
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                              {rate.duration}
+                            </Typography>
+                          </Stack>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}
+                          >
+                            {formatCurrency(rate.price)}
+                          </Typography>
+                        </Stack>
+                      }
+                    />
+                  ))}
+                </RadioGroup>
+              )}
+            </Paper>
+          )}
+
           <Paper variant="outlined" sx={{ p: 2 }}>
             <Stack spacing={1.5}>
               {items.map((item) => (
@@ -119,7 +297,7 @@ export default function CheckoutPage() {
               </Stack>
               <Stack direction="row" sx={{ justifyContent: "space-between" }}>
                 <Typography variant="body2">{t("checkout.shipping")}</Typography>
-                <Typography variant="body2">{formatCurrency(SHIPPING_FEE)}</Typography>
+                <Typography variant="body2">{formatCurrency(shippingFee)}</Typography>
               </Stack>
 
               <Divider />
@@ -140,7 +318,7 @@ export default function CheckoutPage() {
           <Button
             variant="contained"
             size="large"
-            disabled={createOrder.isPending}
+            disabled={!mainAddress || !selectedRate || createOrder.isPending}
             onClick={handleCheckout}
           >
             {createOrder.isPending ? t("checkout.processing") : t("checkout.payNow")}

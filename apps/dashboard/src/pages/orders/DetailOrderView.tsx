@@ -409,7 +409,7 @@ function Info({
   bold,
 }: {
   label: ReactNode;
-  value: any;
+  value: ReactNode;
   bold?: boolean;
 }) {
   return (

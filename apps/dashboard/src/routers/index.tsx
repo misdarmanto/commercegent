@@ -197,7 +197,6 @@ export default function AppRouters() {
         children: routers,
       },
     ]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
 
   return <RouterProvider router={appRouters} />;

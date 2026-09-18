@@ -13,6 +13,7 @@ import IconButton from "@mui/material/IconButton";
 import CircularProgress from "@mui/material/CircularProgress";
 import RemoveIcon from "@mui/icons-material/Remove";
 import AddIcon from "@mui/icons-material/Add";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "react-i18next";
 import { useProduct } from "@/lib/api/products";
 import { useAddToCart } from "@/lib/api/cart";
@@ -73,6 +74,26 @@ export default function ProductDetailPage({
     });
   };
 
+  const handleCheckOut = () => {
+    if (!isLoggedIn()) {
+      router.push("/login");
+      return;
+    }
+    if (!selectedVariant) return;
+    addToCart.mutate(
+      {
+        cartProductId: product.productId,
+        cartProductVariantId: selectedVariant.productVariantId,
+        cartQuantity: quantity,
+      },
+      {
+        onSuccess: () => {
+          router.push("/checkout");
+        },
+      },
+    );
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Grid container spacing={4}>
@@ -91,9 +112,18 @@ export default function ProductDetailPage({
         </Grid>
 
         <Grid size={{ xs: 12, md: 7 }}>
-          <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-            {product.productName}
-          </Typography>
+          <Stack direction="row" sx={{ alignItems: "center", mb: 3 }}>
+            <IconButton
+              onClick={() => router.push("/")}
+              size="small"
+              sx={{ mr: 1 }}
+            >
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h4" sx={{ fontWeight: 800 }}>
+              {product.productName}
+            </Typography>
+          </Stack>
 
           {product.category && (
             <Chip label={product.category.categoryName} size="small" sx={{ mb: 2 }} />
@@ -167,18 +197,32 @@ export default function ProductDetailPage({
             </Typography>
           </Stack>
 
-          <Button
-            variant="contained"
-            size="large"
-            disabled={
-              !selectedVariant ||
-              selectedVariant.productVariantStock <= 0 ||
-              addToCart.isPending
-            }
-            onClick={handleAddToCart}
-          >
-            {addToCart.isPending ? t("product.adding") : t("product.addToCart")}
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              size="large"
+              disabled={
+                !selectedVariant ||
+                selectedVariant.productVariantStock <= 0 ||
+                addToCart.isPending
+              }
+              onClick={handleAddToCart}
+            >
+              {addToCart.isPending ? t("product.adding") : t("product.addToCart")}
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              disabled={
+                !selectedVariant ||
+                selectedVariant.productVariantStock <= 0 ||
+                addToCart.isPending
+              }
+              onClick={handleCheckOut}
+            >
+              {addToCart.isPending ? t("product.adding") : t("cart.checkout")}
+            </Button>
+          </Stack>
         </Grid>
       </Grid>
 

@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
 import {
   IChatMessage,
@@ -18,10 +18,19 @@ export const chatKeys = {
 };
 
 export function useSendChatMessage() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: ISendChatMessagePayload) => {
       const { data } = await apiClient.post("/chats", payload);
       return data.data as ISendChatMessageResponse;
+    },
+    onSuccess: () => {
+      // The homepage's "Recommended for You" is derived from the latest
+      // chat history; without this it kept showing whatever it had at
+      // mount time (or nothing) until the user did a hard refresh, even
+      // though a new message had just changed the underlying recommendation.
+      queryClient.invalidateQueries({ queryKey: chatKeys.recommendations() });
+      queryClient.invalidateQueries({ queryKey: chatKeys.sessions() });
     },
   });
 }
@@ -49,14 +58,21 @@ export function useChatSessionMessages(chatSessionId: number | null) {
 }
 
 /** Product recommendations derived from the user's most recent chat session. */
-export function useChatRecommendations() {
+export function useChatRecommendations(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: chatKeys.recommendations(),
     queryFn: async () => {
       const { data } = await apiClient.get("/chats/recommendations");
       return data.data as IChatRecommendationsResponse;
     },
-    enabled: isLoggedIn(),
+    // Callers pass their own (state-backed) logged-in flag rather than this
+    // hook re-evaluating isLoggedIn() inline: `enabled` is read on every
+    // render, so an inline call here could flip independently of whatever
+    // state gates the component's own render output, and — combined with
+    // the auth-changed/storage listeners other chat hooks react to — that
+    // mismatch could trigger a redundant refetch shortly after mount that
+    // raced with the correct one.
+    enabled: options?.enabled ?? isLoggedIn(),
     staleTime: 60_000,
   });
 }

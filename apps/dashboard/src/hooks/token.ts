@@ -13,9 +13,7 @@ export const useToken = () => {
     const token = getToken();
 
     if (token) {
-      const resultToken: any = jwtDecode(token);
-      const userToken: IJwtPayload = resultToken;
-      return userToken;
+      return jwtDecode<IJwtPayload>(token);
     }
     return null;
   };

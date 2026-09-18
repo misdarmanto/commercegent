@@ -29,7 +29,7 @@ let bubbleIdCounter = 0;
 const nextBubbleId = () => `bubble-${++bubbleIdCounter}`;
 
 export function ChatWidget() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [loggedIn, setLoggedIn] = useState(false);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
@@ -112,7 +112,11 @@ export function ChatWidget() {
     setInput("");
 
     sendMessage.mutate(
-      { chatSessionId: chatSessionId ?? undefined, message: trimmed },
+      {
+        chatSessionId: chatSessionId ?? undefined,
+        message: trimmed,
+        language: i18n.language === "id" ? "id" : "en",
+      },
       {
         onSuccess: (data) => {
           setChatSessionId(data.chatSessionId);

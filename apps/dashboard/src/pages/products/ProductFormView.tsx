@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowBack, Add as AddIcon, DeleteOutline } from "@mui/icons-material";
-import { useFieldArray, useForm, Controller } from "react-hook-form";
+import { useFieldArray, useForm, Controller, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useProduct,
@@ -75,7 +75,7 @@ export default function ProductFormView() {
     () =>
       zodResolver(
         isEdit ? getProductFormUpdateSchema() : getProductFormCreateSchema(),
-      ) as any,
+      ) as Resolver<ProductFormValues>,
     // i18n.language forces the resolver to rebuild with fresh validation
     // messages when the user switches language.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -243,6 +243,17 @@ export default function ProductFormView() {
     }
   };
 
+  // Validation errors can occur on fields above the submit button (which
+  // sits at the bottom of a long form). Without scrolling to the first
+  // invalid field, the user sees no visible feedback and assumes nothing
+  // happened.
+  const onInvalid = () => {
+    requestAnimationFrame(() => {
+      const el = document.querySelector('.Mui-error, [aria-invalid="true"]');
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  };
+
   return (
     <>
       <BreadCrumberStyle
@@ -276,7 +287,7 @@ export default function ProductFormView() {
           {productId ? t("product.form.editTitle") : t("product.form.createTitle")}
         </Typography>
 
-        <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
+        <Box component="form" onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
           <Typography fontWeight="bold" mb={2}>
             {t("product.form.productInfo")}
           </Typography>

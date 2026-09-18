@@ -19,7 +19,10 @@ import Chip from "@mui/material/Chip";
 import CircularProgress from "@mui/material/CircularProgress";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutlineOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import LogoutIcon from "@mui/icons-material/LogoutOutlined";
+import IconButton from "@mui/material/IconButton";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useTranslation } from "react-i18next";
 import { useProfile, useUpdateProfile } from "@/lib/api/profile";
 import { isLoggedIn, removeToken } from "@/lib/auth/token";
@@ -96,9 +99,18 @@ export default function ProfilePage() {
 
   return (
     <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Typography variant="h4" gutterBottom sx={{ fontWeight: 800 }}>
-        {t("profile.title")}
-      </Typography>
+      <Stack direction="row" sx={{ alignItems: "center", mb: 3 }}>
+        <IconButton
+          onClick={() => router.push("/")}
+          size="small"
+          sx={{ mr: 1 }}
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>
+          {t("profile.title")}
+        </Typography>
+      </Stack>
 
       <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Stack direction="row" spacing={2} sx={{ alignItems: "center" }}>
@@ -205,6 +217,26 @@ export default function ProfilePage() {
         >
           <ReceiptLongOutlinedIcon fontSize="small" />
           <Typography sx={{ flexGrow: 1 }}>{t("profile.myOrders")}</Typography>
+        </Stack>
+
+        <Divider />
+
+        <Stack
+          component={Link}
+          href="/addresses"
+          direction="row"
+          spacing={1.5}
+          sx={{
+            alignItems: "center",
+            p: 1.5,
+            borderRadius: 1,
+            color: "text.primary",
+            textDecoration: "none",
+            "&:hover": { bgcolor: "action.hover" },
+          }}
+        >
+          <LocationOnOutlinedIcon fontSize="small" />
+          <Typography sx={{ flexGrow: 1 }}>{t("profile.myAddresses")}</Typography>
         </Stack>
 
         <Divider />
