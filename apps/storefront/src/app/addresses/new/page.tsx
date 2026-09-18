@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -55,6 +55,20 @@ interface RegionOption {
 }
 
 export default function NewAddressPage() {
+  return (
+    <Suspense
+      fallback={
+        <Container sx={{ py: 8, display: "flex", justifyContent: "center" }}>
+          <CircularProgress />
+        </Container>
+      }
+    >
+      <NewAddressPageContent />
+    </Suspense>
+  );
+}
+
+function NewAddressPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();

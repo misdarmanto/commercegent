@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Container from "@mui/material/Container";
@@ -20,6 +20,20 @@ import { useAddresses, useRemoveAddress, useSetMainAddress } from "@/lib/api/add
 import { isLoggedIn } from "@/lib/auth/token";
 
 export default function AddressesPage() {
+  return (
+    <Suspense
+      fallback={
+        <Container sx={{ py: 8, display: "flex", justifyContent: "center" }}>
+          <CircularProgress />
+        </Container>
+      }
+    >
+      <AddressesPageContent />
+    </Suspense>
+  );
+}
+
+function AddressesPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useTranslation();
