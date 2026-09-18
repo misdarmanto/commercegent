@@ -33,9 +33,12 @@ export interface IChatFaqRef {
   faqAnswer: string;
 }
 
+export type IChatLanguage = "en" | "id";
+
 export interface ISendChatMessagePayload {
   chatSessionId?: number;
   message: string;
+  language?: IChatLanguage;
 }
 
 export interface ISendChatMessageResponse {

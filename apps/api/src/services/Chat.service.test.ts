@@ -75,6 +75,49 @@ describe('ChatService.sendMessage', () => {
     })
   })
 
+  it('defaults to Bahasa Indonesia in the system prompt when no language is given', async () => {
+    const session = buildSession()
+    mockedSessionCreate.mockResolvedValue(session)
+    mockedCreateChatCompletion.mockResolvedValue({ content: 'Hi there!', tool_calls: undefined })
+
+    await ChatService.sendMessage(1, { message: 'Hello' } as any)
+
+    const conversation = mockedCreateChatCompletion.mock.calls[0][0]
+    expect(conversation[0].content).toContain('Always reply in Bahasa Indonesia')
+  })
+
+  it('switches the system prompt to English when language is "en"', async () => {
+    const session = buildSession()
+    mockedSessionCreate.mockResolvedValue(session)
+    mockedCreateChatCompletion.mockResolvedValue({ content: 'Hi there!', tool_calls: undefined })
+
+    await ChatService.sendMessage(1, { message: 'Hello', language: 'en' } as any)
+
+    const conversation = mockedCreateChatCompletion.mock.calls[0][0]
+    expect(conversation[0].content).toContain('Always reply in English')
+  })
+
+  it('falls back to the English default message when the model never returns content and language is "en"', async () => {
+    const session = buildSession()
+    mockedSessionCreate.mockResolvedValue(session)
+
+    const toolCall = {
+      id: 'call_1',
+      type: 'function',
+      function: { name: 'view_cart', arguments: '{}' }
+    }
+
+    mockedCreateChatCompletion.mockResolvedValue({ content: null, tool_calls: [toolCall] })
+    mockedToolExecute.mockResolvedValue(JSON.stringify({ success: true, cart: {} }))
+
+    const result = await ChatService.sendMessage(1, {
+      message: 'What is in my cart?',
+      language: 'en'
+    } as any)
+
+    expect(result.reply).toBe('Sorry, something went wrong.')
+  })
+
   it('throws a 404 AppError when chatSessionId does not belong to the user', async () => {
     mockedSessionFindOne.mockResolvedValue(null)
 

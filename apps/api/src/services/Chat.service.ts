@@ -9,11 +9,21 @@ import { OpenAIService } from './external/OpenAI.service'
 import { chatTools, ChatToolsService } from './ChatTools.service'
 import { AppError } from '../utilities/appError'
 import logger from '../utilities/logger'
-import type { ISendChatMessage } from '../schemas/chatSchema'
+import type { IChatLanguage, ISendChatMessage } from '../schemas/chatSchema'
 
-const SYSTEM_PROMPT = `You are an AI customer service assistant for an online store.
+const REPLY_LANGUAGE_NAME: Record<IChatLanguage, string> = {
+  en: 'English',
+  id: 'Bahasa Indonesia'
+}
+
+const FALLBACK_REPLY: Record<IChatLanguage, string> = {
+  en: 'Sorry, something went wrong.',
+  id: 'Maaf, terjadi kesalahan.'
+}
+
+const buildSystemPrompt = (language: IChatLanguage): string => `You are an AI customer service assistant for an online store.
 Your job: help customers find & get recommendations for products, answer product questions, answer general store FAQs, and add products to the shopping cart when asked.
-Always reply in Bahasa Indonesia, in a friendly, concise, and clear tone.
+Always reply in ${REPLY_LANGUAGE_NAME[language]}, in a friendly, concise, and clear tone, regardless of what language the product/FAQ context below is written in.
 Use ONLY the product data given in the "PRODUCT CONTEXT" section below when mentioning product names, prices, or stock.
 Use ONLY the entries given in the "FAQ CONTEXT" section below when answering general store questions (shipping, returns, payment methods, etc).
 If no relevant product or FAQ entry is found in the context, honestly say so and never make up product names, prices, or store policies.
@@ -83,6 +93,7 @@ export class ChatService {
 
   static async sendMessage(userId: number, payload: ISendChatMessage) {
     try {
+      const language: IChatLanguage = payload.language ?? 'id'
       const session = await this.resolveSession(userId, payload.chatSessionId)
 
       await ChatMessageModel.create({
@@ -112,7 +123,7 @@ export class ChatService {
       const conversation: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
         {
           role: 'system',
-          content: `${SYSTEM_PROMPT}\n\nPRODUCT CONTEXT:\n${productContext}\n\nFAQ CONTEXT:\n${faqContext}`
+          content: `${buildSystemPrompt(language)}\n\nPRODUCT CONTEXT:\n${productContext}\n\nFAQ CONTEXT:\n${faqContext}`
         },
         ...orderedHistory
       ]
@@ -144,7 +155,7 @@ export class ChatService {
         }
       }
 
-      const replyContent = finalMessage?.content ?? 'Maaf, terjadi kesalahan.'
+      const replyContent = finalMessage?.content ?? FALLBACK_REPLY[language]
 
       await ChatMessageModel.create({
         chatMessageSessionId: session.chatSessionId,
