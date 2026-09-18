@@ -34,7 +34,6 @@ import {
 import BreadCrumberStyle from "../../components/breadcrumb/Index";
 import { IconMenus } from "../../components/icon";
 import { convertTime } from "../../utilities/convertTime";
-import { getImageUrl } from "../../utilities/getImageUrl";
 import { IUpload } from "../../interfaces/Upload";
 import ButtonUploadFile from "../../components/buttons/ButtonUploadFile";
 import { useUploads, useRemoveUpload } from "../../services/uploads";
@@ -233,7 +232,7 @@ export default function ListUploadView() {
             ) : (
               <>
                 <Grid container spacing={2} sx={{ pt: 5 }}>
-                  {tableData.map((item: any) => (
+                  {(tableData as IUpload[]).map((item) => (
                     <Grid item xs={6} sm={4} md={3} lg={2} key={item.fileId}>
                       <Card
                         sx={{
@@ -323,7 +322,7 @@ export default function ListUploadView() {
           <Box sx={{ height: "auto", width: "100%" }}>
             <DataGrid
               rows={tableData}
-              getRowId={(row) => (row as any).fileId}
+              getRowId={(row) => (row as IUpload).fileId}
               columns={columns}
               loading={loading}
               sx={{

@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { AppContextTypes, useAppContext } from "../context/app.context";
+import { AppContextTypes, useAppContext } from "../context/appContextStore";
 import { alertBridge } from "../services/alertBridge";
 
 /**

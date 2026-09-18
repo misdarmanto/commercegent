@@ -262,7 +262,7 @@ export default function ProductListView() {
         handleModalOnCancel={() => setOpenModalDelete(false)}
         message={t("common.confirmDeleteNamed", { name: modalDeleteData?.productName })}
         handleModal={() => {
-          handleDeleteCategory(modalDeleteData?.productId!);
+          if (modalDeleteData) handleDeleteCategory(modalDeleteData.productId);
           setOpenModalDelete(false);
         }}
       />

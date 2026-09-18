@@ -41,7 +41,7 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { Link, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 
-import { useAppContext } from "../context/app.context";
+import { useAppContext } from "../context/appContextStore";
 import { useToken } from "../hooks/token";
 import { ColorModeContext } from "../context/colorMode.context";
 import { IconMenusSidebar } from "../components/icon";

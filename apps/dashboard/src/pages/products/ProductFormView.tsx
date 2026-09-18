@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowBack, Add as AddIcon, DeleteOutline } from "@mui/icons-material";
-import { useFieldArray, useForm, Controller } from "react-hook-form";
+import { useFieldArray, useForm, Controller, Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   useProduct,
@@ -75,7 +75,7 @@ export default function ProductFormView() {
     () =>
       zodResolver(
         isEdit ? getProductFormUpdateSchema() : getProductFormCreateSchema(),
-      ) as any,
+      ) as Resolver<ProductFormValues>,
     // i18n.language forces the resolver to rebuild with fresh validation
     // messages when the user switches language.
     // eslint-disable-next-line react-hooks/exhaustive-deps

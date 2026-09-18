@@ -6,6 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 // import { CONFIGS } from '../../configs';
 
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { getErrorMessage } from '../../utilities/getErrorMessage';
 
 interface DeleteImageButtonProps {
     filename: string;
@@ -28,9 +29,9 @@ const ButtonDeleteFile: React.FC<DeleteImageButtonProps> = ({ filename, onDelete
             //   },
             // });
             onDelete();
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error uploading file:', error);
-            const errorMessage = t('uploadButton.deleteFailed', { message: error?.response?.data?.errorMessage });
+            const errorMessage = t('uploadButton.deleteFailed', { message: getErrorMessage(error) });
             setUploadError(errorMessage);
         } finally {
             setLoading(false);

@@ -23,6 +23,7 @@ import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import FolderIcon from '@mui/icons-material/Folder';
 import { useUploads, useUploadImage } from '../../services/uploads';
+import { getErrorMessage } from '../../utilities/getErrorMessage';
 
 interface ButtonUploadFileTypes {
     onUpload: (urlOrName: string) => void;
@@ -93,13 +94,13 @@ export default function ButtonUploadWithOption({ onUpload }: ButtonUploadFileTyp
             setUploadSuccess(true);
             onUpload(result.url);
             setOpenModal(false);
-        } catch (error: any) {
+        } catch (error) {
             console.error('Error uploading file:', error);
             setUploadProgress(null);
             setUploadSuccess(false);
+            const backendMessage = getErrorMessage(error);
             const errorMessage =
-                t('uploadButton.uploadFailed') +
-                (error.response?.data?.errorMessage ? `: ${error.response.data.errorMessage}` : '');
+                t('uploadButton.uploadFailed') + (backendMessage ? `: ${backendMessage}` : '');
             setUploadError(errorMessage);
         } finally {
             if (fileInputRef.current) fileInputRef.current.value = '';
