@@ -209,7 +209,7 @@ export default function CheckoutPage() {
                     <FormControlLabel
                       key={`${rate.courier_code}-${rate.courier_service_code}-${index}`}
                       value={index}
-                      control={<Radio />}
+                      control={<Radio sx={{ alignSelf: "flex-start" }} />}
                       sx={{
                         border: "1px solid",
                         borderColor: "divider",
@@ -217,26 +217,39 @@ export default function CheckoutPage() {
                         mx: 0,
                         mb: 1,
                         px: 1,
+                        width: "100%",
+                        alignItems: "flex-start",
+                        "& .MuiFormControlLabel-label": {
+                          flex: 1,
+                          minWidth: 0,
+                        },
                       }}
                       label={
                         <Stack
                           direction="row"
+                          spacing={1}
                           sx={{
                             justifyContent: "space-between",
-                            alignItems: "center",
+                            alignItems: "flex-start",
                             width: "100%",
                             py: 1,
                           }}
                         >
-                          <Stack>
-                            <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          <Stack sx={{ minWidth: 0 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{ fontWeight: 600, wordBreak: "break-word" }}
+                            >
                               {rate.courier_name} - {rate.courier_service_name}
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
                               {rate.duration}
                             </Typography>
                           </Stack>
-                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 600, whiteSpace: "nowrap", flexShrink: 0 }}
+                          >
                             {formatCurrency(rate.price)}
                           </Typography>
                         </Stack>

@@ -128,10 +128,19 @@ export class ShippingService {
             })) ?? []
           )
         } catch (serviceError) {
+          // Previously this only logged and fell through, silently returning
+          // undefined -> the controller responded 200 with an empty rates
+          // list, so a real Biteship failure (bad coords, API outage, quota)
+          // looked identical to "no couriers available" in the UI. Rethrow
+          // as an AppError so it surfaces as a real error instead.
           logger.error(
             `[ShippingService] getShippingRates failed: ${getBiteShipErrorDetail(
               serviceError
             )}`
+          )
+          throw new AppError(
+            'Failed to get shipping rates from courier provider',
+            StatusCodes.BAD_GATEWAY
           )
         }
       }
