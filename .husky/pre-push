@@ -1,0 +1,2 @@
+echo "Running lint, typecheck, and build for all packages (same checks as CI) before push..."
+pnpm exec turbo run lint typecheck build
