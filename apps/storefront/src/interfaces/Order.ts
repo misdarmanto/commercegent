@@ -46,3 +46,9 @@ export interface ICreateOrderPayload {
   orderCourierType: string | null;
   items: ICreateOrderItemPayload[];
 }
+
+export interface ICreateOrderResponse {
+  orderId: number;
+  snapToken: string;
+  redirectUrl: string;
+}

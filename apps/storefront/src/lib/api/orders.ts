@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "./client";
-import { ICreateOrderPayload, IOrder } from "@/interfaces/Order";
+import { ICreateOrderPayload, ICreateOrderResponse, IOrder } from "@/interfaces/Order";
 import { IPaginatedResult } from "@/interfaces/Product";
 import { isLoggedIn } from "@/lib/auth/token";
 
@@ -39,7 +39,7 @@ export function useCreateOrder() {
   return useMutation({
     mutationFn: async (payload: ICreateOrderPayload) => {
       const { data } = await apiClient.post("/orders", payload);
-      return data.data as IOrder;
+      return data.data as ICreateOrderResponse;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: orderKeys.all });

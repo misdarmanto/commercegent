@@ -92,6 +92,11 @@ export default function CheckoutPage() {
   const handleCheckout = () => {
     if (!selectedRate) return;
 
+    // Open the tab synchronously within the click handler so browsers don't
+    // treat it as an unsolicited popup; the Midtrans Snap URL is only known
+    // once the order is created, so it's filled in once the mutation resolves.
+    const paymentTab = window.open("", "_blank", "noopener,noreferrer");
+
     createOrder.mutate(
       {
         orderShippingProvider: selectedRate.provider,
@@ -107,11 +112,15 @@ export default function CheckoutPage() {
       },
       {
         onSuccess: (order) => {
-          if (order.orderPaymentUrl) {
-            window.location.href = order.orderPaymentUrl;
-          } else {
-            router.push("/orders");
+          if (order.redirectUrl && paymentTab) {
+            paymentTab.location.href = order.redirectUrl;
+          } else if (order.redirectUrl) {
+            window.open(order.redirectUrl, "_blank", "noopener,noreferrer");
           }
+          router.push("/orders");
+        },
+        onError: () => {
+          paymentTab?.close();
         },
       },
     );
