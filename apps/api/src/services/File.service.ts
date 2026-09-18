@@ -93,8 +93,8 @@ export class FileService {
         fileSize: file.fileSize,
         mimeType: file.mimeType,
         filePath: file.filePath,
-        uploadedBy: file.uploadedBy,
-        createdAt: file.createdAt
+        uploadedBy: file.uploadedBy ?? undefined,
+        createdAt: file.createdAt ?? new Date()
       }
     } catch (serviceError) {
       if (serviceError instanceof AppError) throw serviceError
