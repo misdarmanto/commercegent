@@ -73,6 +73,26 @@ export default function ProductDetailPage({
     });
   };
 
+  const handleCheckOut = () => {
+    if (!isLoggedIn()) {
+      router.push("/login");
+      return;
+    }
+    if (!selectedVariant) return;
+    addToCart.mutate(
+      {
+        cartProductId: product.productId,
+        cartProductVariantId: selectedVariant.productVariantId,
+        cartQuantity: quantity,
+      },
+      {
+        onSuccess: () => {
+          router.push("/checkout");
+        },
+      },
+    );
+  };
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Grid container spacing={4}>
@@ -167,18 +187,32 @@ export default function ProductDetailPage({
             </Typography>
           </Stack>
 
-          <Button
-            variant="contained"
-            size="large"
-            disabled={
-              !selectedVariant ||
-              selectedVariant.productVariantStock <= 0 ||
-              addToCart.isPending
-            }
-            onClick={handleAddToCart}
-          >
-            {addToCart.isPending ? t("product.adding") : t("product.addToCart")}
-          </Button>
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              size="large"
+              disabled={
+                !selectedVariant ||
+                selectedVariant.productVariantStock <= 0 ||
+                addToCart.isPending
+              }
+              onClick={handleAddToCart}
+            >
+              {addToCart.isPending ? t("product.adding") : t("product.addToCart")}
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              disabled={
+                !selectedVariant ||
+                selectedVariant.productVariantStock <= 0 ||
+                addToCart.isPending
+              }
+              onClick={handleCheckOut}
+            >
+              {addToCart.isPending ? t("product.adding") : t("cart.checkout")}
+            </Button>
+          </Stack>
         </Grid>
       </Grid>
 
