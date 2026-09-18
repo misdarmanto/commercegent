@@ -32,8 +32,24 @@ Payment, address entry, and shipping method selection are handled by the custome
 
 const HISTORY_LIMIT = 10
 const MAX_TOOL_ITERATIONS = 3
-const RECOMMENDATION_HISTORY_MESSAGE_LIMIT = 5
+const RECOMMENDATION_HISTORY_MESSAGE_LIMIT = 10
 const RECOMMENDATION_LIMIT = 6
+
+const INTEREST_EXTRACTION_PROMPT = `You analyze a customer's recent chat messages to an online store and extract their CURRENT product interests for a recommendation engine.
+
+Respond with EXACTLY two lines, nothing else:
+INTERESTED: <comma-separated list of products/categories they want, are curious about, or asked to buy — empty if none>
+AVOID: <comma-separated list of products/categories they explicitly said they dislike, don't want, are allergic to, or asked to avoid — empty if none>
+
+Rules:
+- A product mentioned only in a negative context (e.g. "I don't like X", "I hate X", "no X please") belongs ONLY in AVOID, never in INTERESTED.
+- Do not invent products that were never mentioned.
+- Keep each list short (a few words per item, comma-separated), no explanations.`
+
+interface IExtractedInterest {
+  interested: string
+  avoid: string[]
+}
 
 export class ChatService {
   private static async resolveSession(userId: number, chatSessionId?: number) {
@@ -89,6 +105,62 @@ export class ChatService {
         ].join('\n')
       })
       .join('\n')
+  }
+
+  /**
+   * Uses the LLM to separate what the customer actually wants from what
+   * they explicitly said they dislike, so recommendation search embeds
+   * only positive intent — a plain embedding of the raw messages would
+   * otherwise surface products the customer rejected, since "I don't like
+   * mineral water" is semantically close to "mineral water".
+   */
+  private static async extractInterest(userMessages: string[]): Promise<IExtractedInterest> {
+    const response = await OpenAIService.createChatCompletion([
+      { role: 'system', content: INTEREST_EXTRACTION_PROMPT },
+      { role: 'user', content: userMessages.join('\n') }
+    ])
+
+    const content = response.content ?? ''
+    const interestedLine = /INTERESTED:[ \t]*(.*)/i.exec(content)?.[1] ?? ''
+    const avoidLine = /AVOID:[ \t]*(.*)/i.exec(content)?.[1] ?? ''
+
+    return {
+      interested: interestedLine.trim(),
+      avoid: avoidLine
+        .split(',')
+        .map((term) => term.trim().toLowerCase())
+        .filter((term) => term.length > 0)
+    }
+  }
+
+  /** Strips a trailing "s" so simple plural/singular variants ("oranges" vs "orange") still match. */
+  private static singularize(word: string): string {
+    return word.length > 3 && word.endsWith('s') ? word.slice(0, -1) : word
+  }
+
+  /**
+   * True when the product's name shares a significant word with any avoid
+   * term (e.g. avoid "mineral water" matches product "Mineral Water";
+   * avoid "oranges" matches product "Sunkist Orange"). Word-level
+   * comparison avoids both false negatives from singular/plural mismatches
+   * and false positives from unrelated substrings.
+   */
+  private static isProductAvoided(productName: unknown, avoid: string[]): boolean {
+    if (typeof productName !== 'string' || avoid.length === 0) return false
+
+    const productWords = new Set(
+      productName
+        .toLowerCase()
+        .split(/\s+/)
+        .map((word) => this.singularize(word))
+    )
+
+    return avoid.some((term) =>
+      term
+        .split(/\s+/)
+        .map((word) => this.singularize(word))
+        .some((word) => word.length > 2 && productWords.has(word))
+    )
   }
 
   static async sendMessage(userId: number, payload: ISendChatMessage) {
@@ -241,17 +313,19 @@ export class ChatService {
 
       if (recentUserMessages.length === 0) return { products: [] }
 
-      const combinedQuery = recentUserMessages
-        .reverse()
-        .map((message) => message.chatMessageContent)
-        .join('\n')
+      const { interested, avoid } = await this.extractInterest(
+        recentUserMessages.reverse().map((message) => message.chatMessageContent)
+      )
+
+      if (interested.length === 0) return { products: [] }
 
       const matches = await ProductEmbeddingService.searchProducts(
-        combinedQuery,
+        interested,
         RECOMMENDATION_LIMIT
       )
 
       const productIds = matches
+        .filter((match) => !this.isProductAvoided(match.metadata?.productName, avoid))
         .map((match) => Number(match.metadata?.productId))
         .filter((productId) => Number.isFinite(productId))
 
