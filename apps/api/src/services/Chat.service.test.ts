@@ -311,15 +311,18 @@ describe('ChatService.getRecommendations', () => {
     expect(mockedSearchProducts).not.toHaveBeenCalled()
   })
 
-  it('embeds the recent user messages and returns live product rows in relevance order', async () => {
+  it('extracts positive interest via the LLM and searches with it instead of the raw messages', async () => {
     mockedSessionFindOne.mockResolvedValue(buildSession({ chatSessionId: 7 }))
     mockedMessageFindAll.mockResolvedValue([
       { chatMessageContent: 'do you have fresh salmon?' },
       { chatMessageContent: 'something under 50k' }
     ])
+    mockedCreateChatCompletion.mockResolvedValue({
+      content: 'INTERESTED: salmon\nAVOID: '
+    })
     mockedSearchProducts.mockResolvedValue([
-      { metadata: { productId: 9 } },
-      { metadata: { productId: 3 } }
+      { metadata: { productId: 9, productName: 'Salmon' } },
+      { metadata: { productId: 3, productName: 'Shrimp' } }
     ])
     mockedFindByIds.mockResolvedValue([
       { productId: 9, productName: 'Salmon' },
@@ -333,10 +336,14 @@ describe('ChatService.getRecommendations', () => {
         where: { chatMessageSessionId: 7, chatMessageRole: 'user', deleted: false }
       })
     )
-    expect(mockedSearchProducts).toHaveBeenCalledWith(
-      'something under 50k\ndo you have fresh salmon?',
-      6
-    )
+    expect(mockedCreateChatCompletion).toHaveBeenCalledWith([
+      expect.objectContaining({ role: 'system' }),
+      {
+        role: 'user',
+        content: 'something under 50k\ndo you have fresh salmon?'
+      }
+    ])
+    expect(mockedSearchProducts).toHaveBeenCalledWith('salmon', 6)
     expect(mockedFindByIds).toHaveBeenCalledWith([9, 3])
     expect(result).toEqual({
       products: [
@@ -344,6 +351,50 @@ describe('ChatService.getRecommendations', () => {
         { productId: 3, productName: 'Shrimp' }
       ]
     })
+  })
+
+  it('filters out products the customer explicitly said they dislike', async () => {
+    mockedSessionFindOne.mockResolvedValue(buildSession({ chatSessionId: 7 }))
+    mockedMessageFindAll.mockResolvedValue([
+      { chatMessageContent: 'I like garlic and beef' },
+      { chatMessageContent: "I don't like mineral water or oranges" }
+    ])
+    mockedCreateChatCompletion.mockResolvedValue({
+      content: 'INTERESTED: garlic, beef\nAVOID: mineral water, oranges'
+    })
+    mockedSearchProducts.mockResolvedValue([
+      { metadata: { productId: 10, productName: 'Garlic' } },
+      { metadata: { productId: 7, productName: 'Fresh Beef' } },
+      { metadata: { productId: 13, productName: 'Mineral Water' } },
+      { metadata: { productId: 6, productName: 'Sunkist Orange' } }
+    ])
+    mockedFindByIds.mockResolvedValue([
+      { productId: 10, productName: 'Garlic' },
+      { productId: 7, productName: 'Fresh Beef' }
+    ])
+
+    const result = await ChatService.getRecommendations(1)
+
+    expect(mockedFindByIds).toHaveBeenCalledWith([10, 7])
+    expect(result.products).toEqual([
+      { productId: 10, productName: 'Garlic' },
+      { productId: 7, productName: 'Fresh Beef' }
+    ])
+  })
+
+  it('returns no products when the LLM finds no positive interest to search for', async () => {
+    mockedSessionFindOne.mockResolvedValue(buildSession({ chatSessionId: 7 }))
+    mockedMessageFindAll.mockResolvedValue([
+      { chatMessageContent: "I don't like mineral water" }
+    ])
+    mockedCreateChatCompletion.mockResolvedValue({
+      content: 'INTERESTED: \nAVOID: mineral water'
+    })
+
+    const result = await ChatService.getRecommendations(1)
+
+    expect(result).toEqual({ products: [] })
+    expect(mockedSearchProducts).not.toHaveBeenCalled()
   })
 
   it('wraps an unexpected failure into a 500 AppError', async () => {
